@@ -40,7 +40,7 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 		opinions.add(opinion);
 		
 		ListenableFuture<T> valFuture = opinion.getValueFuture();
-		ListenableFuture<Float> trustFuture = opinion.getTrustFuture();
+		ListenableFuture<Double> trustFuture = opinion.getTrustFuture();
 		
 		// We can suppress the warnings here, as it is complaining about us combining
 		// Futures of type T and Float. This is fine, as we don't actually care about

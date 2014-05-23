@@ -1,5 +1,6 @@
 package edu.toronto.cs.se.ci;
 
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import com.google.common.base.Function;
@@ -7,9 +8,22 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 public interface Source<F, T> extends Function<F, T> {
 	
-	public String getName();
-	
-	public float getTrust(ListenableFuture<T> response, F args);
+	/**
+	 * Get the cost of querying the source
+	 * 
+	 * @param args The arguments which would be passed to {@code apply}
+	 * @return The cost of querying the source
+	 */
+	public Map<String, Double> getCost(F args);
+
+	/**
+	 * Get the trustworthiness of the source's response
+	 * 
+	 * @param response A future which will resolve to the result of calling the source
+	 * @param args The arguments passed to {@code apply}
+	 * @return The trustworthiness of the source's response
+	 */
+	public Double getTrust(ListenableFuture<T> response, F args);
 
 	/**
 	 * Callable wrapper for a source.
@@ -40,7 +54,7 @@ public interface Source<F, T> extends Function<F, T> {
 	 * @param <F> Argument Type
 	 * @param <T> Return Type
 	 */
-	public class SourceTrustCallable<F, T> implements Callable<Float> {
+	public class SourceTrustCallable<F, T> implements Callable<Double> {
 		
 		private Source<F, T> source;
 		private ListenableFuture<T> result;
@@ -53,7 +67,7 @@ public interface Source<F, T> extends Function<F, T> {
 		}
 
 		@Override
-		public Float call() throws Exception {
+		public Double call() throws Exception {
 			return source.getTrust(result, args);
 		}
 

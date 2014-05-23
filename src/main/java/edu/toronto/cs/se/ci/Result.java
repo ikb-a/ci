@@ -3,14 +3,14 @@ package edu.toronto.cs.se.ci;
 public class Result<T> {
 	
 	private T value;
-	private float quality;
+	private double quality;
 
 	/**
 	 * Create an immutable Result object
 	 * @param value The result's value
 	 * @param quality The result's quality
 	 */
-	public Result(T value, float quality) {
+	public Result(T value, double quality) {
 		this.value = value;
 		this.quality = quality;
 	}
@@ -25,7 +25,7 @@ public class Result<T> {
 	/**
 	 * @return The result's quality
 	 */
-	public float getQuality() {
+	public double getQuality() {
 		return quality;
 	}
 }

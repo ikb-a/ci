@@ -9,10 +9,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 public class Opinion<T> {
 	// TODO: This should extend from AbstractFuture, and be a future itself (wrapping both value and trust)
 	
-	private ListenableFuture<Float> trust;
+	private ListenableFuture<Double> trust;
 	private ListenableFuture<T> value;
 	
-	public Opinion(ListenableFuture<T> value, ListenableFuture<Float> trust) {
+	public Opinion(ListenableFuture<T> value, ListenableFuture<Double> trust) {
 		this.value = value;
 		this.trust = trust;
 	}
@@ -30,7 +30,7 @@ public class Opinion<T> {
 		}
 	}
 	
-	public float getTrust() {
+	public double getTrust() {
 		try {
 			return trust.get();
 		} catch (InterruptedException | ExecutionException e) {
@@ -43,7 +43,7 @@ public class Opinion<T> {
 		return value;
 	}
 	
-	public ListenableFuture<Float> getTrustFuture() {
+	public ListenableFuture<Double> getTrustFuture() {
 		return trust;
 	}
 
