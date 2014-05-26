@@ -49,11 +49,15 @@ public class VoteAggregator<T> implements Aggregator<T> {
 		
 		T bestValue = null;
 		double bestWeight = 0.0;
+		
+		System.out.println(options);
 
 		// Choose the entry with the highest weight
 		for (Map.Entry<T, Double> e : options.entrySet()) {
-			if (e.getValue() > bestWeight)
+			if (e.getValue() > bestWeight) {
 				bestValue = e.getKey();
+				bestWeight = e.getValue();
+			}
 		}
 		
 		// Return the result

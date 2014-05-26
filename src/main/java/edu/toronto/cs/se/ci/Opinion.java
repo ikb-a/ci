@@ -1,20 +1,24 @@
 package edu.toronto.cs.se.ci;
 
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
+import com.google.common.util.concurrent.AbstractFuture;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
-public class Opinion<T> {
-	// TODO: This should extend from AbstractFuture, and be a future itself (wrapping both value and trust)
-	
+public class Opinion<T> extends AbstractFuture<Opinion<T>> {
 	private ListenableFuture<Double> trust;
 	private ListenableFuture<T> value;
 	
 	public Opinion(ListenableFuture<T> value, ListenableFuture<Double> trust) {
 		this.value = value;
 		this.trust = trust;
+		
+		// Resolve the Opinion when both the trust and the value have resolved
+		ResolveCallback cb = new ResolveCallback();
+		Futures.addCallback(trust, cb);
+		Futures.addCallback(value, cb);
 	}
 	
 	public boolean isDone() {
@@ -45,6 +49,21 @@ public class Opinion<T> {
 	
 	public ListenableFuture<Double> getTrustFuture() {
 		return trust;
+	}
+	
+	private class ResolveCallback implements FutureCallback<Object> {
+
+		@Override
+		public void onSuccess(Object result) {
+			if (value.isDone() && trust.isDone())
+				set(Opinion.this);
+		}
+
+		@Override
+		public void onFailure(Throwable t) {
+			setException(t);
+		}
+		
 	}
 
 }

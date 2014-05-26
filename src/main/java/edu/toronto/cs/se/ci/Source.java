@@ -1,12 +1,10 @@
 package edu.toronto.cs.se.ci;
 
-import java.util.Map;
 import java.util.concurrent.Callable;
 
-import com.google.common.base.Function;
 import com.google.common.util.concurrent.ListenableFuture;
 
-public interface Source<F, T> extends Function<F, T> {
+public interface Source<F, T> {
 	
 	/**
 	 * Get the cost of querying the source
@@ -14,7 +12,7 @@ public interface Source<F, T> extends Function<F, T> {
 	 * @param args The arguments which would be passed to {@code apply}
 	 * @return The cost of querying the source
 	 */
-	public Map<String, Double> getCost(F args);
+	public Cost getCost(F args) throws Exception;
 
 	/**
 	 * Get the trustworthiness of the source's response
@@ -23,7 +21,9 @@ public interface Source<F, T> extends Function<F, T> {
 	 * @param args The arguments passed to {@code apply}
 	 * @return The trustworthiness of the source's response
 	 */
-	public Double getTrust(ListenableFuture<T> response, F args);
+	public Double getTrust(ListenableFuture<T> response, F args) throws SourceUnavaliableException;
+	
+	public T apply(F args) throws SourceUnavaliableException;
 
 	/**
 	 * Callable wrapper for a source.
