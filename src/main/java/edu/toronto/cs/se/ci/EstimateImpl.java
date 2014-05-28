@@ -1,14 +1,12 @@
 package edu.toronto.cs.se.ci;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 
 public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estimate<T> {
 	
@@ -32,52 +30,51 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 	 * 
 	 * @param opinion The opinion to augment the Estimate with
 	 */
-	public void augment(Opinion<T> opinion) {
+	public synchronized void augment(Opinion<T> opinion) {
 		if (sealed)
 			throw new Error("Cannot augment a sealed Estimate");
 
 		incomplete++;
-		opinions.add(opinion);
-		
-		ListenableFuture<T> valFuture = opinion.getValueFuture();
-		ListenableFuture<Double> trustFuture = opinion.getTrustFuture();
-		
-		// We can suppress the warnings here, as it is complaining about us combining
-		// Futures of type T and Float. This is fine, as we don't actually care about
-		// the combined values, we just want to know when they are both done.
-		@SuppressWarnings("unchecked")
-		ListenableFuture<List<Object>> allAsList = Futures.allAsList(valFuture, trustFuture);
 
-		Futures.addCallback(allAsList, new FutureCallback<List<Object>>() {
+		Futures.addCallback(opinion, new FutureCallback<Opinion<T>>() {
 
 			@Override
-			public void onSuccess(List<Object> result) {
-				if (isDone())
-					return;
-				
-				incomplete--;
-				
-				if (sat != null)
-					value = aggregate();
-				
-				// Check if we are done
-				if ((sealed && incomplete <= 0) || (sat != null && sat.apply(value)))
-					done();
+			public void onSuccess(Opinion<T> opinion) {
+				synchronized(EstimateImpl.this) {
+					if (isDone())
+						return;
+					
+					// We can record the opinion now!
+					opinions.add(opinion);
+					incomplete--;
+					
+					// Caching
+					if (sat != null)
+						value = aggregate();
+					
+					// Check if we are done
+					if ((sealed && incomplete <= 0) || (sat != null && sat.apply(value)))
+						done();
+				}
 			}
 
 			@Override
 			public void onFailure(Throwable t) {
-				if (isDone())
-					return;
+				synchronized(EstimateImpl.this) {
+					if (isDone())
+						return;
 
-				incomplete--;
-				
-				System.err.println("Error thrown by Opinion");
-				t.printStackTrace();
-				
-				// Check if we are done
-				if (sealed && incomplete <= 0)
-					done();
+					// We can still mark it as incomplete
+					incomplete--;
+					
+					// Log the error TODO: Remove?
+					System.err.println("Error thrown by Opinion");
+					t.printStackTrace();
+					
+					// Check if we are done
+					if (sealed && incomplete <= 0)
+						done();
+				}
 			}
 			
 		});
@@ -88,7 +85,7 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 	 * be used to augment the Estimate. If {@link augment(Opinion<T>)}
 	 * is called after the Estimate is sealed, it will throw.
 	 */
-	public void seal() {
+	public synchronized void seal() {
 		if (sealed)
 			return;
 		
@@ -116,7 +113,7 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 	/**
 	 * Mark the Estimate as complete, firing callbacks etc.
 	 */
-	private void done() {
+	private synchronized void done() {
 		sealed = true;
 
 		if (isDone())

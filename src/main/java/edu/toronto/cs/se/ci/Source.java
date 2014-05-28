@@ -1,6 +1,7 @@
 package edu.toronto.cs.se.ci;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -21,7 +22,7 @@ public interface Source<F, T> {
 	 * @param args The arguments passed to {@code apply}
 	 * @return The trustworthiness of the source's response
 	 */
-	public Double getTrust(ListenableFuture<T> response, F args) throws SourceUnavaliableException;
+	public double getTrust(ListenableFuture<T> response, F args) throws InterruptedException, ExecutionException;
 	
 	public T apply(F args) throws SourceUnavaliableException;
 

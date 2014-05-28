@@ -1,9 +1,9 @@
 package edu.toronto.cs.se.ci;
 
-public class Result<T> {
+public final class Result<T> {
 	
-	private T value;
-	private double quality;
+	private final T value;
+	private final double quality;
 
 	/**
 	 * Create an immutable Result object
@@ -28,4 +28,5 @@ public class Result<T> {
 	public double getQuality() {
 		return quality;
 	}
+
 }

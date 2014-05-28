@@ -1,12 +1,14 @@
 package edu.toronto.cs.se.ci;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -18,9 +20,9 @@ import edu.toronto.cs.se.ci.selectors.AllSelector;
 
 public class CI<F, T> {
 	
-	private List<Source<F, T>> sources;
-	private Aggregator<T> agg;
-	private Selector<F, T> sel;
+	private final ImmutableSet<Source<F,T>> sources;
+	private final Aggregator<T> agg;
+	private final Selector<F, T> sel;
 
 	/**
 	 * Create a CI using the {@link VoteAggregator} aggregator and
@@ -28,7 +30,7 @@ public class CI<F, T> {
 	 * 
 	 * @param sources The list of sources for the CI to query
 	 */
-	public CI(List<Source<F, T>> sources) {
+	public CI(Collection<Source<F, T>> sources) {
 		this(sources, new VoteAggregator<T>(), new AllSelector<F, T>());
 	}
 
@@ -39,8 +41,8 @@ public class CI<F, T> {
 	 * @param agg The opinion aggregator
 	 * @param sel The source selector
 	 */
-	public CI(List<Source<F, T>> sources, Aggregator<T> agg, Selector<F, T> sel) {
-		this.sources = sources;
+	public CI(Collection<Source<F, T>> sources, Aggregator<T> agg, Selector<F, T> sel) {
+		this.sources = ImmutableSet.copyOf(sources);
 		this.agg = agg;
 		this.sel = sel;
 	}
@@ -57,7 +59,7 @@ public class CI<F, T> {
 		ListeningExecutorService pool = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
 		
 		// Create the invocation
-		Invocation invocation = new Invocation(args, budget, pool);
+		Invocation invocation = new Invocation(args, new Budget(budget), pool);
 		
 		// Return the estimate
 		return invocation.getEstimate();
@@ -73,14 +75,15 @@ public class CI<F, T> {
 	public class Invocation implements Callable<Void> {
 		
 		// Parameters
-		private F args;
-		private Budget budget;
-		private ListeningExecutorService pool;
+		private final F args;
+		private final Budget budget;
+		private final ListeningExecutorService pool;
 		
 		// State
-		private List<Source<F, T>> consulted;
-		private List<Opinion<T>> opinions;
-		private EstimateImpl<T> estimate = new EstimateImpl<T>(agg, null);
+		private final Set<Source<F, T>> consulted;
+		private final Set<Opinion<T>> opinions;
+		private final EstimateImpl<T> estimate = new EstimateImpl<T>(agg, null); // TODO: Add satisfaction function
+
 		private long startedAt = -1;
 		
 		/**
@@ -95,8 +98,8 @@ public class CI<F, T> {
 			this.budget = budget;
 			this.pool = pool;
 			
-			consulted = new ArrayList<Source<F, T>>(sources.size());
-			opinions = new ArrayList<Opinion<T>>(sources.size());
+			consulted = new HashSet<Source<F, T>>();
+			opinions = new HashSet<Opinion<T>>();
 			
 			// Run the invocation, ensuring that the estimate is sealed when it finishes
 			Futures.addCallback(pool.submit(this), new FutureCallback<Object>() {
@@ -151,22 +154,22 @@ public class CI<F, T> {
 		/**
 		 * @return The Sources for the CI to query
 		 */
-		public List<Source<F, T>> getSources() {
+		public ImmutableSet<Source<F, T>> getSources() {
 			return sources;
 		}
 
 		/**
 		 * @return The Sources which have already been consulted in this Invocation of the CI
 		 */
-		public List<Source<F, T>> getConsulted() {
-			return consulted;
+		public Set<Source<F, T>> getConsulted() {
+			return Collections.unmodifiableSet(consulted);
 		}
 		
 		/**
 		 * @return The Opinions which have been solicited in this Invocation of the CI
 		 */
-		public List<Opinion<T>> getOpinions() {
-			return opinions;
+		public Set<Opinion<T>> getOpinions() {
+			return Collections.unmodifiableSet(opinions);
 		}
 
 		/**
@@ -204,6 +207,9 @@ public class CI<F, T> {
 		 */
 		@Override
 		public Void call() throws Exception {
+			if (startedAt > 0)
+				throw new Error("Cannot call invocation twice!");
+
 			startedAt = System.nanoTime();
 			
 			Source<F, T> next;

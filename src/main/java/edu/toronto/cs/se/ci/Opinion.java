@@ -8,8 +8,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 public class Opinion<T> extends AbstractFuture<Opinion<T>> {
-	private ListenableFuture<Double> trust;
-	private ListenableFuture<T> value;
+	private final ListenableFuture<Double> trust;
+	private final ListenableFuture<T> value;
 	
 	public Opinion(ListenableFuture<T> value, ListenableFuture<Double> trust) {
 		this.value = value;
