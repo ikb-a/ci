@@ -16,23 +16,22 @@ public interface Source<F, T> {
 	public Cost getCost(F args) throws Exception;
 
 	/**
-	 * Get the trustworthiness of the source's response
+	 * Get the source's opinion. This includes the result of the source, and
+	 * the trust/confidence of the source.
 	 * 
-	 * @param response A future which will resolve to the result of calling the source
-	 * @param args The arguments passed to {@code apply}
-	 * @return The trustworthiness of the source's response
+	 * @param args The arguments passed to the CI
+	 * @return The source's opinion.
+	 * @throws UnknownException The source wasn't avaliable, so no answer could be obtained
 	 */
-	public double getTrust(ListenableFuture<T> response, F args) throws InterruptedException, ExecutionException;
+	public Opinion<T> getOpinion(F args) throws UnknownException;
 	
-	public T apply(F args) throws SourceUnavaliableException;
-
 	/**
 	 * Callable wrapper for a source.
 	 *
 	 * @param <F> Argument Type
 	 * @param <T> Return Type
 	 */
-	public class SourceCallable<F, T> implements Callable<T> {
+	public class SourceCallable<F, T> implements Callable<Opinion<T>> {
 		
 		private Source<F, T> source;
 		private F args;
@@ -43,34 +42,10 @@ public interface Source<F, T> {
 		}
 
 		@Override
-		public T call() throws Exception {
-			return source.apply(args);
+		public Opinion<T> call() throws Exception {
+			return source.getOpinion(args);
 		}
 
 	}
 	
-	/**
-	 * Callable wrapper for a source's getTrust function
-	 *
-	 * @param <F> Argument Type
-	 * @param <T> Return Type
-	 */
-	public class SourceTrustCallable<F, T> implements Callable<Double> {
-		
-		private Source<F, T> source;
-		private ListenableFuture<T> result;
-		private F args;
-		
-		public SourceTrustCallable(Source<F, T> source, ListenableFuture<T> result, F args) {
-			this.source = source;
-			this.result = result;
-			this.args = args;
-		}
-
-		@Override
-		public Double call() throws Exception {
-			return source.getTrust(result, args);
-		}
-
-	}
 }

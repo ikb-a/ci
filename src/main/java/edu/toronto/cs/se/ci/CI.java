@@ -87,7 +87,7 @@ public class CI<F, T> {
 		
 		// State
 		private final Set<Source<F, T>> consulted;
-		private final Set<Opinion<T>> opinions;
+		private final Set<ListenableFuture<Opinion<T>>> opinions;
 		private final EstimateImpl<T> estimate = new EstimateImpl<T>(agg, null); // TODO: Add satisfaction function
 
 		private long startedAt = -1;
@@ -105,7 +105,7 @@ public class CI<F, T> {
 			this.pool = pool;
 			
 			consulted = new HashSet<Source<F, T>>();
-			opinions = new HashSet<Opinion<T>>();
+			opinions = new HashSet<ListenableFuture<Opinion<T>>>();
 			
 			// Run the invocation, ensuring that the estimate is sealed when it finishes
 			Futures.addCallback(pool.submit(this), new FutureCallback<Object>() {
@@ -174,7 +174,7 @@ public class CI<F, T> {
 		/**
 		 * @return The Opinions which have been solicited in this Invocation of the CI
 		 */
-		public Set<Opinion<T>> getOpinions() {
+		public Set<ListenableFuture<Opinion<T>>> getOpinions() {
 			return Collections.unmodifiableSet(opinions);
 		}
 
@@ -218,7 +218,7 @@ public class CI<F, T> {
 		@Override
 		public Void call() throws Exception {
 			if (startedAt > 0)
-				throw new Error("Cannot call invocation twice!");
+				throw new Error("An invocation can only be called once");
 
 			startedAt = System.nanoTime();
 			
@@ -232,20 +232,19 @@ public class CI<F, T> {
 				// Record that the source has been consulted
 				consulted.add(next);
 				
+				// Exhaust budget
 				Cost cost = next.getCost(args);
 				if (! cost.withinBudget(budget, System.nanoTime() - startedAt, TimeUnit.NANOSECONDS)) {
 					System.err.println("Selection function chose source out of budget");
 					continue;
 				}
-				
 				budget = cost.spend(budget);
 				
-				System.out.println("Calling " + next.getClass().getName());
+				System.out.println("Calling " + next.getClass().getName()); // TODO: DEBUG
 				
-				// Get the value and trust, augmenting the estimate
-				ListenableFuture<T> value = pool.submit(new Source.SourceCallable<F, T>(next, args));
-				ListenableFuture<Double> trust = pool.submit(new Source.SourceTrustCallable<F, T>(next, value, args));
-				Opinion<T> opinion = new Opinion<T>(value, trust);
+				// Query the source & augment the estimate
+				ListenableFuture<Opinion<T>> opinion = pool.submit(new Source.SourceCallable<F, T>(next, args));
+				opinions.add(opinion);
 				estimate.augment(opinion);
 			}
 			

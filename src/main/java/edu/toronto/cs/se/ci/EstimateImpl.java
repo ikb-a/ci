@@ -7,6 +7,7 @@ import com.google.common.base.Function;
 import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estimate<T> {
 	
@@ -30,7 +31,7 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 	 * 
 	 * @param opinion The opinion to augment the Estimate with
 	 */
-	public synchronized void augment(Opinion<T> opinion) {
+	public synchronized void augment(ListenableFuture<Opinion<T>> opinion) {
 		if (sealed)
 			throw new Error("Cannot augment a sealed Estimate");
 
