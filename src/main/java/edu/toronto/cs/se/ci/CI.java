@@ -47,6 +47,12 @@ public class CI<F, T> {
 		this.sel = sel;
 	}
 	
+	public CI(Collection<Source<F, T>> sources, Aggregator<T> agg, Selector<F, T> sel, Acceptor<F, T> acc) {
+		this.sources = ImmutableSet.copyOf(sources);
+		this.agg = agg;
+		this.sel = sel;
+	}
+	
 	/**
 	 * Invokes the CI
 	 * 
@@ -59,7 +65,7 @@ public class CI<F, T> {
 		ListeningExecutorService pool = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
 		
 		// Create the invocation
-		Invocation invocation = new Invocation(args, new Budget(budget), pool);
+		Invocation invocation = new Invocation(args, budget, pool);
 		
 		// Return the estimate
 		return invocation.getEstimate();
@@ -76,7 +82,7 @@ public class CI<F, T> {
 		
 		// Parameters
 		private final F args;
-		private final Budget budget;
+		private Budget budget;
 		private final ListeningExecutorService pool;
 		
 		// State
@@ -123,7 +129,7 @@ public class CI<F, T> {
 		 * @throws Exception If the Source's getCost function throws an exception
 		 */
 		public boolean withinBudget(Source<F, T> source) throws Exception {
-			return budget.withinBudget(source.getCost(args), getElapsedTime(TimeUnit.NANOSECONDS));
+			return source.getCost(args).withinBudget(budget, getElapsedTime(TimeUnit.NANOSECONDS), TimeUnit.NANOSECONDS);
 		}
 		
 		/**
@@ -173,12 +179,16 @@ public class CI<F, T> {
 		}
 
 		/**
-		 * @return The Budget available for running Sources
+		 * Gets the budget for running the remaining sources. As sources are run,
+		 * the budget is depleted, however the Budget object is immutable, so any
+		 * references to a given budget object will not change.
+		 * 
+		 * @return The Budget still available for running Sources
 		 */
 		public Budget getBudget() {
 			return budget;
 		}
-
+		
 		/**
 		 * @return The arguments to the CI function
 		 */
@@ -222,10 +232,13 @@ public class CI<F, T> {
 				// Record that the source has been consulted
 				consulted.add(next);
 				
-				if (! budget.expend(next.getCost(args), System.nanoTime() - startedAt)) {
+				Cost cost = next.getCost(args);
+				if (! cost.withinBudget(budget, System.nanoTime() - startedAt, TimeUnit.NANOSECONDS)) {
 					System.err.println("Selection function chose source out of budget");
 					continue;
 				}
+				
+				budget = cost.spend(budget);
 				
 				System.out.println("Calling " + next.getClass().getName());
 				
