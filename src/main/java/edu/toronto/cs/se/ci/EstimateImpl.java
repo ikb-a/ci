@@ -132,13 +132,7 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 	 * @return The aggregate opinion based on done opinions
 	 */
 	private Result<T> aggregate() {
-		Set<Opinion<T>> doneOpinions = new HashSet<Opinion<T>>();
-		for (Opinion<T> opinion : opinions) {
-			if (opinion.isDone())
-				doneOpinions.add(opinion);
-		}
-		
-		return agg.aggregate(doneOpinions);
+		return agg.aggregate(opinions);
 	}
 	
 	@Override
