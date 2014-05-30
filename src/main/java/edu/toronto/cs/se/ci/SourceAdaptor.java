@@ -11,7 +11,7 @@ package edu.toronto.cs.se.ci;
  * @param <OF> Original input type
  * @param <OT> Original output type
  */
-public abstract class AdaptorSource<F, T, OF, OT> implements Source<F, T> {
+public abstract class SourceAdaptor<F, T, OF, OT> implements Source<F, T> {
 	
 	private Source<OF, OT> adaptee;
 
@@ -20,7 +20,7 @@ public abstract class AdaptorSource<F, T, OF, OT> implements Source<F, T> {
 	 * 
 	 * @param adaptee The source to transform the inputs/outputs of
 	 */
-	public AdaptorSource(Source<OF, OT> adaptee) {
+	public SourceAdaptor(Source<OF, OT> adaptee) {
 		this.adaptee = adaptee;
 	}
 	
