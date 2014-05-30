@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -69,6 +70,17 @@ public class CI<F, T> {
 		
 		// Return the estimate
 		return invocation.getEstimate();
+	}
+	
+	public Result<T> applySync(F args, Budget budget) throws InterruptedException, ExecutionException {
+		// sameThreadExecutor will cause this to run in sync
+		ListeningExecutorService pool = MoreExecutors.sameThreadExecutor();
+		
+		// Create the invocation
+		Invocation invocation = new Invocation(args, budget, pool);
+		
+		// Return the result
+		return invocation.getEstimate().get();
 	}
 	
 	/**
