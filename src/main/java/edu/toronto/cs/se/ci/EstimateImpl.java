@@ -136,8 +136,14 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 		return agg.aggregate(opinions);
 	}
 	
+	/*
+	 * (non-Javadoc)
+	 * @see com.google.common.util.concurrent.AbstractFuture#interruptTask()
+	 */
 	@Override
 	protected void interruptTask() {
+		// When the task has been interrupted, we need to seal the estimate, such that
+		// no more sources can be added to the Estimate.
 		seal();
 	}
 

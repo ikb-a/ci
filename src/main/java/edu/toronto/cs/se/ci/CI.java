@@ -112,13 +112,16 @@ public class CI<F, T> {
 				@Override
 				public void onSuccess(Object result) {
 					estimate.seal();
+					Invocation.this.pool.shutdown();
 				}
 
 				@Override
 				public void onFailure(Throwable t) {
 					estimate.seal();
+					Invocation.this.pool.shutdown();
 				}
 			});
+			
 		}
 		
 		/**
