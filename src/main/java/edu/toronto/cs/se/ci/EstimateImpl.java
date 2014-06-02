@@ -3,7 +3,6 @@ package edu.toronto.cs.se.ci;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.common.base.Function;
 import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -18,11 +17,11 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 	
 	// Functions
 	private Aggregator<T> agg;
-	private Function<Result<T>, Boolean> sat;
+	private Acceptor<T> acceptor;
 	
-	public EstimateImpl(Aggregator<T> agg, Function<Result<T>, Boolean> sat) {
+	public EstimateImpl(Aggregator<T> agg, Acceptor<T> acceptor) {
 		this.agg = agg;
-		this.sat = sat;
+		this.acceptor = acceptor;
 	}
 
 	/**
@@ -50,11 +49,11 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 					incomplete--;
 					
 					// Caching
-					if (sat != null)
+					if (acceptor != null)
 						value = aggregate();
 					
 					// Check if we are done
-					if ((sealed && incomplete <= 0) || (sat != null && sat.apply(value)))
+					if ((sealed && incomplete <= 0) || (acceptor != null && acceptor.isAcceptable(value)))
 						done();
 				}
 			}

@@ -24,6 +24,7 @@ public class CI<F, T> {
 	private final ImmutableSet<Source<F,T>> sources;
 	private final Aggregator<T> agg;
 	private final Selector<F, T> sel;
+	private Acceptor<T> acceptor;
 
 	/**
 	 * Create a CI using the {@link VoteAggregator} aggregator and
@@ -48,10 +49,11 @@ public class CI<F, T> {
 		this.sel = sel;
 	}
 	
-	public CI(Collection<Source<F, T>> sources, Aggregator<T> agg, Selector<F, T> sel, Acceptor<F, T> acc) {
+	public CI(Collection<Source<F, T>> sources, Aggregator<T> agg, Selector<F, T> sel, Acceptor<T> acceptor) {
 		this.sources = ImmutableSet.copyOf(sources);
 		this.agg = agg;
 		this.sel = sel;
+		this.acceptor = acceptor;
 	}
 	
 	/**
@@ -100,7 +102,7 @@ public class CI<F, T> {
 		// State
 		private final Set<Source<F, T>> consulted;
 		private final Set<ListenableFuture<Opinion<T>>> opinions;
-		private final EstimateImpl<T> estimate = new EstimateImpl<T>(agg, null); // TODO: Add satisfaction function
+		private final EstimateImpl<T> estimate = new EstimateImpl<T>(agg, acceptor);
 
 		private long startedAt = -1;
 		
