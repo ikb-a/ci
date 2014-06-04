@@ -10,8 +10,7 @@ import edu.toronto.cs.se.ci.Result;
 /**
  * This {@link Aggregator} aggregates by counting each opinion as a vote as to
  * what the correct answer is. The value of the result is the opinion with
- * the most votes. Each vote is weighted as the opinion's trust. The quality
- * of the result is the ratio consenting_votes/all_votes.
+ * the most votes. Each vote is weighted as the opinion's trust. 
  * 
  * <p>Opinion values are compared using a HashMap.
  * 
@@ -60,8 +59,27 @@ public class VoteAggregator<T> implements Aggregator<T> {
 			}
 		}
 		
+		double quality = getQuality(bestWeight, totalVotes - bestWeight);
+		
 		// Return the result
-		return new Result<T>(bestValue, bestWeight / totalVotes);
+		return new Result<T>(bestValue, quality);
+	}
+
+	/**
+	 * This function was selected as it satisfies a few different conditions, which are
+	 * useful for a quality function. These properties are as follows:<br>
+	 * 1) When there is no consenting evidence, quality is 0 <br>
+	 * 2) As the amount of evidence increases, at a constant ratio {@code consenting / dissenting}, the quality increases <br>
+	 * 3) As the amount of consenting evidence increases relative to the amount of dissenting evidence, the quality increases <br>
+	 * 4) As the amount of dissenting evidence increases relative to the amount of consenting evidence, the quality decreases <br>
+	 * 5) The value is always in [0, 1), for all valid values of {@code consenting} and {@code dissenting}
+	 * 
+	 * @param consenting The quantity of consenting evidence
+	 * @param dissenting The quantity of dissenting evidence
+	 * @return The quality of the answer
+	 */
+	private double getQuality(double consenting, double dissenting) {
+		return consenting / (consenting + 2 * dissenting + 1);
 	}
 
 }
