@@ -1,5 +1,12 @@
 package edu.toronto.cs.se.ci;
 
+/**
+ * The aggregated result of a CI.
+ * 
+ * @author Michael Layzell
+ *
+ * @param <T>
+ */
 public final class Result<T> {
 	
 	private final T value;

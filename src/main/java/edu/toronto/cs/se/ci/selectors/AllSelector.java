@@ -9,7 +9,7 @@ import edu.toronto.cs.se.ci.Source;
 /**
  * This selector selects every source, and runs them all in parallel.
  * 
- * @author layzellm
+ * @author Michael Layzell
  *
  * @param <F>
  * @param <T>

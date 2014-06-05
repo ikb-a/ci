@@ -9,6 +9,19 @@ import edu.toronto.cs.se.ci.Aggregator;
 import edu.toronto.cs.se.ci.Opinion;
 import edu.toronto.cs.se.ci.Result;
 
+/**
+ * The SetVotingAggregator works on the opinions of sources, each of which approximates the
+ * target set. Each possible element is given weight based on the trust of the sources which
+ * include it in their set. All elements with at least {@code threshold} weight are included
+ * in the resulting set.
+ * 
+ * <p>The quality of the result is the average agreement level of items included in
+ * the resulting set.
+ * 
+ * @author Michael Layzell
+ *
+ * @param <T> Set element type
+ */
 public class SetVotingAggregator<T> implements Aggregator<Set<T>> {
 
 	private double threshold;

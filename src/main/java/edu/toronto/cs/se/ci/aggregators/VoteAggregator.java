@@ -14,7 +14,7 @@ import edu.toronto.cs.se.ci.Result;
  * 
  * <p>Opinion values are compared using a HashMap.
  * 
- * @author layzellm
+ * @author Michael Layzell
  *
  * @param <T>
  */
@@ -49,8 +49,6 @@ public class VoteAggregator<T> implements Aggregator<T> {
 		T bestValue = null;
 		double bestWeight = 0.0;
 		
-		System.out.println(options);
-
 		// Choose the entry with the highest weight
 		for (Map.Entry<T, Double> e : options.entrySet()) {
 			if (e.getValue() > bestWeight) {

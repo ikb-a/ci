@@ -10,6 +10,14 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+/**
+ * The Budget is a representation of the resources available for a CI to query sources with.
+ * A Budget consists of a time budget, a budget of depletables (used by sources), and a set
+ * of flags, which can be used to restrict which sources will be run.
+ * 
+ * @author Michael Layzell
+ *
+ */
 public class Budget {
 	
 	private final long time;

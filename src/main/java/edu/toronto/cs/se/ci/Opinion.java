@@ -1,5 +1,12 @@
 package edu.toronto.cs.se.ci;
 
+/**
+ * A source's opinion.
+ * 
+ * @author Michael Layzell
+ *
+ * @param <T>
+ */
 public final class Opinion<T> {
 
 	private final double trust;

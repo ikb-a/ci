@@ -8,6 +8,13 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+/**
+ * Concrete implementation of {@link Estimate}. Used internally by CI.
+ * 
+ * @author Michael Layzell
+ *
+ * @param <T>
+ */
 public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estimate<T> {
 	
 	private Set<Opinion<T>> opinions = new HashSet<Opinion<T>>();

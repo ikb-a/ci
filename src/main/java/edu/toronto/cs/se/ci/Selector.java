@@ -1,5 +1,13 @@
 package edu.toronto.cs.se.ci;
 
+/**
+ * The Selector is a single-method interface. It is used to determine the next 
+ * source to consult for its opinion.
+ * 
+ * @author Michael Layzell
+ *
+ * @param <T>
+ */
 public interface Selector<F, T> {
 	
 	/**

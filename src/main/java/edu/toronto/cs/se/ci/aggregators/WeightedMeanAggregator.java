@@ -9,7 +9,7 @@ import edu.toronto.cs.se.ci.Result;
  * The weighting of each opinion is its trust. The quality of the result is 
  * {@code 1.0/(stdev + 1)} where stdev is the weighted standard deviation.
  * 
- * @author layzellm
+ * @author Michael Layzell
  *
  */
 public class WeightedMeanAggregator implements Aggregator<Double> {

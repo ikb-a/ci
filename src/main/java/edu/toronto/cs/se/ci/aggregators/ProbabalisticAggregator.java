@@ -9,6 +9,14 @@ import edu.toronto.cs.se.ci.Result;
 import edu.toronto.cs.se.ebt.Evidence;
 import edu.toronto.cs.se.ebt.Trust;
 
+/**
+ * The ProbabalisticAggregator uses ideas from the paper 
+ * "Evidence-Based Trust: A Mathematical Model Geared for Multiagent Systems"
+ * to determine which result to choose, and the quality of the result.
+ * 
+ * @author Michael Layzell
+ *
+ */
 public class ProbabalisticAggregator implements Aggregator<Boolean> {
 	
 	private double epsilon;
@@ -45,6 +53,7 @@ public class ProbabalisticAggregator implements Aggregator<Boolean> {
 	/**
 	 * Merges the given trusts into a single trust. This is done by converting them into evidence space,
 	 * summing the evidences, and then converting them back into trust space again.
+	 * 
 	 * @param trusts The set of trusts
 	 * @return The merged trust
 	 */

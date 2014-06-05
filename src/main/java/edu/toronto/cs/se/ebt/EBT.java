@@ -5,14 +5,36 @@ import org.apache.commons.math.MaxIterationsExceededException;
 import org.apache.commons.math.analysis.UnivariateRealFunction;
 import org.apache.commons.math.analysis.integration.TrapezoidIntegrator;
 
+/**
+ * Evidence Based Trust utility functions
+ * 
+ * <p>Important functions used by {@code Evidence} and {@code Trust} for conversions between the
+ * Trust and Evidence spaces. Based on concepts from [Wang and Singh, 2010].
+ * 
+ * @author Michael Layzell
+ *
+ */
 public final class EBT {
 	
 	private EBT() {}
 	
+	/**
+	 * Equivalent to {@code confidence(e.getConsenting(), e.getDissenting());}
+	 * 
+	 * @param e value in the Evidence space
+	 * @return confidence
+	 */
 	public static double confidence(Evidence e) {
 		return confidence(e.getConsenting(), e.getDissenting());
 	}
 
+	/**
+	 * Confidence function {@code c(r, s)}
+	 * 
+	 * @param r consenting evidence
+	 * @param s dissenting evidence
+	 * @return confidence
+	 */
 	public static double confidence(final double r, final double s) {
 		try {
 			TrapezoidIntegrator integrator = new TrapezoidIntegrator();

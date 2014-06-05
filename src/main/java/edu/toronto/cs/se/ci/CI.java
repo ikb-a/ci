@@ -19,6 +19,15 @@ import com.google.common.util.concurrent.MoreExecutors;
 import edu.toronto.cs.se.ci.aggregators.VoteAggregator;
 import edu.toronto.cs.se.ci.selectors.AllSelector;
 
+/**
+ * A Contributional Implementation (CI) of a function. Queries a set of sources, and aggregates
+ * their opinions to get answers to otherwise unanswerable questions.
+ * 
+ * @author Michael Layzell
+ *
+ * @param <F> Input type
+ * @param <T> Result type
+ */
 public class CI<F, T> {
 	
 	private final ImmutableSet<Source<F,T>> sources;

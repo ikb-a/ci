@@ -2,6 +2,14 @@ package edu.toronto.cs.se.ci;
 
 import java.util.concurrent.Callable;
 
+/**
+ * A source queried by a CI for its opinion.
+ * 
+ * @author Michael Layzell
+ *
+ * @param <F>
+ * @param <T>
+ */
 public interface Source<F, T> {
 	
 	/**

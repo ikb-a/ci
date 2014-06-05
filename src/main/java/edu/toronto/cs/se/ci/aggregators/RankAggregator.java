@@ -4,6 +4,15 @@ import edu.toronto.cs.se.ci.Aggregator;
 import edu.toronto.cs.se.ci.Opinion;
 import edu.toronto.cs.se.ci.Result;
 
+/**
+ * This Aggregator selects the single opinion with the highest trust value.
+ * 
+ * <p>The quality of the result is this trust value.
+ * 
+ * @author Michael Layzell
+ *
+ * @param <T>
+ */
 public class RankAggregator<T> implements Aggregator<T> {
 
 	@Override

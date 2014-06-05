@@ -9,6 +9,14 @@ import edu.toronto.cs.se.ci.Result;
 import edu.toronto.cs.se.ebt.Evidence;
 import edu.toronto.cs.se.ebt.Trust;
 
+/**
+ * This {@link Aggregator} performs voting to determine the opinion to select,
+ * then the quality of the answer is determined by using EBT.
+ * 
+ * @author Michael Layzell
+ *
+ * @param <T> The result type
+ */
 public class VoteProbAggregator<T> implements Aggregator<T> {
 
 	@Override

@@ -7,6 +7,14 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.ImmutableMap;
 
+/**
+ * A Cost is a representation of the resource cost of querying a source.
+ * A Cost consists of a time cost, depletable costs, and a set of flags requirements,
+ * which can be used to restrict which sources will be run.
+ * 
+ * @author Michael Layzell
+ *
+ */
 public class Cost {
 	
 	public enum FlagStatus {

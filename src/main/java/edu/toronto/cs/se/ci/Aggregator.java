@@ -1,5 +1,13 @@
 package edu.toronto.cs.se.ci;
 
+/**
+ * The aggregator is a single-method interface. It is used to combine the opinions
+ * returned by sources into a single unified result.
+ * 
+ * @author Michael Layzell
+ *
+ * @param <T>
+ */
 public interface Aggregator<T> {
 
 	/**
