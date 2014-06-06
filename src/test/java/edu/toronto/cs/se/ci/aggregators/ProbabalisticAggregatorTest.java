@@ -23,8 +23,8 @@ public class ProbabalisticAggregatorTest extends TestCase {
 		assertTrue(Math.abs(result - expected) < error);
 	}
 
-	public void testAggregator() {
-		ProbabalisticAggregator aggregator = new ProbabalisticAggregator(2, 1, 1000);
+	public void testBoolean() {
+		ProbabalisticAggregator<Boolean> aggregator = new ProbabalisticAggregator<>(2, 1, 1000);
 		
 		List<Opinion<Boolean>> opinions = new ArrayList<>();
 		opinions.add(new Opinion<Boolean>(true, 0.6));
@@ -34,6 +34,21 @@ public class ProbabalisticAggregatorTest extends TestCase {
 		Result<Boolean> result = aggregator.aggregate(opinions);
 		assertEquals(result.getValue(), Boolean.FALSE);
 		assertApprox(result.getQuality(), 0.4532, 0.0001);
+	}
+	
+	public void testNumbers() {
+		ProbabalisticAggregator<Integer> aggregator = new ProbabalisticAggregator<>(-1, 1, 1000);
+		
+		List<Opinion<Integer>> opinions = new ArrayList<>();
+		opinions.add(new Opinion<Integer>(3, 0.4));
+		opinions.add(new Opinion<Integer>(3, 0.2));
+		opinions.add(new Opinion<Integer>(6, 0.7));
+		opinions.add(new Opinion<Integer>(5, 0.4));
+		opinions.add(new Opinion<Integer>(5, 0.3));
+		
+		Result<Integer> result = aggregator.aggregate(opinions);
+		assertEquals(result.getValue(), new Integer(6));
+		assertApprox(result.getQuality(), 0.2796, 0.0001);
 	}
 
 }

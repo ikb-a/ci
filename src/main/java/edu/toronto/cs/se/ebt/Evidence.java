@@ -72,6 +72,13 @@ public final class Evidence {
 		consenting = r;
 		dissenting = s;
 	}
+
+	/**
+	 * @return This value, in the Trust space.
+	 */
+	public Trust toTrust() {
+		return new Trust(this);
+	}
 	
 	public double getConsenting() {
 		return consenting;

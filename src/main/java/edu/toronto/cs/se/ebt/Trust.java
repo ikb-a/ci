@@ -34,6 +34,13 @@ public final class Trust {
 		this.disbelief = (1 - alpha) * c;
 	}
 	
+	/**
+	 * @return This value, in the Evidence space.
+	 */
+	public Evidence toEvidence() {
+		return new Evidence(this);
+	}
+	
 	public double getBelief() {
 		return belief;
 	}
