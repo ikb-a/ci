@@ -1,6 +1,6 @@
 package edu.toronto.cs.se.ci;
 
-import java.util.concurrent.Future;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * An estimate is a representation of the CI's current estimate of a result. Like normal
@@ -12,7 +12,7 @@ import java.util.concurrent.Future;
  *
  * @param <T>
  */
-public interface Estimate<T> extends Future<Result<T>> {
+public interface Estimate<T> extends ListenableFuture<Result<T>> {
 	
 	/**
 	 * Gets the current estimate. Will not block.
