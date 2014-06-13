@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -261,8 +262,10 @@ public class CI<F, T> {
 			Source<F, T> next;
 			for (;;) {
 				// Get the next source (this might block)
-				next = sel.getNextSource(this);
-				if (next == null)
+				Optional<Source<F, T>> maybeNext = sel.getNextSource(this);
+				if (maybeNext.isPresent())
+					next = maybeNext.get();
+				else
 					break;
 				
 				// Record that the source has been consulted

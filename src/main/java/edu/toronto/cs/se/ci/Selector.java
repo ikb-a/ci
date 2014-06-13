@@ -1,5 +1,7 @@
 package edu.toronto.cs.se.ci;
 
+import com.google.common.base.Optional;
+
 /**
  * The Selector is a single-method interface. It is used to determine the next 
  * source to consult for its opinion.
@@ -18,6 +20,6 @@ public interface Selector<F, T> {
 	 * @param invocation The current invocation of the CI
 	 * @return The next source to consult, or {@code null}
 	 */
-	public Source<F, T> getNextSource(CI<F, T>.Invocation invocation);
+	public Optional<Source<F, T>> getNextSource(CI<F, T>.Invocation invocation);
 
 }

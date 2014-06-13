@@ -1,5 +1,7 @@
 package edu.toronto.cs.se.ci.selectors;
 
+import com.google.common.base.Optional;
+
 import edu.toronto.cs.se.ci.CI;
 import edu.toronto.cs.se.ci.Selector;
 import edu.toronto.cs.se.ci.Source;
@@ -15,17 +17,17 @@ import edu.toronto.cs.se.ci.Source;
 public class AllSelector<F, T> implements Selector<F, T> {
 
 	@Override
-	public Source<F, T> getNextSource(CI<F, T>.Invocation invocation) {
+	public Optional<Source<F, T>> getNextSource(CI<F, T>.Invocation invocation) {
 		try {
 			for (Source<F, T> source : invocation.getRemaining()) {
 				if (invocation.withinBudget(source))
-					return source;
+					return Optional.of(source);
 			}
 		} catch (Exception e) {
-			return null;
+			return Optional.absent();
 		}
 		
-		return null;
+		return Optional.absent();
 	}
 
 }

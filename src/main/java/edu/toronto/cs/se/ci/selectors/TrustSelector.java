@@ -13,21 +13,21 @@ import edu.toronto.cs.se.ci.Source;
 public class TrustSelector<F, T> implements Selector<F, T> {
 
 	@Override
-	public Source<F, T> getNextSource(CI<F, T>.Invocation invocation) {
+	public Optional<Source<F, T>> getNextSource(CI<F, T>.Invocation invocation) {
 		List<Source<F, T>> sources = new ArrayList<>(invocation.getRemaining());
 		sources.sort(new TrustComparator<F>(invocation.getArgs()));
 		
 		try {
 			for (Source<F, T> source : sources) {
 				if (invocation.withinBudget(source)) {
-					return source;
+					return Optional.of(source);
 				}
 			}
 		} catch (Exception e) {
-			return null;
+			return Optional.absent();
 		}
 		
-		return null;
+		return Optional.absent();
 	}
 	
 	public static class TrustComparator<F> implements Comparator<Source<F, ?>> {
