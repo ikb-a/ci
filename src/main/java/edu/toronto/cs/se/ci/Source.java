@@ -2,6 +2,8 @@ package edu.toronto.cs.se.ci;
 
 import java.util.concurrent.Callable;
 
+import com.google.common.base.Optional;
+
 /**
  * A source queried by a CI for its opinion.
  * 
@@ -52,5 +54,15 @@ public interface Source<F, T> {
 		}
 
 	}
+
+	/**
+	 * Gets the trust in the source. This can vary based on the response which
+	 * the source has provided.
+	 * 
+	 * @param value The response which the source provided (the value returned by getResponse)
+	 * @param args The arguments passed to the source
+	 * @return A double representing the trust in the response
+	 */
+	public abstract double getTrust(F args, Optional<T> value);
 	
 }

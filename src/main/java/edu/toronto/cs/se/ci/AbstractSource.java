@@ -1,5 +1,7 @@
 package edu.toronto.cs.se.ci;
 
+import com.google.common.base.Optional;
+
 /**
  * A source object which splits the acts of getting a response ({@code getResponse})
  * from the act of getting the trust ({@code getTrust}).
@@ -10,16 +12,6 @@ package edu.toronto.cs.se.ci;
  * @param <T> Output type (to)
  */
 public abstract class AbstractSource<F, T> implements Source<F, T> {
-	
-	/**
-	 * Gets the trust in the source. This can vary based on the response which
-	 * the source has provided.
-	 * 
-	 * @param response The response which the source provided (the value returned by getResponse)
-	 * @param args The arguments passed to the source
-	 * @return A double representing the trust in the response
-	 */
-	public abstract double getTrust(T response, F input);
 	
 	/**
 	 * Queries the source, getting its response.
@@ -36,7 +28,7 @@ public abstract class AbstractSource<F, T> implements Source<F, T> {
 	@Override
 	public Opinion<T> getOpinion(F input) throws UnknownException {
 		T response = getResponse(input);
-		double trust = getTrust(response, input);
+		double trust = getTrust(input, Optional.of(response));
 		
 		return new Opinion<T>(response, trust);
 	}
