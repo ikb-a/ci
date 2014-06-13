@@ -4,10 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.toronto.cs.se.ci.Aggregator;
-import edu.toronto.cs.se.ci.Opinion;
-import edu.toronto.cs.se.ci.Result;
-import edu.toronto.cs.se.ebt.Evidence;
-import edu.toronto.cs.se.ebt.Trust;
+import edu.toronto.cs.se.ci.data.Evidence;
+import edu.toronto.cs.se.ci.data.Opinion;
+import edu.toronto.cs.se.ci.data.Result;
+import edu.toronto.cs.se.ci.data.Trust;
 
 /**
  * The ProbabalisticAggregator uses ideas from the paper 

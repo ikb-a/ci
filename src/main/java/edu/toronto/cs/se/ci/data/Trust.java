@@ -1,4 +1,5 @@
-package edu.toronto.cs.se.ebt;
+package edu.toronto.cs.se.ci.data;
+
 
 /**
  * A representation of the Trust triple <b, d, u> from [Wang and Singh, 2010].
@@ -36,7 +37,7 @@ public final class Trust {
 	 * @param evidence
 	 */
 	public Trust(Evidence evidence) {
-		double c = EBT.confidence(evidence);
+		double c = evidence.getConfidence();
 		double alpha = evidence.getConsenting() / evidence.getTotal();
 
 		this.belief = alpha * c;

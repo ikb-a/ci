@@ -1,6 +1,5 @@
-package edu.toronto.cs.se.ci;
+package edu.toronto.cs.se.ci.data;
 
-import edu.toronto.cs.se.ebt.Trust;
 
 /**
  * A source's opinion.

@@ -1,8 +1,11 @@
-package edu.toronto.cs.se.ci;
+package edu.toronto.cs.se.ci.utils;
 
 import com.google.common.base.Optional;
 
-import edu.toronto.cs.se.ebt.Trust;
+import edu.toronto.cs.se.ci.Source;
+import edu.toronto.cs.se.ci.UnknownException;
+import edu.toronto.cs.se.ci.data.Opinion;
+import edu.toronto.cs.se.ci.data.Trust;
 
 /**
  * A source object which splits the acts of getting a response ({@code getResponse})

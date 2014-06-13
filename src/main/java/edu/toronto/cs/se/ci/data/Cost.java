@@ -1,4 +1,4 @@
-package edu.toronto.cs.se.ci;
+package edu.toronto.cs.se.ci.data;
 
 import java.math.BigDecimal;
 import java.util.HashMap;

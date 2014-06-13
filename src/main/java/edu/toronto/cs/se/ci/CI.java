@@ -17,6 +17,10 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import edu.toronto.cs.se.ci.aggregators.VoteAggregator;
+import edu.toronto.cs.se.ci.data.Budget;
+import edu.toronto.cs.se.ci.data.Cost;
+import edu.toronto.cs.se.ci.data.Opinion;
+import edu.toronto.cs.se.ci.data.Result;
 import edu.toronto.cs.se.ci.selectors.AllSelector;
 
 /**

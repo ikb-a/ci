@@ -1,5 +1,7 @@
 package edu.toronto.cs.se.ci;
 
+import edu.toronto.cs.se.ci.data.Result;
+
 /**
  * The acceptor is a single-method interface. It is used to determine whether to
  * continue executing sources for a CI, or if the current answer is acceptable.

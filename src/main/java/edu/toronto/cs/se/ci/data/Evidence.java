@@ -1,4 +1,9 @@
-package edu.toronto.cs.se.ebt;
+package edu.toronto.cs.se.ci.data;
+
+import org.apache.commons.math.FunctionEvaluationException;
+import org.apache.commons.math.MaxIterationsExceededException;
+import org.apache.commons.math.analysis.UnivariateRealFunction;
+import org.apache.commons.math.analysis.integration.TrapezoidIntegrator;
 
 /**
  * A representation of the Evidence triple <r, s, t> from [Wang and Singh, 2010].
@@ -18,7 +23,7 @@ public final class Evidence {
 	 */
 	public static final double T_MAX = 1000;
 	
-	private final double consenting, dissenting;
+	private final double r, s;
 	
 	/**
 	 * Create a value in the Evidence space. Total is inferred.
@@ -27,8 +32,8 @@ public final class Evidence {
 	 * @param dissenting
 	 */
 	public Evidence(double consenting, double dissenting) {
-		this.consenting = consenting;
-		this.dissenting = dissenting;
+		this.r = consenting;
+		this.s = dissenting;
 	}
 	
 	/**
@@ -63,14 +68,14 @@ public final class Evidence {
 			r = alpha * t;
 			s = t - r;
 
-			if (EBT.confidence(r, s) < conf)
+			if (new Evidence(r, s).getConfidence() < conf)
 				t1 = t;
 			else
 				t2 = t;
 		}
 		
-		consenting = r;
-		dissenting = s;
+		this.r = r;
+		this.s = s;
 	}
 
 	/**
@@ -81,15 +86,53 @@ public final class Evidence {
 	}
 	
 	public double getConsenting() {
-		return consenting;
+		return r;
 	}
 	
 	public double getDissenting() {
-		return dissenting;
+		return s;
 	}
 	
 	public double getTotal() {
-		return consenting + dissenting;
+		return r + s;
 	}
+
+	public double getConfidence() {
+		try {
+			TrapezoidIntegrator integrator = new TrapezoidIntegrator();
+
+			UnivariateRealFunction p = new UnivariateRealFunction() {
+
+				@Override
+				public double value(double x) throws FunctionEvaluationException {
+					return Math.pow(x, r) * Math.pow(1 - x, s);
+				}
+				
+			};
+
+			final double intp = integrator.integrate(p, 0, 1);
+			
+			// If our initial integration returns a value of 0, we can't compute anything
+			// more. We assume that there is sufficient evidence that the answer is certain
+			if (intp == 0)
+				return 1;
+			
+			UnivariateRealFunction q = new UnivariateRealFunction() {
+
+				@Override
+				public double value(double x) throws FunctionEvaluationException {
+					return Math.abs((Math.pow(x, r) * Math.pow(1 - x, s)) / intp - 1);
+				}
+				
+			};
+			
+			return integrator.integrate(q, 0, 1) / 2;
+		} catch (MaxIterationsExceededException | FunctionEvaluationException
+				| IllegalArgumentException e) {
+			// This shouldn't happen, and I don't feel like declaring the throws right now.
+			throw new Error(e);
+		}
+	}
+
 
 }

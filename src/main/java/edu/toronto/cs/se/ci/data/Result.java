@@ -1,4 +1,4 @@
-package edu.toronto.cs.se.ci;
+package edu.toronto.cs.se.ci.data;
 
 /**
  * The aggregated result of a CI.

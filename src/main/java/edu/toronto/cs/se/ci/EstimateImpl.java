@@ -8,6 +8,9 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import edu.toronto.cs.se.ci.data.Opinion;
+import edu.toronto.cs.se.ci.data.Result;
+
 /**
  * Concrete implementation of {@link Estimate}. Used internally by CI.
  * 

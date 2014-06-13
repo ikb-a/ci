@@ -3,8 +3,8 @@ package edu.toronto.cs.se.ci.aggregators;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.toronto.cs.se.ci.Opinion;
-import edu.toronto.cs.se.ci.Result;
+import edu.toronto.cs.se.ci.data.Opinion;
+import edu.toronto.cs.se.ci.data.Result;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;

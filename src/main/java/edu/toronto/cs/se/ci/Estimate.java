@@ -2,6 +2,8 @@ package edu.toronto.cs.se.ci;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import edu.toronto.cs.se.ci.data.Result;
+
 /**
  * An estimate is a representation of the CI's current estimate of a result. Like normal
  * Futures, the final answer can be retrieved from it (though it may block until the CI

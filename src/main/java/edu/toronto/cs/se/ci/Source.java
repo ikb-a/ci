@@ -4,7 +4,9 @@ import java.util.concurrent.Callable;
 
 import com.google.common.base.Optional;
 
-import edu.toronto.cs.se.ebt.Trust;
+import edu.toronto.cs.se.ci.data.Cost;
+import edu.toronto.cs.se.ci.data.Opinion;
+import edu.toronto.cs.se.ci.data.Trust;
 
 /**
  * A source queried by a CI for its opinion.
