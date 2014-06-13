@@ -4,6 +4,8 @@ import java.util.concurrent.Callable;
 
 import com.google.common.base.Optional;
 
+import edu.toronto.cs.se.ebt.Trust;
+
 /**
  * A source queried by a CI for its opinion.
  * 
@@ -63,6 +65,6 @@ public interface Source<F, T> {
 	 * @param args The arguments passed to the source
 	 * @return A double representing the trust in the response
 	 */
-	public abstract double getTrust(F args, Optional<T> value);
+	public abstract Trust getTrust(F args, Optional<T> value);
 	
 }

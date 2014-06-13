@@ -24,7 +24,7 @@ public class ProbabalisticAggregatorTest extends TestCase {
 	}
 
 	public void testBoolean() {
-		ProbabalisticAggregator<Boolean> aggregator = new ProbabalisticAggregator<>(2, 1, 1000);
+		ProbabalisticAggregator<Boolean> aggregator = new ProbabalisticAggregator<>(2);
 		
 		List<Opinion<Boolean>> opinions = new ArrayList<>();
 		opinions.add(new Opinion<Boolean>(true, 0.6));
@@ -37,7 +37,7 @@ public class ProbabalisticAggregatorTest extends TestCase {
 	}
 	
 	public void testNumbers() {
-		ProbabalisticAggregator<Integer> aggregator = new ProbabalisticAggregator<>(-1, 1, 1000);
+		ProbabalisticAggregator<Integer> aggregator = new ProbabalisticAggregator<>(-1);
 		
 		List<Opinion<Integer>> opinions = new ArrayList<>();
 		opinions.add(new Opinion<Integer>(3, 0.4));

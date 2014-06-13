@@ -11,6 +11,15 @@ public final class Trust {
 	private final double belief, disbelief;
 	
 	/**
+	 * Create a trust value, based only on belief
+	 * 
+	 * @param belief
+	 */
+	public Trust(double belief) {
+		this(belief, 0);
+	}
+
+	/**
 	 * Create a value within the Trust space. Uncertainty is inferred.
 	 * 
 	 * @param belief

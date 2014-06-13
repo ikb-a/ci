@@ -26,7 +26,7 @@ public class VoteProbAggregator<T> implements Aggregator<T> {
 		
 		for (Opinion<T> opinion : opinions) {
 			T value = opinion.getValue();
-			double trust = opinion.getTrust();
+			double trust = opinion.getBelief();
 			options.put(value, options.getOrDefault(value, 0.0) + trust);
 			total += trust;
 		}

@@ -42,7 +42,7 @@ public class SetVotingAggregator<T> implements Aggregator<Set<T>> {
 		
 		// Each source votes for the items in its set
 		for (Opinion<Set<T>> opinion : opinions) {
-			double trust = opinion.getTrust();
+			double trust = opinion.getBelief();
 
 			for (T item : opinion.getValue()) {
 				double weight = votes.getOrDefault(item, 0.0) + trust;

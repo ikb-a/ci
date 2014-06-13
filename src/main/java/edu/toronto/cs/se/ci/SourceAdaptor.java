@@ -2,6 +2,8 @@ package edu.toronto.cs.se.ci;
 
 import com.google.common.base.Optional;
 
+import edu.toronto.cs.se.ebt.Trust;
+
 /**
  * This source wraps another source, transforming its arguments, results, 
  * and trust before it is returned to the CI for aggregation.
@@ -49,7 +51,7 @@ public abstract class SourceAdaptor<F, T, OF, OT> implements Source<F, T> {
 	 * @param opinion The original opinion
 	 * @return The new trust value
 	 */
-	public abstract double transformTrust(double trust, Optional<T> result, Optional<OT> originalResult);
+	public abstract Trust transformTrust(Trust trust, Optional<T> result, Optional<OT> originalResult);
 
 	/**
 	 * Transforms an opinion provided by the adaptee
@@ -96,8 +98,8 @@ public abstract class SourceAdaptor<F, T, OF, OT> implements Source<F, T> {
 	 * @see edu.toronto.cs.se.ci.Source#getTrust(java.lang.Object, com.google.common.base.Optional)
 	 */
 	@Override
-	public double getTrust(F args, Optional<T> result) {
-		double trust = adaptee.getTrust(transformArgs(args), Optional.<OT>absent());
+	public Trust getTrust(F args, Optional<T> result) {
+		Trust trust = adaptee.getTrust(transformArgs(args), Optional.<OT>absent());
 		return transformTrust(trust, result, Optional.<OT>absent());
 	}
 

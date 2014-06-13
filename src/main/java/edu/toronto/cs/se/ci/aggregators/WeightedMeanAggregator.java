@@ -21,7 +21,7 @@ public class WeightedMeanAggregator implements Aggregator<Double> {
 		double totalWeight = 0;
 
 		for (Opinion<Double> opinion : opinions) {
-			double trust = opinion.getTrust();
+			double trust = opinion.getBelief();
 			sum += opinion.getValue() * trust;
 			totalWeight += trust;
 		}
@@ -32,7 +32,7 @@ public class WeightedMeanAggregator implements Aggregator<Double> {
 		double squareDiffSum = 0;
 		
 		for (Opinion<Double> opinion : opinions) {
-			squareDiffSum += Math.pow(opinion.getValue() - mean, 2) * opinion.getTrust();
+			squareDiffSum += Math.pow(opinion.getValue() - mean, 2) * opinion.getBelief();
 		}
 		
 		double stdev = Math.sqrt(squareDiffSum / totalWeight);

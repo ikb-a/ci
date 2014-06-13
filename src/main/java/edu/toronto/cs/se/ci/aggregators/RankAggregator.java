@@ -21,7 +21,7 @@ public class RankAggregator<T> implements Aggregator<T> {
 		Opinion<T> bestOpinion = null;
 		
 		for (Opinion<T> opinion : opinions) {
-			double trust = opinion.getTrust();
+			double trust = opinion.getBelief();
 			if (trust > bestTrust) {
 				bestOpinion = opinion;
 				bestTrust = trust;

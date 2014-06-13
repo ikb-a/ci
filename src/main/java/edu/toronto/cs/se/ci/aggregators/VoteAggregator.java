@@ -31,7 +31,7 @@ public class VoteAggregator<T> implements Aggregator<T> {
 		for (Opinion<T> opinion : opinions) {
 			// Get values from the opinion
 			T value = opinion.getValue();
-			double trust = opinion.getTrust();
+			double trust = opinion.getBelief();
 
 			// Get the current vote count
 			Double votes = options.get(value);

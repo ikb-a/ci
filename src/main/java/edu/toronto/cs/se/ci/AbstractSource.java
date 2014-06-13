@@ -2,6 +2,8 @@ package edu.toronto.cs.se.ci;
 
 import com.google.common.base.Optional;
 
+import edu.toronto.cs.se.ebt.Trust;
+
 /**
  * A source object which splits the acts of getting a response ({@code getResponse})
  * from the act of getting the trust ({@code getTrust}).
@@ -28,7 +30,7 @@ public abstract class AbstractSource<F, T> implements Source<F, T> {
 	@Override
 	public Opinion<T> getOpinion(F input) throws UnknownException {
 		T response = getResponse(input);
-		double trust = getTrust(input, Optional.of(response));
+		Trust trust = getTrust(input, Optional.of(response));
 		
 		return new Opinion<T>(response, trust);
 	}

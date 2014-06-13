@@ -21,7 +21,11 @@ public class ProbabalisticAggregator<T> implements Aggregator<T> {
 	
 	private int nOptions;
 	
-	public ProbabalisticAggregator(int nOptions, double epsilon, double tMax) {
+	public ProbabalisticAggregator() {
+		this(-1);
+	}
+
+	public ProbabalisticAggregator(int nOptions) {
 		this.nOptions = nOptions;
 	}
 
@@ -57,7 +61,7 @@ public class ProbabalisticAggregator<T> implements Aggregator<T> {
 		Map<T, Evidence> options = new HashMap<>();
 		Evidence memo = new Evidence(0, 0);
 		for (Opinion<T> opinion : opinions) {
-			memo = addEvidence(options, opinion.getValue(), new Evidence(new Trust(opinion.getTrust(), 0)), memo);
+			memo = addEvidence(options, opinion.getValue(), new Evidence(opinion.getTrust()), memo);
 		}
 
 		// Convert each evidence into trust space
