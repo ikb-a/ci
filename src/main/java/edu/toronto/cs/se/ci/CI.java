@@ -113,7 +113,7 @@ public class CI<F, T> {
 		private final ListeningExecutorService pool;
 		
 		// State
-		private final Set<Source<F, T>> consulted;
+		private final Set<Source<F, T>> remaining;
 		private final Set<ListenableFuture<Opinion<T>>> opinions;
 		private final EstimateImpl<T> estimate = new EstimateImpl<T>(agg, acceptor);
 
@@ -131,7 +131,7 @@ public class CI<F, T> {
 			this.budget = budget;
 			this.pool = pool;
 			
-			consulted = new HashSet<Source<F, T>>();
+			remaining = new HashSet<>(sources);
 			opinions = new HashSet<ListenableFuture<Opinion<T>>>();
 			
 			// Run the invocation, ensuring that the estimate is sealed when it finishes
@@ -193,12 +193,18 @@ public class CI<F, T> {
 		public ImmutableSet<Source<F, T>> getSources() {
 			return sources;
 		}
+		
+		public Set<Source<F, T>> getRemaining() {
+			return Collections.unmodifiableSet(remaining);
+		}
 
 		/**
 		 * @return The Sources which have already been consulted in this Invocation of the CI
 		 */
 		public Set<Source<F, T>> getConsulted() {
-			return Collections.unmodifiableSet(consulted);
+			Set<Source<F, T>> set = new HashSet<>(sources);
+			set.removeAll(remaining);
+			return Collections.unmodifiableSet(set);
 		}
 		
 		/**
@@ -260,7 +266,7 @@ public class CI<F, T> {
 					break;
 				
 				// Record that the source has been consulted
-				consulted.add(next);
+				remaining.remove(next);
 				
 				// Exhaust budget
 				Cost cost = next.getCost(args);
