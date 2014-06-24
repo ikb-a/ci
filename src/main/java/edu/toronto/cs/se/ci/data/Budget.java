@@ -65,7 +65,7 @@ public class Budget {
 	 * The BudgetBuilder allows easy creation of a Budget object. Simply mutate the
 	 * BudgetBuilder, and then call {@code build} to create the budget object.
 	 * 
-	 * @author layzellm
+	 * @author Michael Layzell
 	 *
 	 */
 	public static class BudgetBuilder {

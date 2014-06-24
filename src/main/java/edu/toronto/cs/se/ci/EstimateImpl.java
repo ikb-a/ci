@@ -1,8 +1,12 @@
 package edu.toronto.cs.se.ci;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
+import com.google.common.base.Optional;
 import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -28,6 +32,9 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 	// Functions
 	private Aggregator<T> agg;
 	private Acceptor<T> acceptor;
+	
+	// Listeners
+	private List<Listener> listeners = new ArrayList<>();
 	
 	public EstimateImpl(Aggregator<T> agg, Acceptor<T> acceptor) {
 		this.agg = agg;
@@ -61,6 +68,15 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 					// Caching
 					if (acceptor != null)
 						value = aggregate();
+					
+					for (Listener listener : listeners) {
+						try {
+							listener.execute();
+						} catch (Exception e) {
+							System.err.print("Exception while executing listener: ");
+							e.printStackTrace();
+						}
+					}
 					
 					// Check if we are done
 					if ((sealed && incomplete <= 0) || (acceptor != null && acceptor.isAcceptable(value)))
@@ -113,11 +129,11 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 	}
 
 	@Override
-	public Result<T> getCurrent() {
+	public Optional<Result<T>> getCurrent() {
 		if (value == null)
-			return aggregate();
+			return Optional.fromNullable(aggregate());
 		else
-			return value;
+			return Optional.of(value);
 	}
 	
 	/**
@@ -129,7 +145,7 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 		if (isDone())
 			return;
 		
-		value = getCurrent();
+		value = getCurrent().orNull();
 		if (value == null)
 			setException(new Error("Unknown")); // TODO: More meaningful error? Should it throw?
 		else
@@ -142,7 +158,13 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 	 * @return The aggregate opinion based on done opinions
 	 */
 	private Result<T> aggregate() {
-		return agg.aggregate(opinions);
+		try {
+			return agg.aggregate(opinions);
+		} catch (Exception e) {
+			// There was a problem aggregating
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 	/*
@@ -154,6 +176,30 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 		// When the task has been interrupted, we need to seal the estimate, such that
 		// no more sources can be added to the Estimate.
 		seal();
+	}
+
+	@Override
+	public synchronized void addPartialListener(Runnable listener, Executor executor) {
+		listeners.add(new Listener(listener, executor));
+	}
+	
+	private class Listener {
+		
+		private final Runnable listener;
+		private final Executor executor;
+		
+		public Listener(Runnable listener, Executor executor) {
+			if (listener == null || executor == null)
+				throw new NullPointerException("Runnable/Executor not null.");
+
+			this.listener = listener;
+			this.executor = executor;
+		}
+		
+		public void execute() {
+			executor.execute(listener);
+		}
+
 	}
 
 }

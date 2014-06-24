@@ -1,5 +1,8 @@
 package edu.toronto.cs.se.ci;
 
+import java.util.concurrent.Executor;
+
+import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import edu.toronto.cs.se.ci.data.Result;
@@ -20,6 +23,18 @@ public interface Estimate<T> extends ListenableFuture<Result<T>> {
 	 * Gets the current estimate. Will not block.
 	 * @return Current best estimate
 	 */
-	public Result<T> getCurrent();
+	public Optional<Result<T>> getCurrent();
+	
+
+	/**
+	 * Adds a partial listener.
+	 * 
+	 * @param listener the listener to run when a new partial estimate is avaliable
+	 * @param executor the executor to run the listener in
+	 * @throws NullPointerException if the executor or listener was null
+	 * @throws RejectedExecutionException if we tried to execute the listener
+	 *         immediately but the executor rejected it.
+	 */
+	public void addPartialListener(Runnable listener, Executor executor);
 
 }
