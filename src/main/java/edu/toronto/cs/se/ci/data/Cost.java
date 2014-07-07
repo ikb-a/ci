@@ -71,7 +71,9 @@ public class Cost {
 	 * @return {@code true} if the cost fits within the budget, {@code false} otherwise
 	 */
 	public boolean withinBudget(Budget budget, long elapsed, TimeUnit unit) {
-		if (budget.getTime(TimeUnit.NANOSECONDS) < time + unit.toNanos(elapsed))
+		long nanos = budget.getTime(TimeUnit.NANOSECONDS);
+		
+		if (nanos > 0 && nanos < time + unit.toNanos(elapsed))
 			return false;
 		
 		for (Map.Entry<String, BigDecimal> depletable : depletables.entrySet()) {
