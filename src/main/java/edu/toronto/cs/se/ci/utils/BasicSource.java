@@ -13,10 +13,10 @@ import edu.toronto.cs.se.ci.data.Trust;
  * 
  * @author Michael Layzell
  *
- * @param <F> Input type (from)
+ * @param <A> Input type (from)
  * @param <T> Output type (to)
  */
-public abstract class AbstractSource<F, T> implements Source<F, T> {
+public abstract class BasicSource<A, T> extends Source<A, T> {
 	
 	/**
 	 * Queries the source, getting its response.
@@ -24,14 +24,14 @@ public abstract class AbstractSource<F, T> implements Source<F, T> {
 	 * @param args The arguments passed to the source
 	 * @return The value of the source's opinion.
 	 */
-	public abstract T getResponse(F input) throws UnknownException;
+	public abstract T getResponse(A input) throws UnknownException;
 	
 	/*
 	 * (non-Javadoc)
 	 * @see edu.toronto.cs.se.ci.Source#getOpinion(java.lang.Object)
 	 */
 	@Override
-	public Opinion<T> getOpinion(F input) throws UnknownException {
+	public Opinion<T> getOpinion(A input) throws UnknownException {
 		T response = getResponse(input);
 		Trust trust = getTrust(input, Optional.of(response));
 		

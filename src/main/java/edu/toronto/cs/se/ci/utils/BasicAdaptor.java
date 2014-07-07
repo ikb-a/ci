@@ -2,6 +2,7 @@ package edu.toronto.cs.se.ci.utils;
 
 import com.google.common.base.Optional;
 
+import edu.toronto.cs.se.ci.Adaptor;
 import edu.toronto.cs.se.ci.Source;
 import edu.toronto.cs.se.ci.UnknownException;
 import edu.toronto.cs.se.ci.data.Cost;
@@ -19,18 +20,7 @@ import edu.toronto.cs.se.ci.data.Trust;
  * @param <OF> Original input type
  * @param <OT> Original output type
  */
-public abstract class SourceAdaptor<F, T, OF, OT> implements Source<F, T> {
-	
-	private Source<OF, OT> adaptee;
-
-	/**
-	 * Create an AdaptorSource, setting the adaptee.
-	 * 
-	 * @param adaptee The source to transform the inputs/outputs of
-	 */
-	public SourceAdaptor(Source<OF, OT> adaptee) {
-		this.adaptee = adaptee;
-	}
+public abstract class BasicAdaptor<F, T, OF, OT> extends Adaptor<F, T, OF, OT> {
 	
 	/**
 	 * Transforms the arguments to provide to the adaptee
@@ -71,20 +61,13 @@ public abstract class SourceAdaptor<F, T, OF, OT> implements Source<F, T> {
 						Optional.of(newResult), 
 						Optional.of(opinion.getValue())));
 	}
-
-	/**
-	 * @return The Source wrapped by this AdaptorSource
-	 */
-	public Source<OF, OT> getAdaptee() {
-		return adaptee;
-	}
 	
 	/*
 	 * (non-Javadoc)
 	 * @see edu.toronto.cs.se.ci.Source#getCost(java.lang.Object)
 	 */
 	@Override
-	public Cost getCost(F args) throws Exception {
+	public Cost getCost(F args, Source<OF, OT> adaptee) throws Exception {
 		return adaptee.getCost(transformArgs(args));
 	}
 
@@ -93,7 +76,7 @@ public abstract class SourceAdaptor<F, T, OF, OT> implements Source<F, T> {
 	 * @see edu.toronto.cs.se.ci.Source#getOpinion(java.lang.Object)
 	 */
 	@Override
-	public Opinion<T> getOpinion(F args) throws UnknownException {
+	public Opinion<T> getOpinion(F args, Source<OF, OT> adaptee) throws UnknownException {
 		return transformOpinion(adaptee.getOpinion(transformArgs(args)));
 	}
 	
@@ -102,7 +85,7 @@ public abstract class SourceAdaptor<F, T, OF, OT> implements Source<F, T> {
 	 * @see edu.toronto.cs.se.ci.Source#getTrust(java.lang.Object, com.google.common.base.Optional)
 	 */
 	@Override
-	public Trust getTrust(F args, Optional<T> result) {
+	public Trust getTrust(F args, Optional<T> result, Source<OF, OT> adaptee) {
 		Trust trust = adaptee.getTrust(transformArgs(args), Optional.<OT>absent());
 		return transformTrust(trust, result, Optional.<OT>absent());
 	}

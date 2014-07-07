@@ -34,11 +34,19 @@ import edu.toronto.cs.se.ci.selectors.AllSelector;
  * @param <T> Result type
  */
 public class CI<F, T> {
-	
+
 	private final ImmutableSet<Source<F,T>> sources;
 	private final Aggregator<T> agg;
 	private final Selector<F, T> sel;
 	private Acceptor<T> acceptor;
+	
+	public CI(Class<? extends Contract<F, T>> contract) {
+		this(Contracts.discover(contract));
+	}
+
+	public CI(Class<? extends Contract<F, T>> contract, Aggregator<T> agg, Selector<F, T> sel, Acceptor<T> acceptor) {
+		this(Contracts.discover(contract), agg, sel, acceptor);
+	}
 
 	/**
 	 * Create a CI using the {@link VoteAggregator} aggregator and
@@ -279,7 +287,7 @@ public class CI<F, T> {
 				}
 				budget = cost.spend(budget);
 				
-				System.out.println("Calling " + next.getClass().getName()); // TODO: DEBUG
+				System.out.println("Calling " + next.getName()); // TODO: DEBUG
 				
 				// Query the source & augment the estimate
 				ListenableFuture<Opinion<T>> opinion = pool.submit(new Source.SourceCallable<F, T>(next, args));

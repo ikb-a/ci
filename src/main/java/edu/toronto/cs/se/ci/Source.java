@@ -1,8 +1,10 @@
 package edu.toronto.cs.se.ci;
 
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import edu.toronto.cs.se.ci.data.Cost;
 import edu.toronto.cs.se.ci.data.Opinion;
@@ -16,7 +18,24 @@ import edu.toronto.cs.se.ci.data.Trust;
  * @param <F>
  * @param <T>
  */
-public interface Source<F, T> {
+public abstract class Source<F, T> {
+	
+	/**
+	 * Provides this source. Means that contracts don't have to be implemented
+	 * manually for every source.
+	 * 
+	 * @return A single element list containing only this source
+	 */
+	public List<Source<F, T>> provide() {
+		return ImmutableList.of(this);
+	}
+	
+	/**
+	 * @return A unique name for the Source - used for debugging purposes
+	 */
+	public String getName() {
+		return this.getClass().getName();
+	}
 	
 	/**
 	 * Get the cost of querying the source
@@ -24,7 +43,7 @@ public interface Source<F, T> {
 	 * @param args The arguments which would be passed to {@code apply}
 	 * @return The cost of querying the source
 	 */
-	public Cost getCost(F args) throws Exception;
+	public abstract Cost getCost(F args) throws Exception;
 
 	/**
 	 * Get the source's opinion. This includes the result of the source, and
@@ -34,7 +53,7 @@ public interface Source<F, T> {
 	 * @return The source's opinion.
 	 * @throws UnknownException The source wasn't avaliable, so no answer could be obtained
 	 */
-	public Opinion<T> getOpinion(F args) throws UnknownException;
+	public abstract Opinion<T> getOpinion(F args) throws UnknownException;
 
 	/**
 	 * Callable wrapper for a source.
@@ -42,7 +61,7 @@ public interface Source<F, T> {
 	 * @param <F> Argument Type
 	 * @param <T> Return Type
 	 */
-	public class SourceCallable<F, T> implements Callable<Opinion<T>> {
+	public static class SourceCallable<F, T> implements Callable<Opinion<T>> {
 		
 		private Source<F, T> source;
 		private F args;
