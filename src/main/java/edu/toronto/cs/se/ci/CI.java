@@ -38,7 +38,7 @@ public class CI<F, T> {
 	private final ImmutableSet<Source<F,T>> sources;
 	private final Aggregator<T> agg;
 	private final Selector<F, T> sel;
-	private Acceptor<T> acceptor;
+	private final Acceptor<T> acceptor;
 	
 	public CI(Class<? extends Contract<F, T>> contract) {
 		this(Contracts.discover(contract));
@@ -69,6 +69,7 @@ public class CI<F, T> {
 		this.sources = ImmutableSet.copyOf(sources);
 		this.agg = agg;
 		this.sel = sel;
+		this.acceptor = null;
 	}
 	
 	public CI(Collection<Source<F, T>> sources, Aggregator<T> agg, Selector<F, T> sel, Acceptor<T> acceptor) {
@@ -156,6 +157,21 @@ public class CI<F, T> {
 					estimate.seal();
 					Invocation.this.pool.shutdown();
 				}
+			});
+			
+			// Once the estimate is complete & has returned a final answer, kill all of the threads
+			Futures.addCallback(estimate, new FutureCallback<Result<T>>() {
+
+				@Override
+				public void onSuccess(Result<T> result) {
+					Invocation.this.pool.shutdownNow();
+				}
+
+				@Override
+				public void onFailure(Throwable t) {
+					Invocation.this.pool.shutdownNow();
+				}
+				
 			});
 			
 		}
@@ -267,6 +283,20 @@ public class CI<F, T> {
 
 			startedAt = System.nanoTime();
 			
+			// Create the timeout timer
+			long timeBudget = budget.getTime(TimeUnit.NANOSECONDS);
+			if (timeBudget > 0) {
+				pool.submit(() -> {
+					try {
+						synchronized(this) {
+							this.wait(timeBudget / 1000000, (int) (timeBudget % 1000000));
+						}
+
+						estimate.done(); // If the estimate isn't done yet - force it to be so.
+					} catch (InterruptedException e) { }
+				});
+			}
+			
 			Source<F, T> next;
 			for (;;) {
 				// Get the next source (this might block)
@@ -285,14 +315,21 @@ public class CI<F, T> {
 					System.err.println("Selection function chose source out of budget");
 					continue;
 				}
-				budget = cost.spend(budget);
-				
-				System.out.println("Calling " + next.getName()); // TODO: DEBUG
-				
-				// Query the source & augment the estimate
-				ListenableFuture<Opinion<T>> opinion = pool.submit(new Source.SourceCallable<F, T>(next, args));
-				opinions.add(opinion);
-				estimate.augment(opinion);
+
+				// Run the opinion if the estimate isn't already sealed. Stop running if it is.
+				synchronized(estimate) {
+					if (estimate.isSealed())
+						return null;
+
+					budget = cost.spend(budget);
+					
+					System.out.println("Calling " + next.getName()); // TODO: DEBUG
+					
+					// Query the source & augment the estimate
+					ListenableFuture<Opinion<T>> opinion = pool.submit(new Source.SourceCallable<F, T>(next, args));
+					opinions.add(opinion);
+					estimate.augment(opinion);
+				}
 			}
 			
 			// Seal the estimate

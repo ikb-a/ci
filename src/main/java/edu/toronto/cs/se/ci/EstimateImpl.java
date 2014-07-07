@@ -139,7 +139,7 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 	/**
 	 * Mark the Estimate as complete, firing callbacks etc.
 	 */
-	private synchronized void done() {
+	public synchronized void done() {
 		sealed = true;
 
 		if (isDone())
