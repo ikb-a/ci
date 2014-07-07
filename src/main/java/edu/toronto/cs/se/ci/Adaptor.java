@@ -11,15 +11,16 @@ import edu.toronto.cs.se.ci.data.Trust;
 
 public abstract class Adaptor<F, T, OF, OT> {
 	
-	/**
-	 * @return The Contract which the Adaptor wraps around
-	 */
-	public abstract Class<? extends Contract<OF, OT>> around();
+	private Class<? extends Contract<OF, OT>> around;
+	
+	public Adaptor(Class<? extends Contract<OF, OT>> around) {
+		this.around = around;
+	}
 	
 	public List<Source<F, T>> provide() {
 		List<Source<F, T>> sources = new ArrayList<>();
 
-		for (Source<OF, OT> s : Contracts.discover(around())) {
+		for (Source<OF, OT> s : Contracts.discover(around)) {
 			sources.add(new SrcAdaptor(s));
 		}
 

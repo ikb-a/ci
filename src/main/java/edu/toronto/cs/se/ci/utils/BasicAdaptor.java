@@ -3,6 +3,7 @@ package edu.toronto.cs.se.ci.utils;
 import com.google.common.base.Optional;
 
 import edu.toronto.cs.se.ci.Adaptor;
+import edu.toronto.cs.se.ci.Contract;
 import edu.toronto.cs.se.ci.Source;
 import edu.toronto.cs.se.ci.UnknownException;
 import edu.toronto.cs.se.ci.data.Cost;
@@ -21,6 +22,10 @@ import edu.toronto.cs.se.ci.data.Trust;
  * @param <OT> Original output type
  */
 public abstract class BasicAdaptor<F, T, OF, OT> extends Adaptor<F, T, OF, OT> {
+	
+	public BasicAdaptor(Class<? extends Contract<OF, OT>> around) {
+		super(around);
+	}
 	
 	/**
 	 * Transforms the arguments to provide to the adaptee
