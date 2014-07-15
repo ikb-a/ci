@@ -18,8 +18,10 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import edu.toronto.cs.se.ci.aggregators.VoteAggregator;
-import edu.toronto.cs.se.ci.data.Budget;
-import edu.toronto.cs.se.ci.data.Cost;
+import edu.toronto.cs.se.ci.budget.Allowance;
+import edu.toronto.cs.se.ci.budget.Budgets;
+import edu.toronto.cs.se.ci.budget.Expenditure;
+import edu.toronto.cs.se.ci.budget.basic.Time;
 import edu.toronto.cs.se.ci.data.Opinion;
 import edu.toronto.cs.se.ci.data.Result;
 import edu.toronto.cs.se.ci.selectors.AllSelector;
@@ -86,7 +88,7 @@ public class CI<F, T> {
 	 * @param budget The budget allocated to the CI
 	 * @return An {@link Estimate} of the CI's response
 	 */
-	public Estimate<T> apply(F args, Budget budget) {
+	public Estimate<T> apply(F args, Allowance[] budget) {
 		// Create the thread pool
 		ListeningExecutorService pool = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
 		
@@ -97,7 +99,7 @@ public class CI<F, T> {
 		return invocation.getEstimate();
 	}
 	
-	public Result<T> applySync(F args, Budget budget) throws InterruptedException, ExecutionException {
+	public Result<T> applySync(F args, Allowance[] budget) throws InterruptedException, ExecutionException {
 		// sameThreadExecutor will cause this to run in sync
 		ListeningExecutorService pool = MoreExecutors.sameThreadExecutor();
 		
@@ -119,7 +121,7 @@ public class CI<F, T> {
 		
 		// Parameters
 		private final F args;
-		private Budget budget;
+		private Allowance[] budget;
 		private final ListeningExecutorService pool;
 		
 		// State
@@ -136,7 +138,7 @@ public class CI<F, T> {
 		 * @param args The arguments to pass to Source functions
 		 * @param budget The budget for the CI
 		 */
-		private Invocation(F args, Budget budget, ListeningExecutorService pool) {
+		private Invocation(F args, Allowance[] budget, ListeningExecutorService pool) {
 			this.args = args;
 			this.budget = budget;
 			this.pool = pool;
@@ -184,7 +186,7 @@ public class CI<F, T> {
 		 * @throws Exception If the Source's getCost function throws an exception
 		 */
 		public boolean withinBudget(Source<F, T> source) throws Exception {
-			return source.getCost(args).withinBudget(budget, getElapsedTime(TimeUnit.NANOSECONDS), TimeUnit.NANOSECONDS);
+			return Budgets.withinBudget(budget, source.getCost(args), Optional.of(this));
 		}
 		
 		/**
@@ -246,7 +248,7 @@ public class CI<F, T> {
 		 * 
 		 * @return The Budget still available for running Sources
 		 */
-		public Budget getBudget() {
+		public Allowance[] getBudget() {
 			return budget;
 		}
 		
@@ -284,12 +286,14 @@ public class CI<F, T> {
 			startedAt = System.nanoTime();
 			
 			// Create the timeout timer
-			long timeBudget = budget.getTime(TimeUnit.NANOSECONDS);
-			if (timeBudget > 0) {
+			Optional<Time> timeAllowance = Budgets.getByClass(budget, Time.class);
+			if (timeAllowance.isPresent()) {
+				long time = timeAllowance.get().getDuration(TimeUnit.NANOSECONDS);
+
 				pool.submit(() -> {
 					try {
 						synchronized(this) {
-							this.wait(timeBudget / 1000000, (int) (timeBudget % 1000000));
+							this.wait(time / 1000000, (int) (time % 1000000));
 						}
 
 						estimate.done(); // If the estimate isn't done yet - force it to be so.
@@ -310,8 +314,10 @@ public class CI<F, T> {
 				remaining.remove(next);
 				
 				// Exhaust budget
-				Cost cost = next.getCost(args);
-				if (! cost.withinBudget(budget, System.nanoTime() - startedAt, TimeUnit.NANOSECONDS)) {
+				Expenditure[] cost = next.getCost(args);
+				Optional<Allowance[]> newBudget = Budgets.expend(budget, cost, Optional.of(this));
+
+				if (! newBudget.isPresent()) {
 					System.err.println("Selection function chose source out of budget");
 					continue;
 				}
@@ -321,7 +327,7 @@ public class CI<F, T> {
 					if (estimate.isSealed())
 						return null;
 
-					budget = cost.spend(budget);
+					budget = newBudget.get();
 					
 					System.out.println("Calling " + next.getName()); // TODO: DEBUG
 					

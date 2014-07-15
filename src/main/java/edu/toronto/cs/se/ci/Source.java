@@ -6,7 +6,7 @@ import java.util.concurrent.Callable;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-import edu.toronto.cs.se.ci.data.Cost;
+import edu.toronto.cs.se.ci.budget.Expenditure;
 import edu.toronto.cs.se.ci.data.Opinion;
 import edu.toronto.cs.se.ci.data.Trust;
 
@@ -43,7 +43,7 @@ public abstract class Source<F, T> {
 	 * @param args The arguments which would be passed to {@code apply}
 	 * @return The cost of querying the source
 	 */
-	public abstract Cost getCost(F args) throws Exception;
+	public abstract Expenditure[] getCost(F args) throws Exception;
 
 	/**
 	 * Get the source's opinion. This includes the result of the source, and

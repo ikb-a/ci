@@ -6,7 +6,7 @@ import edu.toronto.cs.se.ci.Adaptor;
 import edu.toronto.cs.se.ci.Contract;
 import edu.toronto.cs.se.ci.Source;
 import edu.toronto.cs.se.ci.UnknownException;
-import edu.toronto.cs.se.ci.data.Cost;
+import edu.toronto.cs.se.ci.budget.Expenditure;
 import edu.toronto.cs.se.ci.data.Opinion;
 import edu.toronto.cs.se.ci.data.Trust;
 
@@ -72,7 +72,7 @@ public abstract class BasicAdaptor<F, T, OF, OT> extends Adaptor<F, T, OF, OT> {
 	 * @see edu.toronto.cs.se.ci.Source#getCost(java.lang.Object)
 	 */
 	@Override
-	public Cost getCost(F args, Source<OF, OT> adaptee) throws Exception {
+	public Expenditure[] getCost(F args, Source<OF, OT> adaptee) throws Exception {
 		return adaptee.getCost(transformArgs(args));
 	}
 

@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.google.common.base.Optional;
 
-import edu.toronto.cs.se.ci.data.Cost;
+import edu.toronto.cs.se.ci.budget.Expenditure;
 import edu.toronto.cs.se.ci.data.Opinion;
 import edu.toronto.cs.se.ci.data.Trust;
 
@@ -27,7 +27,7 @@ public abstract class Adaptor<F, T, OF, OT> {
 		return sources;
 	}
 	
-	public abstract Cost getCost(F args, Source<OF, OT> around) throws Exception;
+	public abstract Expenditure[] getCost(F args, Source<OF, OT> around) throws Exception;
 	
 	public abstract Opinion<T> getOpinion(F args, Source<OF, OT> around) throws UnknownException;
 	
@@ -47,7 +47,7 @@ public abstract class Adaptor<F, T, OF, OT> {
 		}
 
 		@Override
-		public Cost getCost(F args) throws Exception {
+		public Expenditure[] getCost(F args) throws Exception {
 			return Adaptor.this.getCost(args, around);
 		}
 
