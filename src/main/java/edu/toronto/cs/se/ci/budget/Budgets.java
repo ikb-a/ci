@@ -12,7 +12,7 @@ public final class Budgets {
 		return expend(budget, cost, Optional.absent());
 	}
 
-	public static Optional<Allowance[]> expend(Allowance[] budget, Expenditure[] cost, Optional<CI<?, ?>.Invocation> invocation) {
+	public static Optional<Allowance[]> expend(Allowance[] budget, Expenditure[] cost, Optional<CI<?, ?, ?, ?>.Invocation> invocation) {
 		for (Expenditure expenditure : cost) {
 			Optional<Allowance[]> spent = expenditure.expend(budget, invocation);
 			if (spent.isPresent())
@@ -24,7 +24,7 @@ public final class Budgets {
 		return Optional.of(budget);
 	}
 	
-	public static boolean withinBudget(Allowance[] budget, Expenditure[] cost, Optional<CI<?, ?>.Invocation> invocation) {
+	public static boolean withinBudget(Allowance[] budget, Expenditure[] cost, Optional<CI<?, ?, ?, ?>.Invocation> invocation) {
 		return expend(budget, cost, invocation).isPresent();
 	}
 

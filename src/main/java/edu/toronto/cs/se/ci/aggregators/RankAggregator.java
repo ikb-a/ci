@@ -11,24 +11,24 @@ import edu.toronto.cs.se.ci.data.Result;
  * 
  * @author Michael Layzell
  *
- * @param <T>
+ * @param <O>
  */
-public class RankAggregator<T> implements Aggregator<T> {
+public class RankAggregator<O, T extends Comparable<T>> implements Aggregator<O, T, T> {
 
 	@Override
-	public Result<T> aggregate(Iterable<Opinion<T>> opinions) {
-		double bestTrust = 0;
-		Opinion<T> bestOpinion = null;
+	public Result<O, T> aggregate(Iterable<Opinion<O, T>> opinions) {
+		T bestTrust = null;
+		Opinion<O, T> bestOpinion = null;
 		
-		for (Opinion<T> opinion : opinions) {
-			double trust = opinion.getBelief();
-			if (trust > bestTrust) {
+		for (Opinion<O, T> opinion : opinions) {
+			T trust = opinion.getTrust();
+			if (bestTrust == null || trust.compareTo(bestTrust) > 0) {
 				bestOpinion = opinion;
 				bestTrust = trust;
 			}
 		}
 		
-		return new Result<T>(bestOpinion.getValue(), bestTrust);
+		return new Result<O, T>(bestOpinion.getValue(), bestTrust);
 	}
 
 }

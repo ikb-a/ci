@@ -12,16 +12,16 @@ import edu.toronto.cs.se.ci.data.Result;
  * @author Michael Layzell
  *
  */
-public class WeightedMeanAggregator implements Aggregator<Double> {
+public class WeightedMeanAggregator implements Aggregator<Double, Double, Double> {
 
 	@Override
-	public Result<Double> aggregate(Iterable<Opinion<Double>> opinions) {
+	public Result<Double, Double> aggregate(Iterable<Opinion<Double, Double>> opinions) {
 		// Get the weighted mean
 		double sum = 0;
 		double totalWeight = 0;
 
-		for (Opinion<Double> opinion : opinions) {
-			double trust = opinion.getBelief();
+		for (Opinion<Double, Double> opinion : opinions) {
+			double trust = opinion.getTrust();
 			sum += opinion.getValue() * trust;
 			totalWeight += trust;
 		}
@@ -31,14 +31,14 @@ public class WeightedMeanAggregator implements Aggregator<Double> {
 		// Get the weighted standard deviation
 		double squareDiffSum = 0;
 		
-		for (Opinion<Double> opinion : opinions) {
-			squareDiffSum += Math.pow(opinion.getValue() - mean, 2) * opinion.getBelief();
+		for (Opinion<Double, Double> opinion : opinions) {
+			squareDiffSum += Math.pow(opinion.getValue() - mean, 2) * opinion.getTrust();
 		}
 		
 		double stdev = Math.sqrt(squareDiffSum / totalWeight);
 		
 		// Return the result
-		return new Result<Double>(mean, 1.0/(stdev + 1));
+		return new Result<Double, Double>(mean, 1.0/(stdev + 1));
 	}
 
 }

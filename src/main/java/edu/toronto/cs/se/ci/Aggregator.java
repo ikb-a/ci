@@ -9,14 +9,14 @@ import edu.toronto.cs.se.ci.data.Result;
  * 
  * @author Michael Layzell
  *
- * @param <T>
+ * @param <O>
  */
-public interface Aggregator<T> {
+public interface Aggregator<O, T, Q> {
 
 	/**
 	 * @param opinions The opinions provided by sources in the CI
 	 * @return An aggregated result
 	 */
-	public Result<T> aggregate(Iterable<Opinion<T>> opinions);
+	public Result<O, Q> aggregate(Iterable<Opinion<O, T>> opinions);
 
 }

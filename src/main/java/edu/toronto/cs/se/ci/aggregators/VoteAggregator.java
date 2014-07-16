@@ -16,22 +16,22 @@ import edu.toronto.cs.se.ci.data.Result;
  * 
  * @author Michael Layzell
  *
- * @param <T>
+ * @param <O>
  */
-public class VoteAggregator<T> implements Aggregator<T> {
+public class VoteAggregator<O> implements Aggregator<O, Double, Double> {
 
 	@Override
-	public Result<T> aggregate(Iterable<Opinion<T>> opinions) {
+	public Result<O, Double> aggregate(Iterable<Opinion<O, Double>> opinions) {
 		// Map from each value to its current aggregate weight
-		Map<T, Double> options = new HashMap<T, Double>();
+		Map<O, Double> options = new HashMap<O, Double>();
 		
 		// The total trust in all sources in the system
 		double totalVotes = 0.0;
 		
-		for (Opinion<T> opinion : opinions) {
+		for (Opinion<O, Double> opinion : opinions) {
 			// Get values from the opinion
-			T value = opinion.getValue();
-			double trust = opinion.getBelief();
+			O value = opinion.getValue();
+			double trust = opinion.getTrust();
 
 			// Get the current vote count
 			Double votes = options.get(value);
@@ -46,11 +46,11 @@ public class VoteAggregator<T> implements Aggregator<T> {
 			options.put(value, votes);
 		}
 		
-		T bestValue = null;
+		O bestValue = null;
 		double bestWeight = 0.0;
 		
 		// Choose the entry with the highest weight
-		for (Map.Entry<T, Double> e : options.entrySet()) {
+		for (Map.Entry<O, Double> e : options.entrySet()) {
 			if (e.getValue() > bestWeight) {
 				bestValue = e.getKey();
 				bestWeight = e.getValue();
@@ -60,7 +60,7 @@ public class VoteAggregator<T> implements Aggregator<T> {
 		double quality = getQuality(bestWeight, totalVotes - bestWeight);
 		
 		// Return the result
-		return new Result<T>(bestValue, quality);
+		return new Result<O, Double>(bestValue, quality);
 	}
 
 	/**

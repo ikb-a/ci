@@ -20,23 +20,23 @@ import edu.toronto.cs.se.ci.data.Result;
  * 
  * @author Michael Layzell
  *
- * @param <T>
+ * @param <O>
  */
-public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estimate<T> {
+public class EstimateImpl<O, T, Q> extends AbstractFuture<Result<O, Q>> implements Estimate<O, Q> {
 	
-	private Set<Opinion<T>> opinions = new HashSet<Opinion<T>>();
+	private Set<Opinion<O, T>> opinions = new HashSet<Opinion<O, T>>();
 	private int incomplete = 0;
 	private boolean sealed = false;
-	private Result<T> value = null;
+	private Result<O, Q> value = null;
 	
 	// Functions
-	private Aggregator<T> agg;
-	private Acceptor<T> acceptor;
+	private Aggregator<O, T, Q> agg;
+	private Acceptor<O, Q> acceptor;
 	
 	// Listeners
 	private List<Listener> listeners = new ArrayList<>();
 	
-	public EstimateImpl(Aggregator<T> agg, Acceptor<T> acceptor) {
+	public EstimateImpl(Aggregator<O, T, Q> agg, Acceptor<O, Q> acceptor) {
 		this.agg = agg;
 		this.acceptor = acceptor;
 	}
@@ -47,16 +47,16 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 	 * 
 	 * @param opinion The opinion to augment the Estimate with
 	 */
-	public synchronized void augment(ListenableFuture<Opinion<T>> opinion) {
+	public synchronized void augment(ListenableFuture<Opinion<O, T>> opinion) {
 		if (sealed)
 			throw new Error("Cannot augment a sealed Estimate");
 
 		incomplete++;
 
-		Futures.addCallback(opinion, new FutureCallback<Opinion<T>>() {
+		Futures.addCallback(opinion, new FutureCallback<Opinion<O, T>>() {
 
 			@Override
-			public void onSuccess(Opinion<T> opinion) {
+			public void onSuccess(Opinion<O, T> opinion) {
 				synchronized(EstimateImpl.this) {
 					if (isDone())
 						return;
@@ -129,7 +129,7 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 	}
 
 	@Override
-	public Optional<Result<T>> getCurrent() {
+	public Optional<Result<O, Q>> getCurrent() {
 		if (value == null)
 			return Optional.fromNullable(aggregate());
 		else
@@ -157,7 +157,7 @@ public class EstimateImpl<T> extends AbstractFuture<Result<T>> implements Estima
 	 * with the complete ones.
 	 * @return The aggregate opinion based on done opinions
 	 */
-	private Result<T> aggregate() {
+	private Result<O, Q> aggregate() {
 		try {
 			return agg.aggregate(opinions);
 		} catch (Exception e) {

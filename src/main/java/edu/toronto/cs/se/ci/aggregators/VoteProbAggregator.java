@@ -15,27 +15,27 @@ import edu.toronto.cs.se.ci.data.Trust;
  * 
  * @author Michael Layzell
  *
- * @param <T> The result type
+ * @param <O> The result type
  */
-public class VoteProbAggregator<T> implements Aggregator<T> {
+public class VoteProbAggregator<O> implements Aggregator<O, Trust, Double> {
 
 	@Override
-	public Result<T> aggregate(Iterable<Opinion<T>> opinions) {
-		Map<T, Double> options = new HashMap<>();
+	public Result<O, Double> aggregate(Iterable<Opinion<O, Trust>> opinions) {
+		Map<O, Double> options = new HashMap<>();
 		double total = 0;
 		
-		for (Opinion<T> opinion : opinions) {
-			T value = opinion.getValue();
-			double trust = opinion.getBelief();
+		for (Opinion<O, Trust> opinion : opinions) {
+			O value = opinion.getValue();
+			double trust = opinion.getTrust().getBelief();
 			options.put(value, options.getOrDefault(value, 0.0) + trust);
 			total += trust;
 		}
 		
 		// Choose the best one
-		T bestOption = null;
+		O bestOption = null;
 		double bestTrust = 0;
 		
-		for (Map.Entry<T, Double> entry : options.entrySet()) {
+		for (Map.Entry<O, Double> entry : options.entrySet()) {
 			if (entry.getValue() > bestTrust) {
 				bestOption = entry.getKey();
 				bestTrust = entry.getValue();
@@ -45,7 +45,7 @@ public class VoteProbAggregator<T> implements Aggregator<T> {
 		// Generate a confidence level
 		double conf = new Trust(new Evidence(bestTrust, total - bestTrust)).getBelief();
 				
-		return new Result<T>(bestOption, conf);
+		return new Result<O, Double>(bestOption, conf);
 	}
 
 }

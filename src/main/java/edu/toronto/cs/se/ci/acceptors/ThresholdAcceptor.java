@@ -3,7 +3,7 @@ package edu.toronto.cs.se.ci.acceptors;
 import edu.toronto.cs.se.ci.Acceptor;
 import edu.toronto.cs.se.ci.data.Result;
 
-public class ThresholdAcceptor<T> implements Acceptor<T> {
+public class ThresholdAcceptor<O> implements Acceptor<O, Double> {
 	
 	private double threshold;
 
@@ -12,7 +12,7 @@ public class ThresholdAcceptor<T> implements Acceptor<T> {
 	}
 
 	@Override
-	public boolean isAcceptable(Result<T> result) {
+	public boolean isAcceptable(Result<O, Double> result) {
 		return result.getQuality() > threshold;
 	}
 

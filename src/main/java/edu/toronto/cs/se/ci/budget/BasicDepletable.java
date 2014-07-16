@@ -66,7 +66,7 @@ public abstract class BasicDepletable<T> implements Allowance, Expenditure, Clon
 	 * @see edu.toronto.cs.se.ci.budget.Expenditure#expend(edu.toronto.cs.se.ci.budget.Allowance[], com.google.common.base.Optional)
 	 */
 	@Override
-	public Optional<Allowance[]> expend(Allowance[] budget, Optional<CI<?, ?>.Invocation> invocation) {
+	public Optional<Allowance[]> expend(Allowance[] budget, Optional<CI<?, ?, ?, ?>.Invocation> invocation) {
 		Allowance[] newBudget = new Allowance[budget.length];
 		boolean seen = false;
 

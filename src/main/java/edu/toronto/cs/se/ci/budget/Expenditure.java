@@ -13,6 +13,6 @@ import edu.toronto.cs.se.ci.CI;
  */
 public interface Expenditure {
 	
-	public Optional<Allowance[]> expend(Allowance[] budget, Optional<CI<?, ?>.Invocation> invocation);
+	public Optional<Allowance[]> expend(Allowance[] budget, Optional<CI<?, ?, ?, ?>.Invocation> invocation);
 
 }

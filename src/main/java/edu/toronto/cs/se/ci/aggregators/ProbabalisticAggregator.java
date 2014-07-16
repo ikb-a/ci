@@ -17,7 +17,7 @@ import edu.toronto.cs.se.ci.data.Trust;
  * @author Michael Layzell
  *
  */
-public class ProbabalisticAggregator<T> implements Aggregator<T> {
+public class ProbabalisticAggregator<O> implements Aggregator<O, Trust, Double> {
 	
 	private int nOptions;
 	
@@ -33,7 +33,7 @@ public class ProbabalisticAggregator<T> implements Aggregator<T> {
 		return new Evidence(a.getConsenting() + b.getConsenting(), a.getDissenting() + b.getDissenting());
 	}
 
-	public Evidence addEvidence(Map<T, Evidence> options, T answer, Evidence evidence, Evidence memo) {
+	public Evidence addEvidence(Map<O, Evidence> options, O answer, Evidence evidence, Evidence memo) {
 		// The counter-evidence is the evidence which, because of the evidence for k, will be acting
 		// "for" every other option. This depends on the number of options which are avaliable.
 		// If nOptions == -1, nOptions is assumed to be infinity.
@@ -47,7 +47,7 @@ public class ProbabalisticAggregator<T> implements Aggregator<T> {
 		options.put(answer, combine(options.getOrDefault(answer, memo), evidence));
 		
 		// Record the evidence for everything else
-		for (Map.Entry<T, Evidence> option : options.entrySet()) {
+		for (Map.Entry<O, Evidence> option : options.entrySet()) {
 			if (option.getKey() != answer)
 				options.put(option.getKey(), combine(option.getValue(), counter));
 		}
@@ -56,31 +56,31 @@ public class ProbabalisticAggregator<T> implements Aggregator<T> {
 	}
 	
 	@Override
-	public Result<T> aggregate(Iterable<Opinion<T>> opinions) {
+	public Result<O, Double> aggregate(Iterable<Opinion<O, Trust>> opinions) {
 		// Add the evidence from every source
-		Map<T, Evidence> options = new HashMap<>();
+		Map<O, Evidence> options = new HashMap<>();
 		Evidence memo = new Evidence(0, 0);
-		for (Opinion<T> opinion : opinions) {
+		for (Opinion<O, Trust> opinion : opinions) {
 			memo = addEvidence(options, opinion.getValue(), new Evidence(opinion.getTrust()), memo);
 		}
 
 		// Convert each evidence into trust space
-		Map<T, Trust> optionTrusts = new HashMap<>();
-		for (Map.Entry<T, Evidence> option : options.entrySet()) {
+		Map<O, Trust> optionTrusts = new HashMap<>();
+		for (Map.Entry<O, Evidence> option : options.entrySet()) {
 			optionTrusts.put(option.getKey(), new Trust(option.getValue()));
 		}
 		
 		// And choose the best one
 		double bestBelief = 0;
-		T bestOption = null;
-		for (Map.Entry<T, Trust> option : optionTrusts.entrySet()) {
+		O bestOption = null;
+		for (Map.Entry<O, Trust> option : optionTrusts.entrySet()) {
 			if (option.getValue().getBelief() > bestBelief) {
 				bestBelief = option.getValue().getBelief();
 				bestOption = option.getKey();
 			}
 		}
 		
-		return new Result<T>(bestOption, bestBelief);
+		return new Result<O, Double>(bestOption, bestBelief);
 	}
 	
 }

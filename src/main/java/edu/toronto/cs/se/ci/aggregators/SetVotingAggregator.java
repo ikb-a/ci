@@ -20,9 +20,9 @@ import edu.toronto.cs.se.ci.data.Result;
  * 
  * @author Michael Layzell
  *
- * @param <T> Set element type
+ * @param <O> Set element type
  */
-public class SetVotingAggregator<T> implements Aggregator<Set<T>> {
+public class SetVotingAggregator<O> implements Aggregator<Set<O>, Double, Double> {
 
 	private double threshold;
 
@@ -36,15 +36,15 @@ public class SetVotingAggregator<T> implements Aggregator<Set<T>> {
 	}
 
 	@Override
-	public Result<Set<T>> aggregate(Iterable<Opinion<Set<T>>> opinions) {
+	public Result<Set<O>, Double> aggregate(Iterable<Opinion<Set<O>, Double>> opinions) {
 		double totalWeight = 0;
-		Map<T, Double> votes = new HashMap<T, Double>();
+		Map<O, Double> votes = new HashMap<O, Double>();
 		
 		// Each source votes for the items in its set
-		for (Opinion<Set<T>> opinion : opinions) {
-			double trust = opinion.getBelief();
+		for (Opinion<Set<O>, Double> opinion : opinions) {
+			double trust = opinion.getTrust();
 
-			for (T item : opinion.getValue()) {
+			for (O item : opinion.getValue()) {
 				double weight = votes.getOrDefault(item, 0.0) + trust;
 				votes.put(item, weight);
 			}
@@ -53,10 +53,10 @@ public class SetVotingAggregator<T> implements Aggregator<Set<T>> {
 		}
 		
 		// Items which have an agreement level above the threshold are added to the set
-		Set<T> results = new HashSet<T>();
+		Set<O> results = new HashSet<O>();
 		double agreementSum = 0;
 		
-		for (Map.Entry<T, Double> entry : votes.entrySet()) {
+		for (Map.Entry<O, Double> entry : votes.entrySet()) {
 			double agreement = entry.getValue() / totalWeight;
 
 			if (agreement > threshold) {
@@ -69,7 +69,7 @@ public class SetVotingAggregator<T> implements Aggregator<Set<T>> {
 		}
 		
 		// The quality is the average agreement level of items in the set
-		return new Result<Set<T>>(results, agreementSum / results.size());
+		return new Result<Set<O>, Double>(results, agreementSum / results.size());
 	}
 
 }

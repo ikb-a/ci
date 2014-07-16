@@ -17,14 +17,12 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import edu.toronto.cs.se.ci.aggregators.VoteAggregator;
 import edu.toronto.cs.se.ci.budget.Allowance;
 import edu.toronto.cs.se.ci.budget.Budgets;
 import edu.toronto.cs.se.ci.budget.Expenditure;
 import edu.toronto.cs.se.ci.budget.basic.Time;
 import edu.toronto.cs.se.ci.data.Opinion;
 import edu.toronto.cs.se.ci.data.Result;
-import edu.toronto.cs.se.ci.selectors.AllSelector;
 
 /**
  * A Contributional Implementation (CI) of a function. Queries a set of sources, and aggregates
@@ -32,21 +30,25 @@ import edu.toronto.cs.se.ci.selectors.AllSelector;
  * 
  * @author Michael Layzell
  *
- * @param <F> Input type
- * @param <T> Result type
+ * @param <I> Input type
+ * @param <O> Result type
  */
-public class CI<F, T> {
+public class CI<I, O, T, Q> {
 
-	private final ImmutableSet<Source<F,T>> sources;
-	private final Aggregator<T> agg;
-	private final Selector<F, T> sel;
-	private final Acceptor<T> acceptor;
+	private final ImmutableSet<Source<I, O, T>> sources;
+	private final Aggregator<O, T, Q> agg;
+	private final Selector<I, O, T> sel;
+	private final Acceptor<O, Q> acceptor;
 	
-	public CI(Class<? extends Contract<F, T>> contract) {
+	/* public CI(Class<? extends Contract<I, O>> contract) {
 		this(Contracts.discover(contract));
+	} */
+
+	public CI(Class<? extends Contract<I, O, T>> contract, Aggregator<O, T, Q> agg, Selector<I, O, T> sel) {
+		this(Contracts.discover(contract), agg, sel);
 	}
 
-	public CI(Class<? extends Contract<F, T>> contract, Aggregator<T> agg, Selector<F, T> sel, Acceptor<T> acceptor) {
+	public CI(Class<? extends Contract<I, O, T>> contract, Aggregator<O, T, Q> agg, Selector<I, O, T> sel, Acceptor<O, Q> acceptor) {
 		this(Contracts.discover(contract), agg, sel, acceptor);
 	}
 
@@ -56,9 +58,9 @@ public class CI<F, T> {
 	 * 
 	 * @param sources The list of sources for the CI to query
 	 */
-	public CI(Collection<Source<F, T>> sources) {
-		this(sources, new VoteAggregator<T>(), new AllSelector<F, T>());
-	}
+	/* public CI(Collection<Source<I, O>> sources) {
+		this(sources, new VoteAggregator<O>(), new AllSelector<I, O, T>());
+	} */
 
 	/**
 	 * Create a CI using the provided aggregator and selector.
@@ -67,14 +69,14 @@ public class CI<F, T> {
 	 * @param agg The opinion aggregator
 	 * @param sel The source selector
 	 */
-	public CI(Collection<Source<F, T>> sources, Aggregator<T> agg, Selector<F, T> sel) {
+	public CI(Collection<Source<I, O, T>> sources, Aggregator<O, T, Q> agg, Selector<I, O, T> sel) {
 		this.sources = ImmutableSet.copyOf(sources);
 		this.agg = agg;
 		this.sel = sel;
 		this.acceptor = null;
 	}
 	
-	public CI(Collection<Source<F, T>> sources, Aggregator<T> agg, Selector<F, T> sel, Acceptor<T> acceptor) {
+	public CI(Collection<Source<I, O, T>> sources, Aggregator<O, T, Q> agg, Selector<I, O, T> sel, Acceptor<O, Q> acceptor) {
 		this.sources = ImmutableSet.copyOf(sources);
 		this.agg = agg;
 		this.sel = sel;
@@ -88,7 +90,7 @@ public class CI<F, T> {
 	 * @param budget The budget allocated to the CI
 	 * @return An {@link Estimate} of the CI's response
 	 */
-	public Estimate<T> apply(F args, Allowance[] budget) {
+	public Estimate<O, Q> apply(I args, Allowance[] budget) {
 		// Create the thread pool
 		ListeningExecutorService pool = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
 		
@@ -99,7 +101,7 @@ public class CI<F, T> {
 		return invocation.getEstimate();
 	}
 	
-	public Result<T> applySync(F args, Allowance[] budget) throws InterruptedException, ExecutionException {
+	public Result<O, Q> applySync(I args, Allowance[] budget) throws InterruptedException, ExecutionException {
 		// sameThreadExecutor will cause this to run in sync
 		ListeningExecutorService pool = MoreExecutors.sameThreadExecutor();
 		
@@ -120,14 +122,14 @@ public class CI<F, T> {
 	public class Invocation implements Callable<Void> {
 		
 		// Parameters
-		private final F args;
+		private final I args;
 		private Allowance[] budget;
 		private final ListeningExecutorService pool;
 		
 		// State
-		private final Set<Source<F, T>> remaining;
-		private final Set<ListenableFuture<Opinion<T>>> opinions;
-		private final EstimateImpl<T> estimate = new EstimateImpl<T>(agg, acceptor);
+		private final Set<Source<I, O, T>> remaining;
+		private final Set<ListenableFuture<Opinion<O, T>>> opinions;
+		private final EstimateImpl<O, T, Q> estimate = new EstimateImpl<O, T, Q>(agg, acceptor);
 
 		private long startedAt = -1;
 		
@@ -138,13 +140,13 @@ public class CI<F, T> {
 		 * @param args The arguments to pass to Source functions
 		 * @param budget The budget for the CI
 		 */
-		private Invocation(F args, Allowance[] budget, ListeningExecutorService pool) {
+		private Invocation(I args, Allowance[] budget, ListeningExecutorService pool) {
 			this.args = args;
 			this.budget = budget;
 			this.pool = pool;
 			
 			remaining = new HashSet<>(sources);
-			opinions = new HashSet<ListenableFuture<Opinion<T>>>();
+			opinions = new HashSet<ListenableFuture<Opinion<O, T>>>();
 			
 			// Run the invocation, ensuring that the estimate is sealed when it finishes
 			Futures.addCallback(pool.submit(this), new FutureCallback<Object>() {
@@ -162,10 +164,10 @@ public class CI<F, T> {
 			});
 			
 			// Once the estimate is complete & has returned a final answer, kill all of the threads
-			Futures.addCallback(estimate, new FutureCallback<Result<T>>() {
+			Futures.addCallback(estimate, new FutureCallback<Result<O, Q>>() {
 
 				@Override
-				public void onSuccess(Result<T> result) {
+				public void onSuccess(Result<O, Q> result) {
 					Invocation.this.pool.shutdownNow();
 				}
 
@@ -185,7 +187,7 @@ public class CI<F, T> {
 		 * @return Whether the source fits within the CI's remaining budget
 		 * @throws Exception If the Source's getCost function throws an exception
 		 */
-		public boolean withinBudget(Source<F, T> source) throws Exception {
+		public boolean withinBudget(Source<I, O, T> source) throws Exception {
 			return Budgets.withinBudget(budget, source.getCost(args), Optional.of(this));
 		}
 		
@@ -203,33 +205,33 @@ public class CI<F, T> {
 		/**
 		 * @return The Selector object for the CI
 		 */
-		public Selector<F, T> getSelector() {
+		public Selector<I, O, T> getSelector() {
 			return sel;
 		}
 
 		/**
 		 * @return The Aggregator object for the CI
 		 */
-		public Aggregator<T> getAggregator() {
+		public Aggregator<O, T, Q> getAggregator() {
 			return agg;
 		}
 
 		/**
 		 * @return The Sources for the CI to query
 		 */
-		public ImmutableSet<Source<F, T>> getSources() {
+		public ImmutableSet<Source<I, O, T>> getSources() {
 			return sources;
 		}
 		
-		public Set<Source<F, T>> getRemaining() {
+		public Set<Source<I, O, T>> getRemaining() {
 			return Collections.unmodifiableSet(remaining);
 		}
 
 		/**
 		 * @return The Sources which have already been consulted in this Invocation of the CI
 		 */
-		public Set<Source<F, T>> getConsulted() {
-			Set<Source<F, T>> set = new HashSet<>(sources);
+		public Set<Source<I, O, T>> getConsulted() {
+			Set<Source<I, O, T>> set = new HashSet<>(sources);
 			set.removeAll(remaining);
 			return Collections.unmodifiableSet(set);
 		}
@@ -237,7 +239,7 @@ public class CI<F, T> {
 		/**
 		 * @return The Opinions which have been solicited in this Invocation of the CI
 		 */
-		public Set<ListenableFuture<Opinion<T>>> getOpinions() {
+		public Set<ListenableFuture<Opinion<O, T>>> getOpinions() {
 			return Collections.unmodifiableSet(opinions);
 		}
 
@@ -255,14 +257,14 @@ public class CI<F, T> {
 		/**
 		 * @return The arguments to the CI function
 		 */
-		public F getArgs() {
+		public I getArgs() {
 			return args;
 		}
 
 		/**
 		 * @return The Estimate object for the result of the CI
 		 */
-		public Estimate<T> getEstimate() {
+		public Estimate<O, Q> getEstimate() {
 			return estimate;
 		}
 		
@@ -301,10 +303,10 @@ public class CI<F, T> {
 				});
 			}
 			
-			Source<F, T> next;
+			Source<I, O, T> next;
 			for (;;) {
 				// Get the next source (this might block)
-				Optional<Source<F, T>> maybeNext = sel.getNextSource(this);
+				Optional<Source<I, O, T>> maybeNext = sel.getNextSource(this);
 				if (maybeNext.isPresent())
 					next = maybeNext.get();
 				else
@@ -332,7 +334,7 @@ public class CI<F, T> {
 					System.out.println("Calling " + next.getName()); // TODO: DEBUG
 					
 					// Query the source & augment the estimate
-					ListenableFuture<Opinion<T>> opinion = pool.submit(new Source.SourceCallable<F, T>(next, args));
+					ListenableFuture<Opinion<O, T>> opinion = pool.submit(new Source.SourceCallable<I, O, T>(next, args));
 					opinions.add(opinion);
 					estimate.augment(opinion);
 				}

@@ -8,14 +8,14 @@ import edu.toronto.cs.se.ci.data.Result;
  * 
  * @author Michael Layzell
  *
- * @param <T>
+ * @param <O>
  */
-public interface Acceptor<T> {
+public interface Acceptor<O, Q> {
 	
 	/**
 	 * @param result The aggregated result of a CI
 	 * @return Whether the result is acceptable
 	 */
-	public boolean isAcceptable(Result<T> result);
+	public boolean isAcceptable(Result<O, Q> result);
 
 }

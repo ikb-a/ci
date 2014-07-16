@@ -8,7 +8,6 @@ import edu.toronto.cs.se.ci.Source;
 import edu.toronto.cs.se.ci.UnknownException;
 import edu.toronto.cs.se.ci.budget.Expenditure;
 import edu.toronto.cs.se.ci.data.Opinion;
-import edu.toronto.cs.se.ci.data.Trust;
 
 /**
  * This source wraps another source, transforming its arguments, results, 
@@ -16,14 +15,14 @@ import edu.toronto.cs.se.ci.data.Trust;
  * 
  * @author Michael Layzell
  *
- * @param <F> Transformed input type
- * @param <T> Transformed output type
- * @param <OF> Original input type
- * @param <OT> Original output type
+ * @param <I> Transformed input type
+ * @param <O> Transformed output type
+ * @param <OI> Original input type
+ * @param <OO> Original output type
  */
-public abstract class BasicAdaptor<F, T, OF, OT> extends Adaptor<F, T, OF, OT> {
+public abstract class BasicAdaptor<I, O, T, OI, OO, OT> extends Adaptor<I, O, T, OI, OO, OT> {
 	
-	public BasicAdaptor(Class<? extends Contract<OF, OT>> around) {
+	public BasicAdaptor(Class<? extends Contract<OI, OO, OT>> around) {
 		super(around);
 	}
 	
@@ -33,7 +32,7 @@ public abstract class BasicAdaptor<F, T, OF, OT> extends Adaptor<F, T, OF, OT> {
 	 * @param args The input arguments
 	 * @return The arguments passed to the adaptee
 	 */
-	public abstract OF transformArgs(F args);
+	public abstract OI transformArgs(I args);
 	
 	/**
 	 * Transforms the result provided by the adaptee
@@ -41,7 +40,7 @@ public abstract class BasicAdaptor<F, T, OF, OT> extends Adaptor<F, T, OF, OT> {
 	 * @param result The original result
 	 * @return The transformed result
 	 */
-	public abstract T transformResult(OT result);
+	public abstract O transformResult(OO result);
 	
 	/**
 	 * Generates a trust value for an opinion provided by the adaptee
@@ -50,7 +49,7 @@ public abstract class BasicAdaptor<F, T, OF, OT> extends Adaptor<F, T, OF, OT> {
 	 * @param opinion The original opinion
 	 * @return The new trust value
 	 */
-	public abstract Trust transformTrust(Trust trust, Optional<T> result, Optional<OT> originalResult);
+	public abstract T transformTrust(OT trust, Optional<O> result, Optional<OO> originalResult);
 
 	/**
 	 * Transforms an opinion provided by the adaptee
@@ -58,8 +57,8 @@ public abstract class BasicAdaptor<F, T, OF, OT> extends Adaptor<F, T, OF, OT> {
 	 * @param opinion The original opinion
 	 * @return The transformed opinion
 	 */
-	public Opinion<T> transformOpinion(Opinion<OT> opinion) {
-		T newResult = transformResult(opinion.getValue());
+	public Opinion<O, T> transformOpinion(Opinion<OO, OT> opinion) {
+		O newResult = transformResult(opinion.getValue());
 		return new Opinion<>(newResult, 
 				transformTrust(
 						opinion.getTrust(), 
@@ -72,7 +71,7 @@ public abstract class BasicAdaptor<F, T, OF, OT> extends Adaptor<F, T, OF, OT> {
 	 * @see edu.toronto.cs.se.ci.Source#getCost(java.lang.Object)
 	 */
 	@Override
-	public Expenditure[] getCost(F args, Source<OF, OT> adaptee) throws Exception {
+	public Expenditure[] getCost(I args, Source<OI, OO, OT> adaptee) throws Exception {
 		return adaptee.getCost(transformArgs(args));
 	}
 
@@ -81,7 +80,7 @@ public abstract class BasicAdaptor<F, T, OF, OT> extends Adaptor<F, T, OF, OT> {
 	 * @see edu.toronto.cs.se.ci.Source#getOpinion(java.lang.Object)
 	 */
 	@Override
-	public Opinion<T> getOpinion(F args, Source<OF, OT> adaptee) throws UnknownException {
+	public Opinion<O, T> getOpinion(I args, Source<OI, OO, OT> adaptee) throws UnknownException {
 		return transformOpinion(adaptee.getOpinion(transformArgs(args)));
 	}
 	
@@ -90,9 +89,9 @@ public abstract class BasicAdaptor<F, T, OF, OT> extends Adaptor<F, T, OF, OT> {
 	 * @see edu.toronto.cs.se.ci.Source#getTrust(java.lang.Object, com.google.common.base.Optional)
 	 */
 	@Override
-	public Trust getTrust(F args, Optional<T> result, Source<OF, OT> adaptee) {
-		Trust trust = adaptee.getTrust(transformArgs(args), Optional.<OT>absent());
-		return transformTrust(trust, result, Optional.<OT>absent());
+	public T getTrust(I args, Optional<O> result, Source<OI, OO, OT> adaptee) {
+		OT trust = adaptee.getTrust(transformArgs(args), Optional.<OO>absent());
+		return transformTrust(trust, result, Optional.<OO>absent());
 	}
 
 }

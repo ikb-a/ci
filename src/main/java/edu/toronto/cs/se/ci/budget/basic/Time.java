@@ -38,7 +38,7 @@ public class Time implements Allowance, Expenditure {
 	 * @see edu.toronto.cs.se.ci.budget.Expenditure#expend(edu.toronto.cs.se.ci.budget.Allowance[], com.google.common.base.Optional)
 	 */
 	@Override
-	public Optional<Allowance[]> expend(Allowance[] budget, Optional<CI<?, ?>.Invocation> invocation) {
+	public Optional<Allowance[]> expend(Allowance[] budget, Optional<CI<?, ?, ?, ?>.Invocation> invocation) {
 		for (int i = 0; i < budget.length; i++) {
 			if (budget[i] instanceof Time) {
 				Time allowance = (Time) budget[i];

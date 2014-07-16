@@ -5,6 +5,7 @@ import java.util.List;
 
 import edu.toronto.cs.se.ci.data.Opinion;
 import edu.toronto.cs.se.ci.data.Result;
+import edu.toronto.cs.se.ci.data.Trust;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -26,12 +27,12 @@ public class ProbabalisticAggregatorTest extends TestCase {
 	public void testBoolean() {
 		ProbabalisticAggregator<Boolean> aggregator = new ProbabalisticAggregator<>(2);
 		
-		List<Opinion<Boolean>> opinions = new ArrayList<>();
-		opinions.add(new Opinion<Boolean>(true, 0.6));
-		opinions.add(new Opinion<Boolean>(true, 0.2));
-		opinions.add(new Opinion<Boolean>(false, 0.8));
+		List<Opinion<Boolean, Trust>> opinions = new ArrayList<>();
+		opinions.add(new Opinion<Boolean, Trust>(true, new Trust(0.6)));
+		opinions.add(new Opinion<Boolean, Trust>(true, new Trust(0.2)));
+		opinions.add(new Opinion<Boolean, Trust>(false, new Trust(0.8)));
 
-		Result<Boolean> result = aggregator.aggregate(opinions);
+		Result<Boolean, Double> result = aggregator.aggregate(opinions);
 		assertEquals(result.getValue(), Boolean.FALSE);
 		assertApprox(result.getQuality(), 0.4532, 0.0001);
 	}
@@ -39,14 +40,14 @@ public class ProbabalisticAggregatorTest extends TestCase {
 	public void testNumbers() {
 		ProbabalisticAggregator<Integer> aggregator = new ProbabalisticAggregator<>(-1);
 		
-		List<Opinion<Integer>> opinions = new ArrayList<>();
-		opinions.add(new Opinion<Integer>(3, 0.4));
-		opinions.add(new Opinion<Integer>(3, 0.2));
-		opinions.add(new Opinion<Integer>(6, 0.7));
-		opinions.add(new Opinion<Integer>(5, 0.4));
-		opinions.add(new Opinion<Integer>(5, 0.3));
+		List<Opinion<Integer, Trust>> opinions = new ArrayList<>();
+		opinions.add(new Opinion<Integer, Trust>(3, new Trust(0.4)));
+		opinions.add(new Opinion<Integer, Trust>(3, new Trust(0.2)));
+		opinions.add(new Opinion<Integer, Trust>(6, new Trust(0.7)));
+		opinions.add(new Opinion<Integer, Trust>(5, new Trust(0.4)));
+		opinions.add(new Opinion<Integer, Trust>(5, new Trust(0.3)));
 		
-		Result<Integer> result = aggregator.aggregate(opinions);
+		Result<Integer, Double> result = aggregator.aggregate(opinions);
 		assertEquals(result.getValue(), new Integer(6));
 		assertApprox(result.getQuality(), 0.2796, 0.0001);
 	}

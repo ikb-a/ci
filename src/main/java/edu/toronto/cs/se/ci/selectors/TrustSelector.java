@@ -9,16 +9,17 @@ import com.google.common.base.Optional;
 import edu.toronto.cs.se.ci.CI;
 import edu.toronto.cs.se.ci.Selector;
 import edu.toronto.cs.se.ci.Source;
+import edu.toronto.cs.se.ci.data.Trust;
 
-public class TrustSelector<F, T> implements Selector<F, T> {
+public class TrustSelector<I, O> implements Selector<I, O, Trust> {
 
 	@Override
-	public Optional<Source<F, T>> getNextSource(CI<F, T>.Invocation invocation) {
-		List<Source<F, T>> sources = new ArrayList<>(invocation.getRemaining());
-		sources.sort(new TrustComparator<F>(invocation.getArgs()));
+	public Optional<Source<I, O, Trust>> getNextSource(CI<I, O, Trust, ?>.Invocation invocation) {
+		List<Source<I, O, Trust>> sources = new ArrayList<>(invocation.getRemaining());
+		sources.sort(new TrustComparator<I>(invocation.getArgs()));
 		
 		try {
-			for (Source<F, T> source : sources) {
+			for (Source<I, O, Trust> source : sources) {
 				if (invocation.withinBudget(source)) {
 					return Optional.of(source);
 				}
@@ -30,16 +31,16 @@ public class TrustSelector<F, T> implements Selector<F, T> {
 		return Optional.absent();
 	}
 	
-	public static class TrustComparator<F> implements Comparator<Source<F, ?>> {
+	public static class TrustComparator<I> implements Comparator<Source<I, ?, Trust>> {
 
-		private F args;
+		private I args;
 
-		public TrustComparator(F args) {
+		public TrustComparator(I args) {
 			this.args = args;
 		}
 
 		@Override
-		public int compare(Source<F, ?> o1, Source<F, ?> o2) {
+		public int compare(Source<I, ?, Trust> o1, Source<I, ?, Trust> o2) {
 			return (int) (o1.getTrust(args, Optional.absent()).getDisbelief()
 					    - o2.getTrust(args, Optional.absent()).getDisbelief());
 		}

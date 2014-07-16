@@ -8,9 +8,11 @@ import com.google.common.base.Optional;
  * 
  * @author Michael Layzell
  *
+ * @param <O>
  * @param <T>
+ * @param <Q>
  */
-public interface Selector<F, T> {
+public interface Selector<I, O, T> {
 	
 	/**
 	 * Get the next source to be consulted by the CI. This function will be called
@@ -20,6 +22,6 @@ public interface Selector<F, T> {
 	 * @param invocation The current invocation of the CI
 	 * @return The next source to consult, or {@code null}
 	 */
-	public Optional<Source<F, T>> getNextSource(CI<F, T>.Invocation invocation);
+	public Optional<Source<I, O, T>> getNextSource(CI<I, O, T, ?>.Invocation invocation);
 
 }

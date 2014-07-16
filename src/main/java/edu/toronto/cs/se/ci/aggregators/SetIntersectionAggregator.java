@@ -18,23 +18,23 @@ import edu.toronto.cs.se.ci.data.Result;
  * 
  * @author Michael Layzell
  *
- * @param <T> Set element type
+ * @param <O> Set element type
  */
-public class SetIntersectionAggregator<T> implements Aggregator<Set<T>> {
+public class SetIntersectionAggregator<O, T> implements Aggregator<Set<O>, T, Double> {
 
 	@Override
-	public Result<Set<T>> aggregate(Iterable<Opinion<Set<T>>> opinions) {
-		Set<T> intersection = new HashSet<T>();
-		Set<T> union = new HashSet<T>();
+	public Result<Set<O>, Double> aggregate(Iterable<Opinion<Set<O>, T>> opinions) {
+		Set<O> intersection = new HashSet<O>();
+		Set<O> union = new HashSet<O>();
 		
-		for (Opinion<Set<T>> opinion : opinions) {
-			Set<T> value = opinion.getValue();
+		for (Opinion<Set<O>, T> opinion : opinions) {
+			Set<O> value = opinion.getValue();
 			
 			union.addAll(value);
 			intersection.retainAll(value);
 		}
 		
-		return new Result<Set<T>>(intersection, ((double) intersection.size())/union.size());
+		return new Result<Set<O>, Double>(intersection, ((double) intersection.size())/union.size());
 	}
 
 }

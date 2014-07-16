@@ -17,21 +17,21 @@ import edu.toronto.cs.se.ci.data.Result;
  * 
  * @author Michael Layzell
  *
- * @param <T> Set element type
+ * @param <O> Set element type
  */
-public class SetUnionAggregator<T> implements Aggregator<Set<T>> {
+public class SetUnionAggregator<O, T> implements Aggregator<Set<O>, T, Double> {
 
 	@Override
-	public Result<Set<T>> aggregate(Iterable<Opinion<Set<T>>> opinions) {
+	public Result<Set<O>, Double> aggregate(Iterable<Opinion<Set<O>, T>> opinions) {
 		int intersectSize = 0;
 		int totalSize = 0;
-		Set<T> result = new HashSet<T>();
+		Set<O> result = new HashSet<O>();
 		
-		for (Opinion<Set<T>> opinion : opinions) {
-			Set<T> value = opinion.getValue();
+		for (Opinion<Set<O>, T> opinion : opinions) {
+			Set<O> value = opinion.getValue();
 
 			// Getting the intersection
-			Set<T> intersection = new HashSet<T>(result);
+			Set<O> intersection = new HashSet<O>(result);
 			intersection.retainAll(value);
 
 			// Values for determining quality
@@ -42,7 +42,7 @@ public class SetUnionAggregator<T> implements Aggregator<Set<T>> {
 			result.addAll(value);
 		}
 		
-		return new Result<Set<T>>(result, ((double) intersectSize)/totalSize);
+		return new Result<Set<O>, Double>(result, ((double) intersectSize)/totalSize);
 	}
 
 }

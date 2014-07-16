@@ -2,8 +2,8 @@ package edu.toronto.cs.se.ci;
 
 import java.util.List;
 
-public interface Contract<F, T> {
+public interface Contract<I, O, T> {
 	
-	public List<Source<F, T>> provide();
+	public List<Source<I, O, T>> provide();
 
 }

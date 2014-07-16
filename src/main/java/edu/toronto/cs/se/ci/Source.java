@@ -8,17 +8,16 @@ import com.google.common.collect.ImmutableList;
 
 import edu.toronto.cs.se.ci.budget.Expenditure;
 import edu.toronto.cs.se.ci.data.Opinion;
-import edu.toronto.cs.se.ci.data.Trust;
 
 /**
  * A source queried by a CI for its opinion.
  * 
  * @author Michael Layzell
  *
- * @param <F>
- * @param <T>
+ * @param <I>
+ * @param <O>
  */
-public abstract class Source<F, T> {
+public abstract class Source<I, O, T> {
 	
 	/**
 	 * Provides this source. Means that contracts don't have to be implemented
@@ -26,7 +25,7 @@ public abstract class Source<F, T> {
 	 * 
 	 * @return A single element list containing only this source
 	 */
-	public List<Source<F, T>> provide() {
+	public List<Source<I, O, T>> provide() {
 		return ImmutableList.of(this);
 	}
 	
@@ -43,7 +42,7 @@ public abstract class Source<F, T> {
 	 * @param args The arguments which would be passed to {@code apply}
 	 * @return The cost of querying the source
 	 */
-	public abstract Expenditure[] getCost(F args) throws Exception;
+	public abstract Expenditure[] getCost(I args) throws Exception;
 
 	/**
 	 * Get the source's opinion. This includes the result of the source, and
@@ -53,26 +52,26 @@ public abstract class Source<F, T> {
 	 * @return The source's opinion.
 	 * @throws UnknownException The source wasn't avaliable, so no answer could be obtained
 	 */
-	public abstract Opinion<T> getOpinion(F args) throws UnknownException;
+	public abstract Opinion<O, T> getOpinion(I args) throws UnknownException;
 
 	/**
 	 * Callable wrapper for a source.
 	 *
-	 * @param <F> Argument Type
-	 * @param <T> Return Type
+	 * @param <I> Argument Type
+	 * @param <O> Return Type
 	 */
-	public static class SourceCallable<F, T> implements Callable<Opinion<T>> {
+	public static class SourceCallable<I, O, T> implements Callable<Opinion<O, T>> {
 		
-		private Source<F, T> source;
-		private F args;
+		private Source<I, O, T> source;
+		private I args;
 		
-		public SourceCallable(Source<F, T> source, F args) {
+		public SourceCallable(Source<I, O, T> source, I args) {
 			this.source = source;
 			this.args = args;
 		}
 
 		@Override
-		public Opinion<T> call() throws Exception {
+		public Opinion<O, T> call() throws Exception {
 			return source.getOpinion(args);
 		}
 
@@ -86,6 +85,6 @@ public abstract class Source<F, T> {
 	 * @param args The arguments passed to the source
 	 * @return A double representing the trust in the response
 	 */
-	public abstract Trust getTrust(F args, Optional<T> value);
+	public abstract T getTrust(I args, Optional<O> value);
 	
 }

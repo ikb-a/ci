@@ -5,7 +5,6 @@ import com.google.common.base.Optional;
 import edu.toronto.cs.se.ci.Source;
 import edu.toronto.cs.se.ci.UnknownException;
 import edu.toronto.cs.se.ci.data.Opinion;
-import edu.toronto.cs.se.ci.data.Trust;
 
 /**
  * A source object which splits the acts of getting a response ({@code getResponse})
@@ -13,10 +12,10 @@ import edu.toronto.cs.se.ci.data.Trust;
  * 
  * @author Michael Layzell
  *
- * @param <A> Input type (from)
- * @param <T> Output type (to)
+ * @param <I> Input type (from)
+ * @param <O> Output type (to)
  */
-public abstract class BasicSource<A, T> extends Source<A, T> {
+public abstract class BasicSource<I, O, T> extends Source<I, O, T> {
 	
 	/**
 	 * Queries the source, getting its response.
@@ -24,18 +23,18 @@ public abstract class BasicSource<A, T> extends Source<A, T> {
 	 * @param args The arguments passed to the source
 	 * @return The value of the source's opinion.
 	 */
-	public abstract T getResponse(A input) throws UnknownException;
+	public abstract O getResponse(I input) throws UnknownException;
 	
 	/*
 	 * (non-Javadoc)
 	 * @see edu.toronto.cs.se.ci.Source#getOpinion(java.lang.Object)
 	 */
 	@Override
-	public Opinion<T> getOpinion(A input) throws UnknownException {
-		T response = getResponse(input);
-		Trust trust = getTrust(input, Optional.of(response));
+	public Opinion<O, T> getOpinion(I input) throws UnknownException {
+		O response = getResponse(input);
+		T trust = getTrust(input, Optional.of(response));
 		
-		return new Opinion<T>(response, trust);
+		return new Opinion<O, T>(response, trust);
 	}
 
 }

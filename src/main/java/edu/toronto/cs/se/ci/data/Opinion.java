@@ -6,39 +6,30 @@ package edu.toronto.cs.se.ci.data;
  * 
  * @author Michael Layzell
  *
- * @param <T>
+ * @param <O>
  */
-public final class Opinion<T> {
+public final class Opinion<O, T> {
 
-	private final Trust trust;
-	private final T value;
+	private final T trust;
+	private final O value;
 	
-	public Opinion(T value, double belief) {
-		this.value = value;
-		this.trust = new Trust(belief);
-	}
-
 	/**
 	 * Create an Opinion object
 	 * 
 	 * @param value
 	 * @param trust
 	 */
-	public Opinion(T value, Trust trust) {
+	public Opinion(O value, T trust) {
 		this.value = value;
 		this.trust = trust;
 	}
 	
-	public T getValue() {
+	public O getValue() {
 		return value;
 	}
 	
-	public Trust getTrust() {
+	public T getTrust() {
 		return trust;
 	}
 	
-	public double getBelief() {
-		return trust.getBelief();
-	}
-
 }

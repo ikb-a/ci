@@ -11,15 +11,16 @@ import edu.toronto.cs.se.ci.Source;
  * 
  * @author Michael Layzell
  *
- * @param <F>
+ * @param <I>
+ * @param <O>
  * @param <T>
  */
-public class AllSelector<F, T> implements Selector<F, T> {
+public class AllSelector<I, O, T> implements Selector<I, O, T> {
 
 	@Override
-	public Optional<Source<F, T>> getNextSource(CI<F, T>.Invocation invocation) {
+	public Optional<Source<I, O, T>> getNextSource(CI<I, O, T, ?>.Invocation invocation) {
 		try {
-			for (Source<F, T> source : invocation.getRemaining()) {
+			for (Source<I, O, T> source : invocation.getRemaining()) {
 				if (invocation.withinBudget(source))
 					return Optional.of(source);
 			}

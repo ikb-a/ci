@@ -31,7 +31,7 @@ public class RestrictedFlag implements Expenditure {
 	 * @see edu.toronto.cs.se.ci.budget.Expenditure#expend(edu.toronto.cs.se.ci.budget.Allowance[], com.google.common.base.Optional)
 	 */
 	@Override
-	public Optional<Allowance[]> expend(Allowance[] budget, Optional<CI<?, ?>.Invocation> invocation) {
+	public Optional<Allowance[]> expend(Allowance[] budget, Optional<CI<?, ?, ?, ?>.Invocation> invocation) {
 		for (Allowance allowance : budget) {
 			if (allowance instanceof Flag && ((Flag) allowance).getName().equals(name)) {
 				return Optional.absent();
