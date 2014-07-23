@@ -32,7 +32,7 @@ public class ProbabalisticAggregatorTest extends TestCase {
 		opinions.add(new Opinion<Boolean, Trust>(true, new Trust(0.2)));
 		opinions.add(new Opinion<Boolean, Trust>(false, new Trust(0.8)));
 
-		Result<Boolean, Double> result = aggregator.aggregate(opinions);
+		Result<Boolean, Double> result = aggregator.aggregate(opinions).get();
 		assertEquals(result.getValue(), Boolean.FALSE);
 		assertApprox(result.getQuality(), 0.4532, 0.0001);
 	}
@@ -47,7 +47,7 @@ public class ProbabalisticAggregatorTest extends TestCase {
 		opinions.add(new Opinion<Integer, Trust>(5, new Trust(0.4)));
 		opinions.add(new Opinion<Integer, Trust>(5, new Trust(0.3)));
 		
-		Result<Integer, Double> result = aggregator.aggregate(opinions);
+		Result<Integer, Double> result = aggregator.aggregate(opinions).get();
 		assertEquals(result.getValue(), new Integer(6));
 		assertApprox(result.getQuality(), 0.2796, 0.0001);
 	}

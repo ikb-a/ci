@@ -26,6 +26,10 @@ public abstract class BasicAdaptor<I, O, T, OI, OO, OT> extends Adaptor<I, O, T,
 		super(around);
 	}
 	
+	public BasicAdaptor(Source<OI, OO, OT> around) {
+		super(around);
+	}
+	
 	/**
 	 * Transforms the arguments to provide to the adaptee
 	 * 

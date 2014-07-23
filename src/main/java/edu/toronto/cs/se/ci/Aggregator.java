@@ -1,5 +1,9 @@
 package edu.toronto.cs.se.ci;
 
+import java.util.List;
+
+import com.google.common.base.Optional;
+
 import edu.toronto.cs.se.ci.data.Opinion;
 import edu.toronto.cs.se.ci.data.Result;
 
@@ -17,6 +21,6 @@ public interface Aggregator<O, T, Q> {
 	 * @param opinions The opinions provided by sources in the CI
 	 * @return An aggregated result
 	 */
-	public Result<O, Q> aggregate(Iterable<Opinion<O, T>> opinions);
+	public Optional<Result<O, Q>> aggregate(List<Opinion<O, T>> opinions);
 
 }

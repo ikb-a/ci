@@ -1,7 +1,10 @@
 package edu.toronto.cs.se.ci.aggregators;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import com.google.common.base.Optional;
 
 import edu.toronto.cs.se.ci.Aggregator;
 import edu.toronto.cs.se.ci.data.Evidence;
@@ -20,7 +23,7 @@ import edu.toronto.cs.se.ci.data.Trust;
 public class VoteProbAggregator<O> implements Aggregator<O, Trust, Double> {
 
 	@Override
-	public Result<O, Double> aggregate(Iterable<Opinion<O, Trust>> opinions) {
+	public Optional<Result<O, Double>> aggregate(List<Opinion<O, Trust>> opinions) {
 		Map<O, Double> options = new HashMap<>();
 		double total = 0;
 		
@@ -45,7 +48,7 @@ public class VoteProbAggregator<O> implements Aggregator<O, Trust, Double> {
 		// Generate a confidence level
 		double conf = new Trust(new Evidence(bestTrust, total - bestTrust)).getBelief();
 				
-		return new Result<O, Double>(bestOption, conf);
+		return Optional.of(new Result<O, Double>(bestOption, conf));
 	}
 
 }

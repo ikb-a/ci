@@ -2,7 +2,10 @@
 package edu.toronto.cs.se.ci.aggregators;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+
+import com.google.common.base.Optional;
 
 import edu.toronto.cs.se.ci.Aggregator;
 import edu.toronto.cs.se.ci.data.Opinion;
@@ -23,7 +26,7 @@ import edu.toronto.cs.se.ci.data.Result;
 public class SetIntersectionAggregator<O, T> implements Aggregator<Set<O>, T, Double> {
 
 	@Override
-	public Result<Set<O>, Double> aggregate(Iterable<Opinion<Set<O>, T>> opinions) {
+	public Optional<Result<Set<O>, Double>> aggregate(List<Opinion<Set<O>, T>> opinions) {
 		Set<O> intersection = new HashSet<O>();
 		Set<O> union = new HashSet<O>();
 		
@@ -34,7 +37,7 @@ public class SetIntersectionAggregator<O, T> implements Aggregator<Set<O>, T, Do
 			intersection.retainAll(value);
 		}
 		
-		return new Result<Set<O>, Double>(intersection, ((double) intersection.size())/union.size());
+		return Optional.of(new Result<Set<O>, Double>(intersection, ((double) intersection.size())/union.size()));
 	}
 
 }

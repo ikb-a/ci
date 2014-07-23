@@ -1,7 +1,10 @@
 package edu.toronto.cs.se.ci.aggregators;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import com.google.common.base.Optional;
 
 import edu.toronto.cs.se.ci.Aggregator;
 import edu.toronto.cs.se.ci.data.Evidence;
@@ -56,7 +59,7 @@ public class ProbabalisticAggregator<O> implements Aggregator<O, Trust, Double> 
 	}
 	
 	@Override
-	public Result<O, Double> aggregate(Iterable<Opinion<O, Trust>> opinions) {
+	public Optional<Result<O, Double>> aggregate(List<Opinion<O, Trust>> opinions) {
 		// Add the evidence from every source
 		Map<O, Evidence> options = new HashMap<>();
 		Evidence memo = new Evidence(0, 0);
@@ -80,7 +83,10 @@ public class ProbabalisticAggregator<O> implements Aggregator<O, Trust, Double> 
 			}
 		}
 		
-		return new Result<O, Double>(bestOption, bestBelief);
+		if (bestOption == null)
+			return Optional.absent();
+		
+		return Optional.of(new Result<O, Double>(bestOption, bestBelief));
 	}
 	
 }

@@ -1,9 +1,7 @@
 package edu.toronto.cs.se.ci;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Executor;
 
 import com.google.common.base.Optional;
@@ -24,10 +22,10 @@ import edu.toronto.cs.se.ci.data.Result;
  */
 public class EstimateImpl<O, T, Q> extends AbstractFuture<Result<O, Q>> implements Estimate<O, Q> {
 	
-	private Set<Opinion<O, T>> opinions = new HashSet<Opinion<O, T>>();
+	private List<Opinion<O, T>> opinions = new ArrayList<Opinion<O, T>>();
 	private int incomplete = 0;
 	private boolean sealed = false;
-	private Result<O, Q> value = null;
+	private Optional<Result<O, Q>> value = Optional.absent();
 	
 	// Functions
 	private Aggregator<O, T, Q> agg;
@@ -79,7 +77,10 @@ public class EstimateImpl<O, T, Q> extends AbstractFuture<Result<O, Q>> implemen
 					}
 					
 					// Check if we are done
-					if ((sealed && incomplete <= 0) || (acceptor != null && acceptor.isAcceptable(value)))
+					if (sealed && incomplete <= 0)
+						done();
+					
+					if (acceptor != null && value.isPresent() && acceptor.isAcceptable(value.get()) == Acceptability.GOOD)
 						done();
 				}
 			}
@@ -93,9 +94,10 @@ public class EstimateImpl<O, T, Q> extends AbstractFuture<Result<O, Q>> implemen
 					// We can still mark it as incomplete
 					incomplete--;
 					
-					// Log the error TODO: Remove?
-					System.err.println("Error thrown by Opinion");
-					t.printStackTrace();
+					if (! (t instanceof UnknownException)) {
+						System.err.println("Source threw an exception: ");
+						t.printStackTrace();
+					}
 					
 					// Check if we are done
 					if (sealed && incomplete <= 0)
@@ -130,10 +132,10 @@ public class EstimateImpl<O, T, Q> extends AbstractFuture<Result<O, Q>> implemen
 
 	@Override
 	public Optional<Result<O, Q>> getCurrent() {
-		if (value == null)
-			return Optional.fromNullable(aggregate());
+		if (! value.isPresent()) // TODO: Be smarter about this
+			return aggregate();
 		else
-			return Optional.of(value);
+			return value;
 	}
 	
 	/**
@@ -141,15 +143,16 @@ public class EstimateImpl<O, T, Q> extends AbstractFuture<Result<O, Q>> implemen
 	 */
 	public synchronized void done() {
 		sealed = true;
-
+		
 		if (isDone())
 			return;
 		
-		value = getCurrent().orNull();
-		if (value == null)
+		value = getCurrent();
+
+		if (! value.isPresent() || (acceptor != null && acceptor.isAcceptable(value.get()) == Acceptability.BAD))
 			setException(new Error("Unknown")); // TODO: More meaningful error? Should it throw?
 		else
-			set(value);
+			set(value.get());
 	}
 	
 	/**
@@ -157,13 +160,13 @@ public class EstimateImpl<O, T, Q> extends AbstractFuture<Result<O, Q>> implemen
 	 * with the complete ones.
 	 * @return The aggregate opinion based on done opinions
 	 */
-	private Result<O, Q> aggregate() {
+	private Optional<Result<O, Q>> aggregate() {
 		try {
 			return agg.aggregate(opinions);
 		} catch (Exception e) {
 			// There was a problem aggregating
 			e.printStackTrace();
-			return null;
+			return Optional.absent();
 		}
 	}
 	

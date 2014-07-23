@@ -1,7 +1,10 @@
 package edu.toronto.cs.se.ci.aggregators;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import com.google.common.base.Optional;
 
 import edu.toronto.cs.se.ci.Aggregator;
 import edu.toronto.cs.se.ci.data.Opinion;
@@ -21,7 +24,7 @@ import edu.toronto.cs.se.ci.data.Result;
 public class VoteAggregator<O> implements Aggregator<O, Double, Double> {
 
 	@Override
-	public Result<O, Double> aggregate(Iterable<Opinion<O, Double>> opinions) {
+	public Optional<Result<O, Double>> aggregate(List<Opinion<O, Double>> opinions) {
 		// Map from each value to its current aggregate weight
 		Map<O, Double> options = new HashMap<O, Double>();
 		
@@ -60,7 +63,7 @@ public class VoteAggregator<O> implements Aggregator<O, Double, Double> {
 		double quality = getQuality(bestWeight, totalVotes - bestWeight);
 		
 		// Return the result
-		return new Result<O, Double>(bestValue, quality);
+		return Optional.of(new Result<O, Double>(bestValue, quality));
 	}
 
 	/**

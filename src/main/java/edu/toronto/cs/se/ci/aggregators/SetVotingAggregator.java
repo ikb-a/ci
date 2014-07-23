@@ -2,8 +2,11 @@ package edu.toronto.cs.se.ci.aggregators;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.common.base.Optional;
 
 import edu.toronto.cs.se.ci.Aggregator;
 import edu.toronto.cs.se.ci.data.Opinion;
@@ -36,7 +39,7 @@ public class SetVotingAggregator<O> implements Aggregator<Set<O>, Double, Double
 	}
 
 	@Override
-	public Result<Set<O>, Double> aggregate(Iterable<Opinion<Set<O>, Double>> opinions) {
+	public Optional<Result<Set<O>, Double>> aggregate(List<Opinion<Set<O>, Double>> opinions) {
 		double totalWeight = 0;
 		Map<O, Double> votes = new HashMap<O, Double>();
 		
@@ -69,7 +72,7 @@ public class SetVotingAggregator<O> implements Aggregator<Set<O>, Double, Double
 		}
 		
 		// The quality is the average agreement level of items in the set
-		return new Result<Set<O>, Double>(results, agreementSum / results.size());
+		return Optional.of(new Result<Set<O>, Double>(results, agreementSum / results.size()));
 	}
 
 }

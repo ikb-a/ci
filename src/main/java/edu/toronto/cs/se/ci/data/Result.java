@@ -35,5 +35,13 @@ public final class Result<O, Q> {
 	public Q getQuality() {
 		return quality;
 	}
+	
+	@Override
+	public String toString() {
+		if (value != null)
+			return "Result " + value.toString() + " " + quality.toString();
+		else
+			return "UnknownResult";
+	}
 
 }

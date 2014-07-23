@@ -11,7 +11,7 @@ public final class Contracts {
 	
 	public static void register(Object provider) {
 		if (! (provider instanceof Contract<?, ?, ?>))
-			throw new Error("Provider must provide at least one Contract");
+			throw new Error("Provider " + provider.getClass().getName() + " must provide at least one Contract");
 		
 		providers.add(provider);
 	}

@@ -16,6 +16,6 @@ public interface Acceptor<O, Q> {
 	 * @param result The aggregated result of a CI
 	 * @return Whether the result is acceptable
 	 */
-	public boolean isAcceptable(Result<O, Q> result);
+	public Acceptability isAcceptable(Result<O, Q> result);
 
 }

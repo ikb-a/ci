@@ -11,16 +11,25 @@ import edu.toronto.cs.se.ci.data.Opinion;
 public abstract class Adaptor<I, O, T, OI, OO, OT> {
 	
 	private Class<? extends Contract<OI, OO, OT>> around;
+	private Source<OI, OO, OT> aroundSource;
 	
 	public Adaptor(Class<? extends Contract<OI, OO, OT>> around) {
 		this.around = around;
 	}
 	
+	public Adaptor(Source<OI, OO, OT> around) {
+		this.aroundSource = around;
+	}
+	
 	public List<Source<I, O, T>> provide() {
 		List<Source<I, O, T>> sources = new ArrayList<>();
 
-		for (Source<OI, OO, OT> s : Contracts.discover(around)) {
-			sources.add(new SrcAdaptor(s));
+		if (this.around != null) {
+			for (Source<OI, OO, OT> s : Contracts.discover(around)) {
+				sources.add(new SrcAdaptor(s));
+			}
+		} else {
+			sources.add(new SrcAdaptor(aroundSource));
 		}
 
 		return sources;
