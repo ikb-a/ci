@@ -4,6 +4,12 @@ import java.math.BigDecimal;
 
 import com.google.common.base.Optional;
 
+/**
+ * A generic class for depletables which deal with BigDecimal values
+ * 
+ * @author Michael Layzell
+ *
+ */
 public abstract class DecimalDepletable extends BasicDepletable<BigDecimal> {
 	
 	/**

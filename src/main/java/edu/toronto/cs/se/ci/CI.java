@@ -32,6 +32,8 @@ import edu.toronto.cs.se.ci.data.Result;
  *
  * @param <I> Input type
  * @param <O> Result type
+ * @param <T> Trust type
+ * @param <Q> Quality type
  */
 public class CI<I, O, T, Q> {
 
@@ -40,34 +42,35 @@ public class CI<I, O, T, Q> {
 	private final Selector<I, O, T> sel;
 	private final Acceptor<O, Q> acceptor;
 	
-	/* public CI(Class<? extends Contract<I, O>> contract) {
-		this(Contracts.discover(contract));
-	} */
-
+	/**
+	 * Create a CI using source discovery
+	 * 
+	 * @param contract The {@link Contract} to discover sources with
+	 * @param agg The {@link Aggregator} to use
+	 * @param sel The {@link Selector} to use
+	 */
 	public CI(Class<? extends Contract<I, O, T>> contract, Aggregator<O, T, Q> agg, Selector<I, O, T> sel) {
 		this(Contracts.discover(contract), agg, sel);
 	}
 
+	/**
+	 * Create a CI using source discovery
+	 * 
+	 * @param contract The {@link Contract} to discover sources with
+	 * @param agg The {@link Aggregator} to use
+	 * @param sel The {@link Selector} to use
+	 * @param acceptor The {@link Acceptor} to use
+	 */
 	public CI(Class<? extends Contract<I, O, T>> contract, Aggregator<O, T, Q> agg, Selector<I, O, T> sel, Acceptor<O, Q> acceptor) {
 		this(Contracts.discover(contract), agg, sel, acceptor);
 	}
 
 	/**
-	 * Create a CI using the {@link VoteAggregator} aggregator and
-	 * {@link AllSelector} selector.
+	 * Create a CI using an explicit source set
 	 * 
-	 * @param sources The list of sources for the CI to query
-	 */
-	/* public CI(Collection<Source<I, O>> sources) {
-		this(sources, new VoteAggregator<O>(), new AllSelector<I, O, T>());
-	} */
-
-	/**
-	 * Create a CI using the provided aggregator and selector.
-	 * 
-	 * @param sources The list of sources for the CI to query
-	 * @param agg The opinion aggregator
-	 * @param sel The source selector
+	 * @param sources The {@link Source}s to select from
+	 * @param agg The {@link Aggregator} to use
+	 * @param sel The {@link Selector} to use
 	 */
 	public CI(Collection<Source<I, O, T>> sources, Aggregator<O, T, Q> agg, Selector<I, O, T> sel) {
 		this.sources = ImmutableSet.copyOf(sources);
@@ -76,6 +79,14 @@ public class CI<I, O, T, Q> {
 		this.acceptor = null;
 	}
 	
+	/**
+	 * Create a CI using an explicit source set
+	 * 
+	 * @param sources The {@link Source}s to select from
+	 * @param agg The {@link Aggregator} to use
+	 * @param sel The {@link Selector} to use
+	 * @param acceptor The {@link Acceptor}
+	 */
 	public CI(Collection<Source<I, O, T>> sources, Aggregator<O, T, Q> agg, Selector<I, O, T> sel, Acceptor<O, Q> acceptor) {
 		this.sources = ImmutableSet.copyOf(sources);
 		this.agg = agg;
@@ -101,6 +112,15 @@ public class CI<I, O, T, Q> {
 		return invocation.getEstimate();
 	}
 	
+	/**
+	 * Invokes the CI, running on a single thread. Sources are queried sequentially
+	 * 
+	 * @param args The arguments to pass to the CI
+	 * @param budget The budget allocated to the CI
+	 * @return The result of the CI's execution
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
 	public Result<O, Q> applySync(I args, Allowance[] budget) throws InterruptedException, ExecutionException {
 		// sameThreadExecutor will cause this to run in sync
 		ListeningExecutorService pool = MoreExecutors.sameThreadExecutor();
@@ -223,6 +243,9 @@ public class CI<I, O, T, Q> {
 			return sources;
 		}
 		
+		/**
+		 * @return The Sources which haven't been queried yet
+		 */
 		public Set<Source<I, O, T>> getRemaining() {
 			return Collections.unmodifiableSet(remaining);
 		}
@@ -274,7 +297,6 @@ public class CI<I, O, T, Q> {
 		public ListeningExecutorService getPool() {
 			return pool;
 		}
-
 
 		/*
 		 * (non-Javadoc)

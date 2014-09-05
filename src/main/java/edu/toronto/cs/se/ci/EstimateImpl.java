@@ -19,6 +19,8 @@ import edu.toronto.cs.se.ci.data.Result;
  * @author Michael Layzell
  *
  * @param <O>
+ * @param <T>
+ * @param <Q>
  */
 public class EstimateImpl<O, T, Q> extends AbstractFuture<Result<O, Q>> implements Estimate<O, Q> {
 	
@@ -130,6 +132,10 @@ public class EstimateImpl<O, T, Q> extends AbstractFuture<Result<O, Q>> implemen
 		return sealed;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see edu.toronto.cs.se.ci.Estimate#getCurrent()
+	 */
 	@Override
 	public Optional<Result<O, Q>> getCurrent() {
 		if (! value.isPresent()) // TODO: Be smarter about this
@@ -150,7 +156,7 @@ public class EstimateImpl<O, T, Q> extends AbstractFuture<Result<O, Q>> implemen
 		value = getCurrent();
 
 		if (! value.isPresent() || (acceptor != null && acceptor.isAcceptable(value.get()) == Acceptability.BAD))
-			setException(new Error("Unknown")); // TODO: More meaningful error? Should it throw?
+			setException(new UnknownException("Unknown")); // TODO: More meaningful error? Should it throw?
 		else
 			set(value.get());
 	}
@@ -181,6 +187,10 @@ public class EstimateImpl<O, T, Q> extends AbstractFuture<Result<O, Q>> implemen
 		seal();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see edu.toronto.cs.se.ci.Estimate#addPartialListener(java.lang.Runnable, java.util.concurrent.Executor)
+	 */
 	@Override
 	public synchronized void addPartialListener(Runnable listener, Executor executor) {
 		listeners.add(new Listener(listener, executor));

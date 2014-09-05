@@ -16,6 +16,7 @@ import edu.toronto.cs.se.ci.data.Result;
  * @author Michael Layzell
  *
  * @param <O>
+ * @param <Q>
  */
 public interface Estimate<O, Q> extends ListenableFuture<Result<O, Q>> {
 	

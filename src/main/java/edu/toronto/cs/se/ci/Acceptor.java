@@ -8,7 +8,8 @@ import edu.toronto.cs.se.ci.data.Result;
  * 
  * @author Michael Layzell
  *
- * @param <O>
+ * @param <O> CI Output Type
+ * @param <Q> CI Quality Type
  */
 public interface Acceptor<O, Q> {
 	

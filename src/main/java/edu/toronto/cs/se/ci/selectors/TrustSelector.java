@@ -11,8 +11,20 @@ import edu.toronto.cs.se.ci.Selector;
 import edu.toronto.cs.se.ci.Source;
 import edu.toronto.cs.se.ci.data.Trust;
 
+/**
+ * Select elements in order of decreasing trust. (Uses EBT {@link Trust} values)
+ * 
+ * @author Michael Layzell
+ *
+ * @param <I>
+ * @param <O>
+ */
 public class TrustSelector<I, O> implements Selector<I, O, Trust> {
 
+	/*
+	 * (non-Javadoc)
+	 * @see edu.toronto.cs.se.ci.Selector#getNextSource(edu.toronto.cs.se.ci.CI.Invocation)
+	 */
 	@Override
 	public Optional<Source<I, O, Trust>> getNextSource(CI<I, O, Trust, ?>.Invocation invocation) {
 		List<Source<I, O, Trust>> sources = new ArrayList<>(invocation.getRemaining());
@@ -31,6 +43,13 @@ public class TrustSelector<I, O> implements Selector<I, O, Trust> {
 		return Optional.absent();
 	}
 	
+	/**
+	 * A comparator, used for the implementation of the selection function
+	 * 
+	 * @author Michael Layzell
+	 *
+	 * @param <I>
+	 */
 	public static class TrustComparator<I> implements Comparator<Source<I, ?, Trust>> {
 
 		private I args;

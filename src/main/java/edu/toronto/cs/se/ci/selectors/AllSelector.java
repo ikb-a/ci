@@ -17,6 +17,10 @@ import edu.toronto.cs.se.ci.Source;
  */
 public class AllSelector<I, O, T> implements Selector<I, O, T> {
 
+	/*
+	 * (non-Javadoc)
+	 * @see edu.toronto.cs.se.ci.Selector#getNextSource(edu.toronto.cs.se.ci.CI.Invocation)
+	 */
 	@Override
 	public Optional<Source<I, O, T>> getNextSource(CI<I, O, T, ?>.Invocation invocation) {
 		try {

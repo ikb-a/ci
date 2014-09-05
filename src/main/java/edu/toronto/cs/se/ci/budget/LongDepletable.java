@@ -2,6 +2,12 @@ package edu.toronto.cs.se.ci.budget;
 
 import com.google.common.base.Optional;
 
+/**
+ * A generic class for depletables which deal with Long values
+ * 
+ * @author Michael Layzell
+ *
+ */
 public abstract class LongDepletable extends BasicDepletable<Long> {
 	
 	/**

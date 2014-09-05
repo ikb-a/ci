@@ -8,9 +8,9 @@ import com.google.common.base.Optional;
  * 
  * @author Michael Layzell
  *
+ * @param <I>
  * @param <O>
  * @param <T>
- * @param <Q>
  */
 public interface Selector<I, O, T> {
 	

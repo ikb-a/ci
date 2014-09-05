@@ -14,6 +14,8 @@ import edu.toronto.cs.se.ci.data.Result;
  * @author Michael Layzell
  *
  * @param <O>
+ * @param <T>
+ * @param <Q>
  */
 public interface Aggregator<O, T, Q> {
 
