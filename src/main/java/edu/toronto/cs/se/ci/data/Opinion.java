@@ -1,5 +1,8 @@
 package edu.toronto.cs.se.ci.data;
 
+import com.google.common.base.Optional;
+
+import edu.toronto.cs.se.ci.Source;
 
 /**
  * A source's opinion.
@@ -12,7 +15,15 @@ public final class Opinion<O, T> {
 
 	private final T trust;
 	private final O value;
-	
+	/**
+	 * The Class of the source that created this Opinion
+	 */
+	private final Optional<? extends Source<?, ?, ?>> source;
+	/**
+	 * The arguments given to the Source that created this Opinion
+	 */
+	private final Optional<Object> args;
+
 	/**
 	 * Create an Opinion object
 	 * 
@@ -22,14 +33,27 @@ public final class Opinion<O, T> {
 	public Opinion(O value, T trust) {
 		this.value = value;
 		this.trust = trust;
+		source = Optional.absent();
+		args = Optional.absent();
 	}
-	
+
+	public Opinion(Object args, O value, T trust, Source<?, ?, ?> source) {
+		this.value = value;
+		this.trust = trust;
+		this.args = Optional.of(args);
+		this.source = Optional.of(source);
+	}
+
+	public Optional<? extends Source<?, ?, ?>> getSource() {
+		return source;
+	}
+
 	public O getValue() {
 		return value;
 	}
-	
+
 	public T getTrust() {
 		return trust;
 	}
-	
+
 }
