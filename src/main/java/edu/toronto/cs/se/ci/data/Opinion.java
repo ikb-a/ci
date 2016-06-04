@@ -18,7 +18,7 @@ public final class Opinion<O, T> {
 	/**
 	 * The Class of the source that created this Opinion
 	 */
-	private final Optional<? extends Source<?, ?, ?>> source;
+	private final Source<?, ?, ?> source;
 	/**
 	 * The arguments given to the Source that created this Opinion
 	 */
@@ -33,7 +33,7 @@ public final class Opinion<O, T> {
 	public Opinion(O value, T trust) {
 		this.value = value;
 		this.trust = trust;
-		source = Optional.absent();
+		source = null;
 		args = Optional.absent();
 	}
 
@@ -41,10 +41,10 @@ public final class Opinion<O, T> {
 		this.value = value;
 		this.trust = trust;
 		this.args = Optional.of(args);
-		this.source = Optional.of(source);
+		this.source = source;
 	}
 
-	public Optional<? extends Source<?, ?, ?>> getSource() {
+	public Source<?, ?, ?> getSource() {
 		return source;
 	}
 
