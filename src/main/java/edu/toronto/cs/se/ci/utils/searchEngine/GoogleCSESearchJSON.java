@@ -11,16 +11,67 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * This class models a Google CSE. Note that due to restrictions in the API,
+ * only the first 10 pages of results can be accessed.
+ * 
+ * @author ikba
+ *
+ */
 public class GoogleCSESearchJSON implements JSONSearchEngine {
+	/**
+	 * The String returned by the Google CSE API which is a validly formatted
+	 * JSON String.
+	 */
 	private String rawResults;
+
+	/**
+	 * The next page for the current search. The value should be between 1-10
+	 * inclusive.
+	 */
 	private int nextPageNumber;
+
+	/**
+	 * The current String search (i.e. "restaurants near toronto")
+	 */
 	private String currentSearch;
+
+	/**
+	 * The size of one Google CSE page
+	 */
 	private static final int pageSize = 10;
+
+	/**
+	 * The prefix to the Google CSE API
+	 */
 	private static final String prefix = "https://www.googleapis.com/customsearch/v1?";
+
+	/**
+	 * The ID of the CSE
+	 */
 	private final String APP_ID;
+
+	/**
+	 * The google API key for the CSE refered to by {@link #APP_ID}
+	 */
 	private final String API_KEY;
+
+	/**
+	 * The key that maps to the title of an article in the JSON returned by
+	 * google.
+	 */
 	private static final String RESULT_TITLE_KEY = "title";
+
+	/**
+	 * The key that maps to the snippet of an article in the JSON returned by
+	 * google.
+	 */
 	private static final String RESULT_SNIPPET_KEY = "snippet";
+
+	/**
+	 * The key that maps to the link of an article in the JSON returned by
+	 * google.
+	 */
 	private static final String RESULT_LINK_KEY = "link";
 
 	public GoogleCSESearchJSON() {
@@ -30,8 +81,6 @@ public class GoogleCSESearchJSON implements JSONSearchEngine {
 
 	@Override
 	public SearchResults search(String searchString) throws IOException {
-		nextPageNumber = 2;
-		currentSearch = searchString;
 		return search(searchString, 1);
 	}
 
@@ -43,13 +92,52 @@ public class GoogleCSESearchJSON implements JSONSearchEngine {
 		return rawResults;
 	}
 
+	/**
+	 * Returns the next page of results. Note that {@link #search(String)} or
+	 * {@link #search(String, int)} must be called before this method, or an
+	 * {@link IllegalStateException} will be thrown. Note that due to the Google
+	 * CSE API, the 11th page cannot be retrieved. Attempting to do so will
+	 * result in an {@link IllegalStateException}
+	 * 
+	 * @return The next page of results as a {@link SearchResults}
+	 * @throws IOException
+	 *             Thrown if there is an IO problem getting the search results
+	 * @throws IllegalStateException
+	 *             Thrown if there has not yet been a search, or if the next
+	 *             page is the 11th, and therefore cannot be retrieved by the
+	 *             Google CSE API.
+	 */
 	@Override
 	public SearchResults nextPage() throws IOException {
+		if (currentSearch == null) {
+			throw new IllegalStateException("Cannot retrieve next page of results if there is no search.");
+		} else if (nextPageNumber == 11) {
+			throw new IllegalStateException("The Google CSE API does not allow for the retrieval of the 11th page");
+		}
 		return search(currentSearch, nextPageNumber);
 	}
 
+	/**
+	 * Searches for {@code searchString}, and returns the {@code pageNumber}
+	 * page of results as a {@link SearchResults}. Due to limitations in the
+	 * Google CSE API, an {@link IllegalArgumentException} will be thrown if
+	 * {@code pageNumber} exceeds 10.
+	 * 
+	 * @param searchString
+	 *            The String that should be used to search
+	 * @param pageNumber
+	 *            The page number for the results wanted. Should be between 1-10
+	 *            inclusive.
+	 * @return A SearchResults object containing the first page of results. If
+	 *         there are no search results, the object will be empty.
+	 * @throws IOException
+	 *             Thrown if there is an IO problem getting the search results
+	 */
 	@Override
 	public SearchResults search(String searchString, int pageNumber) throws IOException {
+		if (pageNumber < 1 || pageNumber > 10) {
+			throw new IllegalArgumentException("Due to the Google CSE, pageNumber must be from 1-10 inclusive");
+		}
 		nextPageNumber = pageNumber + 1;
 		currentSearch = searchString;
 		URL url = new URL(formatSearch(searchString, caclulateStartIndex(pageNumber)));
@@ -58,6 +146,15 @@ public class GoogleCSESearchJSON implements JSONSearchEngine {
 		return convertJSONToSearchResults(json);
 	}
 
+	/**
+	 * Connects to the URL and reads the page as a String.
+	 * 
+	 * @param url
+	 *            The URL to connect to and read
+	 * @return The String contained in the webpage pointed to by {@code url}
+	 * @throws IOException
+	 *             If there is any problem retrieving/reading the page
+	 */
 	private String readURL(URL url) throws IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"));
 
@@ -72,6 +169,16 @@ public class GoogleCSESearchJSON implements JSONSearchEngine {
 		return sb.toString();
 	}
 
+	/**
+	 * Creates the String for the URL for the Google CSE API.
+	 * 
+	 * @param searchString
+	 *            The query to the search engine.
+	 * @param startIndex
+	 *            The index (from 1-99) of the first web result that should be
+	 *            on the page
+	 * @return String url that calls the Google CSE API
+	 */
 	private String formatSearch(String searchString, int startIndex) {
 		String parameters;
 		if (searchString.contains("site:")) {
@@ -86,10 +193,26 @@ public class GoogleCSESearchJSON implements JSONSearchEngine {
 		return prefix + parameters;
 	}
 
+	/**
+	 * Returns the index of the first web result on the results page given page
+	 * number.
+	 */
 	private int caclulateStartIndex(int pageNumber) {
 		return (pageNumber - 1) * pageSize + 1;
 	}
 
+	/**
+	 * Converts the {@link JSONObject} produced by the Google CSE API into a
+	 * {@link SearchResults}. The {@link SearchResults} contains the total
+	 * number of hits, as well as the title, snippet, and URL of a single page's
+	 * results.
+	 * 
+	 * @param json
+	 *            The {@link JSONObject} representing the output of the Google
+	 *            CSE API.
+	 * @return A {@link SearchResults} representing the search results contained
+	 *         in {@code json}.
+	 */
 	private SearchResults convertJSONToSearchResults(JSONObject json) {
 		// Get the number of hits. If we can't get this number then there was
 		// not a successful search
@@ -122,5 +245,10 @@ public class GoogleCSESearchJSON implements JSONSearchEngine {
 		} else {
 			return new SearchResults(hits, new ArrayList<SearchResult>(0));
 		}
+	}
+
+	@Override
+	public int getPageSize() {
+		return pageSize;
 	}
 }
