@@ -11,7 +11,7 @@ import java.util.List;
  * @param <O>
  * @param <T>
  */
-public interface Contract<I, O, T> {
+public interface Contract<I, O, T>{
 	
 	/**
 	 * Generate a list of sources which fulfill the contract

@@ -16,6 +16,7 @@ import edu.toronto.cs.se.ci.data.Opinion;
  *
  * @param <I>
  * @param <O>
+ * @param <T>
  */
 public abstract class Source<I, O, T> {
 	
