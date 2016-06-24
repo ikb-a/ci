@@ -32,7 +32,8 @@ public abstract class Source<I, O, T> {
 
 	/**
 	 * @return A unique name for the Source - used as the attribute name for ML
-	 *         aggregators, and for debugging purposes
+	 *         aggregators, and for debugging purposes. For that reason the
+	 *         value returned must not contain any spaces.
 	 */
 	public String getName() {
 		return this.getClass().getName();
