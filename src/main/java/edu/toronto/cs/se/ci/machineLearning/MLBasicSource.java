@@ -32,7 +32,7 @@ public abstract class MLBasicSource<I, O> extends MLSource<I, O> {
 	@Override
 	public Opinion<O, Void> getOpinion(I input) throws UnknownException {
 		O response = getResponse(input);
-		return new Opinion<O, Void>(response, null);
+		return new Opinion<O, Void>(response, null, this);
 	}
 
 }

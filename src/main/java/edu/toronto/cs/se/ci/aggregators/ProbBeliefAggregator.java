@@ -19,7 +19,7 @@ public class ProbBeliefAggregator<O> implements Aggregator<O, Double, Double> {
 		List<Opinion<O, Trust>> newOpinions = new ArrayList<>(opinions.size());
 		
 		for (Opinion<O, Double> opinion : opinions) {
-			newOpinions.add(new Opinion<>(opinion.getValue(), new Trust(opinion.getTrust())));
+			newOpinions.add(new Opinion<>(opinion.getValue(), new Trust(opinion.getTrust()), "ProbBeliefAggregator"));
 		}
 
 		return inner.aggregate(newOpinions);

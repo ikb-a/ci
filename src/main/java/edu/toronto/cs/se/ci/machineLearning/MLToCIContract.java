@@ -91,7 +91,7 @@ public class MLToCIContract<I, O> implements Contract<I, O, Void> {
 		public Opinion<IO, Void> getOpinion(II args) throws UnknownException {
 			Opinion<IO, ?> originalOpinion = originalSource.getOpinion(args);
 			// Create a new Opinion with the same value, but null as the trust
-			return new Opinion<IO, Void>(originalOpinion.getValue(), null);
+			return new Opinion<IO, Void>(originalOpinion.getValue(), null, originalSource.getName());
 		}
 
 		@Override

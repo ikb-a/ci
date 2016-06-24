@@ -67,7 +67,7 @@ public abstract class BasicAdaptor<I, O, T, OI, OO, OT> extends Adaptor<I, O, T,
 				transformTrust(
 						opinion.getTrust(), 
 						Optional.of(newResult), 
-						Optional.of(opinion.getValue())));
+						Optional.of(opinion.getValue())),opinion.toString());
 	}
 	
 	/*

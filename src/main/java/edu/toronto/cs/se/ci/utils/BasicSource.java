@@ -34,7 +34,7 @@ public abstract class BasicSource<I, O, T> extends Source<I, O, T> {
 		O response = getResponse(input);
 		T trust = getTrust(input, Optional.of(response));
 		
-		return new Opinion<O, T>(response, trust);
+		return new Opinion<O, T>(response, trust, this);
 	}
 
 }

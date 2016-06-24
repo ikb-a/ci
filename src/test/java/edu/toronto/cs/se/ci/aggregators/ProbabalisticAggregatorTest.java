@@ -28,9 +28,9 @@ public class ProbabalisticAggregatorTest extends TestCase {
 		ProbabalisticAggregator<Boolean> aggregator = new ProbabalisticAggregator<>(2);
 		
 		List<Opinion<Boolean, Trust>> opinions = new ArrayList<>();
-		opinions.add(new Opinion<Boolean, Trust>(true, new Trust(0.6)));
-		opinions.add(new Opinion<Boolean, Trust>(true, new Trust(0.2)));
-		opinions.add(new Opinion<Boolean, Trust>(false, new Trust(0.8)));
+		opinions.add(new Opinion<Boolean, Trust>(true, new Trust(0.6), ""));
+		opinions.add(new Opinion<Boolean, Trust>(true, new Trust(0.2), ""));
+		opinions.add(new Opinion<Boolean, Trust>(false, new Trust(0.8), ""));
 
 		Result<Boolean, Double> result = aggregator.aggregate(opinions).get();
 		assertEquals(result.getValue(), Boolean.FALSE);
@@ -41,11 +41,11 @@ public class ProbabalisticAggregatorTest extends TestCase {
 		ProbabalisticAggregator<Integer> aggregator = new ProbabalisticAggregator<>(-1);
 		
 		List<Opinion<Integer, Trust>> opinions = new ArrayList<>();
-		opinions.add(new Opinion<Integer, Trust>(3, new Trust(0.4)));
-		opinions.add(new Opinion<Integer, Trust>(3, new Trust(0.2)));
-		opinions.add(new Opinion<Integer, Trust>(6, new Trust(0.7)));
-		opinions.add(new Opinion<Integer, Trust>(5, new Trust(0.4)));
-		opinions.add(new Opinion<Integer, Trust>(5, new Trust(0.3)));
+		opinions.add(new Opinion<Integer, Trust>(3, new Trust(0.4), ""));
+		opinions.add(new Opinion<Integer, Trust>(3, new Trust(0.2), ""));
+		opinions.add(new Opinion<Integer, Trust>(6, new Trust(0.7), ""));
+		opinions.add(new Opinion<Integer, Trust>(5, new Trust(0.4), ""));
+		opinions.add(new Opinion<Integer, Trust>(5, new Trust(0.3), ""));
 		
 		Result<Integer, Double> result = aggregator.aggregate(opinions).get();
 		assertEquals(result.getValue(), new Integer(6));

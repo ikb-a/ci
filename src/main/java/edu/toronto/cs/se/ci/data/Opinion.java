@@ -15,6 +15,7 @@ public final class Opinion<O, T> {
 
 	private final T trust;
 	private final O value;
+	private final String name;
 	/**
 	 * The Class of the source that created this Opinion
 	 */
@@ -30,9 +31,18 @@ public final class Opinion<O, T> {
 	 * @param value
 	 * @param trust
 	 */
-	public Opinion(O value, T trust) {
+	public Opinion(O value, T trust, Source<?, ?, ?> source) {
 		this.value = value;
 		this.trust = trust;
+		this.source = source;
+		args = Optional.absent();
+		this.name = source.getName();
+	}
+	
+	public Opinion(O value, T trust, String name) {
+		this.value = value;
+		this.trust = trust;
+		this.name = name;
 		source = null;
 		args = Optional.absent();
 	}
@@ -42,6 +52,7 @@ public final class Opinion<O, T> {
 		this.trust = trust;
 		this.args = Optional.of(args);
 		this.source = source;
+		this.name = source.getName();
 	}
 
 	public Source<?, ?, ?> getSource() {
@@ -54,6 +65,10 @@ public final class Opinion<O, T> {
 
 	public T getTrust() {
 		return trust;
+	}
+	
+	public String getName(){
+		return name;
 	}
 
 }
