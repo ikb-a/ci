@@ -5,11 +5,12 @@ import java.util.List;
 import com.google.common.base.Optional;
 
 import edu.toronto.cs.se.ci.Aggregator;
+import edu.toronto.cs.se.ci.GenericAggregator;
 import edu.toronto.cs.se.ci.data.Opinion;
 import edu.toronto.cs.se.ci.data.Result;
 
 /**
- * This {@link Aggregator} aggregates by taking the weighted mean of the opinions.
+ * This {@link GenericAggregator} aggregates by taking the weighted mean of the opinions.
  * The weighting of each opinion is its trust. The quality of the result is 
  * {@code 1.0/(stdev + 1)} where stdev is the weighted standard deviation.
  * 

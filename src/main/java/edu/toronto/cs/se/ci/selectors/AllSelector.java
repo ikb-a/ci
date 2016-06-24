@@ -2,7 +2,7 @@ package edu.toronto.cs.se.ci.selectors;
 
 import com.google.common.base.Optional;
 
-import edu.toronto.cs.se.ci.CI;
+import edu.toronto.cs.se.ci.GenericCI;
 import edu.toronto.cs.se.ci.Selector;
 import edu.toronto.cs.se.ci.Source;
 
@@ -19,10 +19,12 @@ public class AllSelector<I, O, T> implements Selector<I, O, T> {
 
 	/*
 	 * (non-Javadoc)
-	 * @see edu.toronto.cs.se.ci.Selector#getNextSource(edu.toronto.cs.se.ci.CI.Invocation)
+	 * 
+	 * @see edu.toronto.cs.se.ci.Selector#getNextSource(edu.toronto.cs.se.ci.CI.
+	 * Invocation)
 	 */
 	@Override
-	public Optional<Source<I, O, T>> getNextSource(CI<I, O, T, ?>.Invocation invocation) {
+	public Optional<Source<I, O, T>> getNextSource(GenericCI<I, O, ?, T, ?>.Invocation invocation) {
 		try {
 			for (Source<I, O, T> source : invocation.getRemaining()) {
 				if (invocation.withinBudget(source))
@@ -31,7 +33,7 @@ public class AllSelector<I, O, T> implements Selector<I, O, T> {
 		} catch (Exception e) {
 			return Optional.absent();
 		}
-		
+
 		return Optional.absent();
 	}
 

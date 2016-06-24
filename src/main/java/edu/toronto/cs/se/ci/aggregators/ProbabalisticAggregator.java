@@ -13,17 +13,17 @@ import edu.toronto.cs.se.ci.data.Result;
 import edu.toronto.cs.se.ci.data.Trust;
 
 /**
- * The ProbabalisticAggregator uses ideas from the paper 
- * "Evidence-Based Trust: A Mathematical Model Geared for Multiagent Systems"
- * to determine which result to choose, and the quality of the result.
+ * The ProbabalisticAggregator uses ideas from the paper
+ * "Evidence-Based Trust: A Mathematical Model Geared for Multiagent Systems" to
+ * determine which result to choose, and the quality of the result.
  * 
  * @author Michael Layzell
  *
  */
 public class ProbabalisticAggregator<O> implements Aggregator<O, Trust, Double> {
-	
+
 	private int nOptions;
-	
+
 	public ProbabalisticAggregator() {
 		this(-1);
 	}
@@ -37,27 +37,29 @@ public class ProbabalisticAggregator<O> implements Aggregator<O, Trust, Double> 
 	}
 
 	public Evidence addEvidence(Map<O, Evidence> options, O answer, Evidence evidence, Evidence memo) {
-		// The counter-evidence is the evidence which, because of the evidence for k, will be acting
-		// "for" every other option. This depends on the number of options which are avaliable.
+		// The counter-evidence is the evidence which, because of the evidence
+		// for k, will be acting
+		// "for" every other option. This depends on the number of options which
+		// are avaliable.
 		// If nOptions == -1, nOptions is assumed to be infinity.
 		Evidence counter;
 		if (nOptions == -1)
 			counter = new Evidence(0, evidence.getConsenting());
 		else
 			counter = new Evidence(evidence.getDissenting() / (nOptions + 1), evidence.getConsenting());
-		
+
 		// Record the evidence for k
 		options.put(answer, combine(options.getOrDefault(answer, memo), evidence));
-		
+
 		// Record the evidence for everything else
 		for (Map.Entry<O, Evidence> option : options.entrySet()) {
 			if (option.getKey() != answer)
 				options.put(option.getKey(), combine(option.getValue(), counter));
 		}
-		
+
 		return combine(memo, counter);
 	}
-	
+
 	@Override
 	public Optional<Result<O, Double>> aggregate(List<Opinion<O, Trust>> opinions) {
 		// Add the evidence from every source
@@ -72,7 +74,7 @@ public class ProbabalisticAggregator<O> implements Aggregator<O, Trust, Double> 
 		for (Map.Entry<O, Evidence> option : options.entrySet()) {
 			optionTrusts.put(option.getKey(), new Trust(option.getValue()));
 		}
-		
+
 		// And choose the best one
 		double bestBelief = 0;
 		O bestOption = null;
@@ -82,11 +84,11 @@ public class ProbabalisticAggregator<O> implements Aggregator<O, Trust, Double> 
 				bestOption = option.getKey();
 			}
 		}
-		
+
 		if (bestOption == null)
 			return Optional.absent();
-		
+
 		return Optional.of(new Result<O, Double>(bestOption, bestBelief));
 	}
-	
+
 }

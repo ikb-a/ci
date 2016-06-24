@@ -1,6 +1,6 @@
 package edu.toronto.cs.se.ci.machineLearning.aggregators;
 
-public interface MLWekaAggregator<O> extends MLAggregator<O, double[]> {
+public interface MLWekaAggregator<O,FO> extends MLAggregator<O,FO, double[]> {
 	
 	// Problem: <O> can only be: "Nominal Attribute" (enum) (in this case, bool would be considered an enum);
 	//String attribute (doesn't seem very useful)

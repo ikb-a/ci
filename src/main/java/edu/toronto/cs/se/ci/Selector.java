@@ -24,6 +24,6 @@ public interface Selector<I, O, T> {
 	 *            The current invocation of the CI
 	 * @return The next source to consult, or {@code Optional.absent()}
 	 */
-	public Optional<Source<I, O, T>> getNextSource(CI<I, O, T, ?>.Invocation invocation);
+	public Optional<Source<I, O, T>> getNextSource(GenericCI<I, O, ?, T, ?>.Invocation invocation);
 
 }

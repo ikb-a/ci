@@ -22,21 +22,21 @@ import edu.toronto.cs.se.ci.data.Result;
  * @param <T>
  * @param <Q>
  */
-public class EstimateImpl<O, T, Q> extends AbstractFuture<Result<O, Q>> implements Estimate<O, Q> {
+public class EstimateImpl<O,FO, T, Q> extends AbstractFuture<Result<FO, Q>> implements Estimate<FO, Q> {
 
 	private List<Opinion<O, T>> opinions = new ArrayList<Opinion<O, T>>();
 	private int incomplete = 0;
 	private boolean sealed = false;
-	private Optional<Result<O, Q>> value = Optional.absent();
+	private Optional<Result<FO, Q>> value = Optional.absent();
 
 	// Functions
-	private Aggregator<O, T, Q> agg;
-	private Acceptor<O, Q> acceptor;
+	private GenericAggregator<O,FO, T, Q> agg;
+	private Acceptor<FO, Q> acceptor;
 
 	// Listeners
 	private List<Listener> listeners = new ArrayList<>();
 
-	public EstimateImpl(Aggregator<O, T, Q> agg, Acceptor<O, Q> acceptor) {
+	public EstimateImpl(GenericAggregator<O,FO, T, Q> agg, Acceptor<FO, Q> acceptor) {
 		this.agg = agg;
 		this.acceptor = acceptor;
 	}
@@ -153,7 +153,7 @@ public class EstimateImpl<O, T, Q> extends AbstractFuture<Result<O, Q>> implemen
 	 * @see edu.toronto.cs.se.ci.Estimate#getCurrent()
 	 */
 	@Override
-	public Optional<Result<O, Q>> getCurrent() {
+	public Optional<Result<FO, Q>> getCurrent() {
 		if (!value.isPresent()) // TODO: Be smarter about this
 			return aggregate();
 		else
@@ -185,7 +185,7 @@ public class EstimateImpl<O, T, Q> extends AbstractFuture<Result<O, Q>> implemen
 	 * 
 	 * @return The aggregate opinion based on done opinions
 	 */
-	private Optional<Result<O, Q>> aggregate() {
+	private Optional<Result<FO, Q>> aggregate() {
 		try {
 			return agg.aggregate(opinions);
 		} catch (Exception e) {

@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 import com.google.common.base.Optional;
 
-import edu.toronto.cs.se.ci.CI;
+import edu.toronto.cs.se.ci.GenericCI;
 import edu.toronto.cs.se.ci.Selector;
 import edu.toronto.cs.se.ci.Source;
 import edu.toronto.cs.se.ci.data.Trust;
@@ -23,13 +23,15 @@ public class TrustSelector<I, O> implements Selector<I, O, Trust> {
 
 	/*
 	 * (non-Javadoc)
-	 * @see edu.toronto.cs.se.ci.Selector#getNextSource(edu.toronto.cs.se.ci.CI.Invocation)
+	 * 
+	 * @see edu.toronto.cs.se.ci.Selector#getNextSource(edu.toronto.cs.se.ci.CI.
+	 * Invocation)
 	 */
 	@Override
-	public Optional<Source<I, O, Trust>> getNextSource(CI<I, O, Trust, ?>.Invocation invocation) {
+	public Optional<Source<I, O, Trust>> getNextSource(GenericCI<I, O, ?, Trust, ?>.Invocation invocation) {
 		List<Source<I, O, Trust>> sources = new ArrayList<>(invocation.getRemaining());
 		sources.sort(new TrustComparator<I>(invocation.getArgs()));
-		
+
 		try {
 			for (Source<I, O, Trust> source : sources) {
 				if (invocation.withinBudget(source)) {
@@ -39,10 +41,10 @@ public class TrustSelector<I, O> implements Selector<I, O, Trust> {
 		} catch (Exception e) {
 			return Optional.absent();
 		}
-		
+
 		return Optional.absent();
 	}
-	
+
 	/**
 	 * A comparator, used for the implementation of the selection function
 	 * 
@@ -61,9 +63,9 @@ public class TrustSelector<I, O> implements Selector<I, O, Trust> {
 		@Override
 		public int compare(Source<I, ?, Trust> o1, Source<I, ?, Trust> o2) {
 			return (int) (o1.getTrust(args, Optional.absent()).getDisbelief()
-					    - o2.getTrust(args, Optional.absent()).getDisbelief());
+					- o2.getTrust(args, Optional.absent()).getDisbelief());
 		}
-		
+
 	}
 
 }

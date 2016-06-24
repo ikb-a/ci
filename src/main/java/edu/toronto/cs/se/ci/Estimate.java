@@ -15,16 +15,16 @@ import edu.toronto.cs.se.ci.data.Result;
  * 
  * @author Michael Layzell
  *
- * @param <O>
+ * @param <FO>
  * @param <Q>
  */
-public interface Estimate<O, Q> extends ListenableFuture<Result<O, Q>> {
+public interface Estimate<FO, Q> extends ListenableFuture<Result<FO, Q>> {
 	
 	/**
 	 * Gets the current estimate. Will not block.
 	 * @return Current best estimate
 	 */
-	public Optional<Result<O, Q>> getCurrent();
+	public Optional<Result<FO, Q>> getCurrent();
 	
 
 	/**
