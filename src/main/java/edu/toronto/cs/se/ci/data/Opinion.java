@@ -6,6 +6,7 @@ import edu.toronto.cs.se.ci.Source;
  * A source's opinion.
  * 
  * @author Michael Layzell
+ * @author Ian Berlot-Attwell
  *
  * @param <O>
  */
@@ -86,6 +87,11 @@ public final class Opinion<O, T> {
 	 */
 	public String getName() {
 		return name;
+	}
+	
+	@Override
+	public String toString(){
+		return "Name: "+name+" Value: "+value+" Trust: "+trust;
 	}
 
 }

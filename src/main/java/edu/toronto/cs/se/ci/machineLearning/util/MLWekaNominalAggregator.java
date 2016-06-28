@@ -91,7 +91,7 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 	 */
 	// TODO: Refactor into MLUtility?
 	private DenseInstance convertOpinionsToDenseInstance(List<Opinion<O, Void>> opinions) {
-		DenseInstance instance = new DenseInstance(opinions.size());
+		DenseInstance instance = new DenseInstance(trainingData.numAttributes());
 		/*
 		 * The dataset of instance is set to the training data, so that the name
 		 * and types (in this case all should be nominal String) of all
@@ -109,6 +109,7 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 				 */
 				if (attribute.name().equals(opinion.getName())) {
 					instance.setValue(attribute, converter.convert(opinion.getValue()));
+					break;
 				}
 			}
 		}
