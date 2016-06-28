@@ -26,17 +26,6 @@ public class GoogleCSESearchJSON implements JSONSearchEngine {
 	private String rawResults;
 
 	/**
-	 * The next page for the current search. The value should be between 1-10
-	 * inclusive.
-	 */
-	private int nextPageNumber;
-
-	/**
-	 * The current String search (i.e. "restaurants near toronto")
-	 */
-	private String currentSearch;
-
-	/**
 	 * The size of one Google CSE page
 	 */
 	private static final int pageSize = 10;
@@ -93,28 +82,27 @@ public class GoogleCSESearchJSON implements JSONSearchEngine {
 	}
 
 	/**
-	 * Returns the next page of results. Note that {@link #search(String)} or
-	 * {@link #search(String, int)} must be called before this method, or an
-	 * {@link IllegalStateException} will be thrown. Note that due to the Google
-	 * CSE API, the 11th page cannot be retrieved. Attempting to do so will
-	 * result in an {@link IllegalStateException}
+	 * Returns the next page of results. Note that due to the Google CSE API,
+	 * the 11th page cannot be retrieved. Attempting to do so will result in an
+	 * {@link IllegalArgumentException}
 	 * 
 	 * @return The next page of results as a {@link SearchResults}
 	 * @throws IOException
 	 *             Thrown if there is an IO problem getting the search results
-	 * @throws IllegalStateException
-	 *             Thrown if there has not yet been a search, or if the next
-	 *             page is the 11th, and therefore cannot be retrieved by the
-	 *             Google CSE API.
+	 * @throws IllegalArgumentException
+	 *             Thrown if {@code previousPage} is null, or if the next page
+	 *             is the 11th and therefore cannot be retrieved by the Google
+	 *             CSE API.
 	 */
 	@Override
-	public SearchResults nextPage() throws IOException {
-		if (currentSearch == null) {
-			throw new IllegalStateException("Cannot retrieve next page of results if there is no search.");
-		} else if (nextPageNumber == 11) {
-			throw new IllegalStateException("The Google CSE API does not allow for the retrieval of the 11th page");
+	public SearchResults nextPage(SearchResults previousPage) throws IOException {
+		if (previousPage == null) {
+			throw new IllegalArgumentException();
 		}
-		return search(currentSearch, nextPageNumber);
+		if (previousPage.getPageNumber() >= 10) {
+			throw new IllegalArgumentException("The Google CSE API does not allow for the retrieval of the 11th page");
+		}
+		return search(previousPage.getQuery(), previousPage.getPageNumber() + 1);
 	}
 
 	/**
@@ -138,12 +126,10 @@ public class GoogleCSESearchJSON implements JSONSearchEngine {
 		if (pageNumber < 1 || pageNumber > 10) {
 			throw new IllegalArgumentException("Due to the Google CSE, pageNumber must be from 1-10 inclusive");
 		}
-		nextPageNumber = pageNumber + 1;
-		currentSearch = searchString;
 		URL url = new URL(formatSearch(searchString, caclulateStartIndex(pageNumber)));
 		rawResults = readURL(url);
 		JSONObject json = new JSONObject(rawResults);
-		return convertJSONToSearchResults(json);
+		return convertJSONToSearchResults(json, searchString, pageNumber);
 	}
 
 	/**
@@ -205,15 +191,20 @@ public class GoogleCSESearchJSON implements JSONSearchEngine {
 	 * Converts the {@link JSONObject} produced by the Google CSE API into a
 	 * {@link SearchResults}. The {@link SearchResults} contains the total
 	 * number of hits, as well as the title, snippet, and URL of a single page's
-	 * results.
+	 * results. It also contains the query and page number as given to the
+	 * method.
 	 * 
 	 * @param json
 	 *            The {@link JSONObject} representing the output of the Google
 	 *            CSE API.
+	 * @param query
+	 *            The query that created {@code json}
+	 * @param pageNumber
+	 *            The page number for {@code json}
 	 * @return A {@link SearchResults} representing the search results contained
 	 *         in {@code json}.
 	 */
-	private SearchResults convertJSONToSearchResults(JSONObject json) {
+	private SearchResults convertJSONToSearchResults(JSONObject json, String query, int pageNumber) {
 		// Get the number of hits. If we can't get this number then there was
 		// not a successful search
 		int hits;
@@ -232,18 +223,16 @@ public class GoogleCSESearchJSON implements JSONSearchEngine {
 			for (int i = 0; i < items.length(); i++) {
 				try {
 					JSONObject item = items.getJSONObject(i);
-					SearchResult result = new SearchResult();
-					result.setTitle(item.getString(RESULT_TITLE_KEY));
-					result.setSnippet(item.getString(RESULT_SNIPPET_KEY));
-					result.setLink(item.getString(RESULT_LINK_KEY));
+					SearchResult result = new SearchResult(item.getString(RESULT_TITLE_KEY),
+							item.getString(RESULT_LINK_KEY), item.getString(RESULT_SNIPPET_KEY));
 					results.add(result);
 				} catch (JSONException e) {
 					continue;
 				}
 			}
-			return new SearchResults(hits, results);
+			return new SearchResults(hits, results, query, pageNumber);
 		} else {
-			return new SearchResults(hits, new ArrayList<SearchResult>(0));
+			return new SearchResults(hits, new ArrayList<SearchResult>(0), query, pageNumber);
 		}
 	}
 

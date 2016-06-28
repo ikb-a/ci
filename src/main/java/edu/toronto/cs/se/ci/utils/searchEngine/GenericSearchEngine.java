@@ -40,15 +40,17 @@ public interface GenericSearchEngine {
 	public SearchResults search(String searchString, int pageNumber) throws IOException;
 
 	/**
-	 * Returns the next page of results. Note that {@link #search(String)} or
-	 * {@link #search(String, int)} must be called before this method, or an
-	 * {@link IllegalStateException} will be thrown.
+	 * Returns the next page of results, based on the query and page number
+	 * contained in the {@link SearchResults} given.
 	 * 
+	 * @param previousPage
+	 *            The previous page of results for which the next page is
+	 *            desired.
 	 * @return The next page of results as a {@link SearchResults}
 	 * @throws IOException
 	 *             Thrown if there is an IO problem getting the search results
 	 */
-	public SearchResults nextPage() throws IOException;
+	public SearchResults nextPage(SearchResults previousPage) throws IOException;
 
 	/**
 	 * Returns the unformatted search results produced by previously calling

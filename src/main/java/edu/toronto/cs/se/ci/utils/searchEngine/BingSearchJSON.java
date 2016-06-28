@@ -17,16 +17,6 @@ public class BingSearchJSON implements JSONSearchEngine {
 
 	private static final int pageSize = 50;
 	/**
-	 * The page number of the next page. Valid page numbers are from 1-21
-	 * inclusive.
-	 */
-	private int nextPage;
-	/**
-	 * The current query (i.e. "e3 2016 games being released")
-	 */
-	private String currentSearch;
-
-	/**
 	 * The Bing Web-Results
 	 * (https://datamarket.azure.com/dataset/bing/searchweb) API Key
 	 */
@@ -79,14 +69,12 @@ public class BingSearchJSON implements JSONSearchEngine {
 		} else if (pageNumber < 1) {
 			throw new IllegalArgumentException("pageNumber must be between 1-21 inclusive.");
 		}
-		nextPage = pageNumber + 1;
-		currentSearch = searchString;
 
 		// Connect to the remote URL
 		URL url = new URL("https://api.datamarket.azure.com/Bing/SearchWeb/v1/Composite?Query="
 				+ URLEncoder.encode("'" + searchString + "'", "UTF-8") + "&$top=50&$skip=" + calcSkip(pageNumber));
 		rawResults = connectToBingAndRead(url);
-		SearchResults currResult = convertRawResultsToSearchResults();
+		SearchResults currResult = convertRawResultsToSearchResults(searchString, pageNumber);
 		return currResult;
 	}
 
@@ -97,7 +85,7 @@ public class BingSearchJSON implements JSONSearchEngine {
 	 * @return The Bing API results converted into a {@link SearchResults}
 	 *         object.
 	 */
-	private SearchResults convertRawResultsToSearchResults() {
+	private SearchResults convertRawResultsToSearchResults(String query, int pageNumber) {
 		assert (rawResults != null);
 		JSONObject json = new JSONObject(rawResults);
 		int hits = json.getJSONObject("d").getJSONArray("results").getJSONObject(0).getInt("WebTotal");
@@ -114,7 +102,7 @@ public class BingSearchJSON implements JSONSearchEngine {
 			SearchResult resultXSearchResult = new SearchResult(title, url, snippet);
 			allResults.add(resultXSearchResult);
 		}
-		return new SearchResults(hits, allResults);
+		return new SearchResults(hits, allResults, query, pageNumber);
 	}
 
 	/**
@@ -159,13 +147,13 @@ public class BingSearchJSON implements JSONSearchEngine {
 	}
 
 	@Override
-	public SearchResults nextPage() throws IOException {
-		if (currentSearch == null) {
-			throw new IllegalStateException("Cannot retrieve next page of results if there is no search.");
-		} else if (nextPage >= 22) {
+	public SearchResults nextPage(SearchResults previousPage) throws IOException {
+		if (previousPage == null) {
+			throw new IllegalArgumentException();
+		} else if (previousPage.getPageNumber() >= 21) {
 			throw new IllegalStateException("The Bing API does not allow for the retrieval of the 22nd page");
 		}
-		return search(currentSearch, nextPage);
+		return search(previousPage.getQuery(), previousPage.getPageNumber() + 1);
 	}
 
 	@Override

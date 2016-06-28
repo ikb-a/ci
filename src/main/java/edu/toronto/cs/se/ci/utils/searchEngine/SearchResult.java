@@ -2,15 +2,17 @@ package edu.toronto.cs.se.ci.utils.searchEngine;
 
 /**
  * An object which holds one search result from an engine such as Google Search.
+ * This class is immutable.
  * 
  * @author wginsberg
+ * @author Ian Berlot-Attwell
  *
  */
 public class SearchResult {
 
-	private String title;
-	private String link;
-	private String snippet;
+	private final String title;
+	private final String link;
+	private final String snippet;
 
 	public SearchResult(String title, String link, String snippet) {
 		super();
@@ -19,32 +21,26 @@ public class SearchResult {
 		this.snippet = snippet;
 	}
 
-	public SearchResult() {
-		this("", "", "");
-	}
-
+	/**
+	 * Returns the title of this result (the title of this webpage).
+	 */
 	public String getTitle() {
 		return title;
 	}
 
-	public void setTitle(String title) {
-		this.title = title;
-	}
-
+	/**
+	 * Returns the link to this webpage.
+	 */
 	public String getLink() {
 		return link;
 	}
 
-	public void setLink(String link) {
-		this.link = link;
-	}
-
+	/**
+	 * Returns a snippet of text from the webpage (typically containing some or
+	 * all of the words in the query that produced this result).
+	 */
 	public String getSnippet() {
 		return snippet;
-	}
-
-	public void setSnippet(String snippet) {
-		this.snippet = snippet;
 	}
 
 	@Override
@@ -52,6 +48,11 @@ public class SearchResult {
 		return String.format("%s\n%s\n%s\n", getTitle(), getSnippet(), getLink());
 	}
 
+	/**
+	 * An object is equal to this if the object is also a {@link SearchResult},
+	 * with the same values for {@link #getTitle()}, {@link #getLink()} and
+	 * {@link #getSnippet()}.
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof SearchResult)) {
