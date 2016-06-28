@@ -25,11 +25,12 @@ import edu.toronto.cs.se.ci.data.Opinion;
 import edu.toronto.cs.se.ci.data.Result;
 
 /**
- * A Contributional Implementation (CI) of a function. Queries a set of sources,
- * and aggregates their opinions to get answers to otherwise unanswerable
- * questions.
+ * A Generic Contributional Implementation (CI) of a function. Queries a set of
+ * sources, and aggregates their opinions to get answers to otherwise
+ * unanswerable questions.
  * 
  * @author Michael Layzell
+ * @author Ian Berlot-Attwell
  *
  * @param <I>
  *            Input type of sources
@@ -38,14 +39,15 @@ import edu.toronto.cs.se.ci.data.Result;
  * @param <FO>
  *            Result type of aggregator
  * @param <T>
- *            Trust type
+ *            Trust type from sources
  * @param <Q>
- *            Quality type
+ *            Quality type of aggregator, measures the quality of the final
+ *            result.
  */
 public class GenericCI<I, O, FO, T, Q> {
 
 	private final ImmutableSet<Source<I, O, T>> sources;
-	private final GenericAggregator<O,FO, T, Q> agg;
+	private final GenericAggregator<O, FO, T, Q> agg;
 	private final Selector<I, O, T> sel;
 	private final Acceptor<FO, Q> acceptor;
 
@@ -53,13 +55,16 @@ public class GenericCI<I, O, FO, T, Q> {
 	 * Create a CI using source discovery
 	 * 
 	 * @param contract
-	 *            The {@link Contract} to discover sources with
+	 *            The {@link Contract} to discover sources with using
+	 *            {@link Contracts}
 	 * @param agg
-	 *            The {@link GenericAggregator} to use
+	 *            The {@link GenericAggregator} to use to aggregate results
 	 * @param sel
-	 *            The {@link Selector} to use
+	 *            The {@link Selector} to use to select which of the discovered
+	 *            sources to use, and in what order.
 	 */
-	public GenericCI(Class<? extends Contract<I, O, T>> contract, GenericAggregator<O,FO, T, Q> agg, Selector<I, O, T> sel) {
+	public GenericCI(Class<? extends Contract<I, O, T>> contract, GenericAggregator<O, FO, T, Q> agg,
+			Selector<I, O, T> sel) {
 		this(Contracts.discover(contract), agg, sel);
 	}
 
@@ -75,8 +80,8 @@ public class GenericCI<I, O, FO, T, Q> {
 	 * @param acceptor
 	 *            The {@link Acceptor} to use
 	 */
-	public GenericCI(Class<? extends Contract<I, O, T>> contract, GenericAggregator<O,FO, T, Q> agg, Selector<I, O, T> sel,
-			Acceptor<FO, Q> acceptor) {
+	public GenericCI(Class<? extends Contract<I, O, T>> contract, GenericAggregator<O, FO, T, Q> agg,
+			Selector<I, O, T> sel, Acceptor<FO, Q> acceptor) {
 		this(Contracts.discover(contract), agg, sel, acceptor);
 	}
 
@@ -90,7 +95,7 @@ public class GenericCI<I, O, FO, T, Q> {
 	 * @param sel
 	 *            The {@link Selector} to use
 	 */
-	public GenericCI(Collection<Source<I, O, T>> sources, GenericAggregator<O,FO, T, Q> agg, Selector<I, O, T> sel) {
+	public GenericCI(Collection<Source<I, O, T>> sources, GenericAggregator<O, FO, T, Q> agg, Selector<I, O, T> sel) {
 		this.sources = ImmutableSet.copyOf(sources);
 		this.agg = agg;
 		this.sel = sel;
@@ -109,7 +114,7 @@ public class GenericCI<I, O, FO, T, Q> {
 	 * @param acceptor
 	 *            The {@link Acceptor}
 	 */
-	public GenericCI(Collection<Source<I, O, T>> sources, GenericAggregator<O,FO, T, Q> agg, Selector<I, O, T> sel,
+	public GenericCI(Collection<Source<I, O, T>> sources, GenericAggregator<O, FO, T, Q> agg, Selector<I, O, T> sel,
 			Acceptor<FO, Q> acceptor) {
 		this.sources = ImmutableSet.copyOf(sources);
 		this.agg = agg;
@@ -182,7 +187,7 @@ public class GenericCI<I, O, FO, T, Q> {
 		 * listeners for when it is complete, or for when a new estimate is
 		 * available from this Invocation.
 		 */
-		private final EstimateImpl<O,FO, T, Q> estimate = new EstimateImpl<O,FO, T, Q>(agg, acceptor);
+		private final EstimateImpl<O, FO, T, Q> estimate = new EstimateImpl<O, FO, T, Q>(agg, acceptor);
 
 		private long startedAt = -1;
 
@@ -284,7 +289,7 @@ public class GenericCI<I, O, FO, T, Q> {
 		/**
 		 * @return The Aggregator object for the CI
 		 */
-		public GenericAggregator<O,FO, T, Q> getAggregator() {
+		public GenericAggregator<O, FO, T, Q> getAggregator() {
 			return agg;
 		}
 

@@ -1,7 +1,5 @@
 package edu.toronto.cs.se.ci.data;
 
-import com.google.common.base.Optional;
-
 import edu.toronto.cs.se.ci.Source;
 
 /**
@@ -20,10 +18,6 @@ public final class Opinion<O, T> {
 	 * The Class of the source that created this Opinion
 	 */
 	private final Source<?, ?, ?> source;
-	/**
-	 * The arguments given to the Source that created this Opinion
-	 */
-	private final Optional<Object> args;
 
 	/**
 	 * Create an Opinion object
@@ -35,26 +29,42 @@ public final class Opinion<O, T> {
 		this.value = value;
 		this.trust = trust;
 		this.source = source;
-		args = Optional.absent();
 		this.name = source.getName();
 	}
-	
+
+	/**
+	 * Create an Opinion object with a specific name and no source.
+	 * 
+	 * @param value
+	 * @param trust
+	 * @param name
+	 */
 	public Opinion(O value, T trust, String name) {
 		this.value = value;
 		this.trust = trust;
 		this.name = name;
 		source = null;
-		args = Optional.absent();
 	}
 
-	public Opinion(Object args, O value, T trust, Source<?, ?, ?> source) {
+	/**
+	 * Create an Opinion object with a specific name and source.
+	 * 
+	 * @param value
+	 * @param trust
+	 * @param name
+	 * @param source
+	 */
+	public Opinion(O value, T trust, String name, Source<?, ?, ?> source) {
 		this.value = value;
 		this.trust = trust;
-		this.args = Optional.of(args);
+		this.name = name;
 		this.source = source;
-		this.name = source.getName();
 	}
 
+	/**
+	 * Returns the source which created this opinion, or {@code null} if none is
+	 * available.
+	 */
 	public Source<?, ?, ?> getSource() {
 		return source;
 	}
@@ -66,8 +76,15 @@ public final class Opinion<O, T> {
 	public T getTrust() {
 		return trust;
 	}
-	
-	public String getName(){
+
+	/**
+	 * Returns the name of this Opinion. By default, this value is the name of
+	 * the source that created the opinion, as determined by
+	 * {@link edu.toronto.cs.se.ci.Source #getName()}.
+	 * 
+	 * @return
+	 */
+	public String getName() {
 		return name;
 	}
 

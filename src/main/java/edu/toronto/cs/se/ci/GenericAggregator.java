@@ -8,10 +8,15 @@ import edu.toronto.cs.se.ci.data.Opinion;
 import edu.toronto.cs.se.ci.data.Result;
 
 /**
- * The aggregator is a single-method interface. It is used to combine the
+ * The GenericAggregator is a single-method interface. It is used to combine the
  * opinions returned by sources into a single unified result.
+ * <p>
+ * More specifically, it aggregates a list of Opinions (usually from a
+ * {@link Source} with a value of type O and a Trust of type T, into a Result
+ * with a value of type FO and a quality of type Q.
  * 
  * @author Michael Layzell
+ * @author Ian Berlot-Attwel
  *
  * @param <O>
  *            output type of source

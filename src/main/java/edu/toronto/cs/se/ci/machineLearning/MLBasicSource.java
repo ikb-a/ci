@@ -4,14 +4,14 @@ import edu.toronto.cs.se.ci.UnknownException;
 import edu.toronto.cs.se.ci.data.Opinion;
 
 /**
- * A source object which splits the acts of getting a response ({@code getResponse})
- * from the act of getting the trust ({@code getTrust}). As this source is for ML Aggregators, the
+ * A {@link MLSource} object which splits the acts of getting a response ({@link #getResponse})
+ * from the act of getting the trust ({@link #getTrust}). As this source is for ML Aggregators, the
  * trust type is implicitly {@code Void}.
  * 
  * @author Ian Berlot-Attwell
  *
- * @param <I> Input type
- * @param <O> Output type
+ * @param <I> Input type of source
+ * @param <O> Output type of source
  */
 public abstract class MLBasicSource<I, O> extends MLSource<I, O> {
 

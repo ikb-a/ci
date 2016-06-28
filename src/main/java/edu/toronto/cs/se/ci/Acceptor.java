@@ -8,15 +8,15 @@ import edu.toronto.cs.se.ci.data.Result;
  * 
  * @author Michael Layzell
  *
- * @param <O> CI Output Type
- * @param <Q> CI Quality Type
+ * @param <FO> CI Output Type (Output type of aggregator)
+ * @param <Q> CI Quality Type (Quality type of aggregator)
  */
-public interface Acceptor<O, Q> {
+public interface Acceptor<FO, Q> {
 	
 	/**
 	 * @param result The aggregated result of a CI
 	 * @return Whether the result is acceptable
 	 */
-	public Acceptability isAcceptable(Result<O, Q> result);
+	public Acceptability isAcceptable(Result<FO, Q> result);
 
 }

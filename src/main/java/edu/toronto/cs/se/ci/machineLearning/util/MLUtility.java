@@ -1,14 +1,15 @@
 package edu.toronto.cs.se.ci.machineLearning.util;
 
-import java.util.Enumeration;
-import java.util.List;
-
-import edu.toronto.cs.se.ci.data.Opinion;
-import weka.core.Attribute;
-import weka.core.DenseInstance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 
+/**
+ * This is a static utility class containing methods that may be useful in
+ * implementations of Weka ML aggregators.
+ * 
+ * @author Ian Berlot-Attwell
+ *
+ */
 public class MLUtility {
 
 	/**
@@ -16,9 +17,13 @@ public class MLUtility {
 	 * instances object.
 	 * <p>
 	 * Code from: https://weka.wikispaces.com/Use+WEKA+in+your+Java+code
+	 * <p>
+	 * Note that if no class attribute is explicitly given, then the last
+	 * attribute will be considered the class attribute.
 	 * 
-	 * @param input
-	 * @return
+	 * @param inputFilePath
+	 *            The path to the file.
+	 * @return The data file as a {@link weka.core.Instances}.
 	 * @throws Exception
 	 */
 	public static Instances fileToInstances(String inputFilePath) throws Exception {

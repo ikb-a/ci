@@ -5,11 +5,11 @@ package edu.toronto.cs.se.ci.data;
  * 
  * @author Michael Layzell
  *
- * @param <O>
+ * @param <FO>
  */
-public final class Result<O, Q> {
+public final class Result<FO, Q> {
 	
-	private final O value;
+	private final FO value;
 	private final Q quality;
 
 	/**
@@ -17,7 +17,7 @@ public final class Result<O, Q> {
 	 * @param value The result's value
 	 * @param quality The result's quality
 	 */
-	public Result(O value, Q quality) {
+	public Result(FO value, Q quality) {
 		this.value = value;
 		this.quality = quality;
 	}
@@ -25,7 +25,7 @@ public final class Result<O, Q> {
 	/**
 	 * @return The result's value
 	 */
-	public O getValue() {
+	public FO getValue() {
 		return value;
 	}
 	

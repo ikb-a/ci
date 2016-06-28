@@ -16,12 +16,15 @@ import edu.toronto.cs.se.ci.Source;
  * @author Ian Berlot-Attwell
  *
  * @param <I>
+ *            The input type to the source
  * @param <O>
+ *            The output type of the source
  */
 public abstract class MLSource<I, O> extends Source<I, O, Void> {
 	/**
 	 * Machine learning computes the trust of a source based on training data,
-	 * so the trust of the source is not needed.
+	 * so the trust of the source is not needed. For that reason, {@code null}
+	 * is returned.
 	 */
 	@Override
 	public Void getTrust(I args, Optional<O> value) {

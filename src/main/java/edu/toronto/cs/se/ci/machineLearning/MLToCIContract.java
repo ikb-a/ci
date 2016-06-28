@@ -21,9 +21,9 @@ import edu.toronto.cs.se.ci.data.Opinion;
  * which can be passed to a CI of type <I, O, Void> for evaluation.
  * 
  * @param <I>
- *            The input type of the MLContract to be wrapped.
+ *            The input type of the {@link MLContract} to be wrapped.
  * @param <O>
- *            The output type of the MLContract to be wrapped.
+ *            The output type of the {@link MLContract} to be wrapped.
  */
 public class MLToCIContract<I, O> implements Contract<I, O, Void> {
 	/**
@@ -65,8 +65,8 @@ public class MLToCIContract<I, O> implements Contract<I, O, Void> {
 	}
 
 	/**
-	 * This class wraps a {@link edu.toronto.cs.se.ci.Source<II, IO, ?>} into a
-	 * Source<II, IO, Void>
+	 * This class wraps a {@link edu.toronto.cs.se.ci.Source}{@code <II, IO, ?>} into a
+	 * {@code Source<II, IO, Void>}.
 	 * 
 	 * @author ikba
 	 *

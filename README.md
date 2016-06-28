@@ -14,9 +14,13 @@ Anywhere you find a generic in the `ci` package, it is generally the case that
 the following are what they stand for:
 
 - `<I> -> Input Type to Source/CI`
-- `<O> -> Output Type from Source/CI`
+- `<O> -> Output Type from Source`
+- `<FO> -> Output type from CI`
 - `<T> -> Trust Type`
 - `<Q> -> Quality Type`
+
+In the case where `<O>` and `<FO>` are the same, they are often replaced with
+a single generic, `<O>`.
 
 ### CI creation
 A CI is created by using one of the CI constructors. You need to pass in a
