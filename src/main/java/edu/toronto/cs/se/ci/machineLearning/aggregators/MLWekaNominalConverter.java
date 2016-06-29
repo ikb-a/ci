@@ -1,5 +1,7 @@
 package edu.toronto.cs.se.ci.machineLearning.aggregators;
 
+import edu.toronto.cs.se.ci.data.Opinion;
+
 /**
  * This is a single method interface, allowing from the conversion of a value of
  * type {@code O}, to a nominal String value. For example an
@@ -15,5 +17,5 @@ public interface MLWekaNominalConverter<O> {
 	/**
 	 * Converts the source output of type {@code O} into a String nominal value.
 	 */
-	public String convert(O sourceOutput);
+	public String convert(Opinion<O, Void> sourceOutput);
 }

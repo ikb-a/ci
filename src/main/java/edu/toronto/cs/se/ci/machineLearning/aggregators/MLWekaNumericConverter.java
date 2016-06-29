@@ -1,5 +1,7 @@
 package edu.toronto.cs.se.ci.machineLearning.aggregators;
 
+import edu.toronto.cs.se.ci.data.Opinion;
+
 /**
  * This is a single method interface, allowing from the conversion of a value of
  * type {@code O}, to a numeric double value. For example an
@@ -15,5 +17,5 @@ public interface MLWekaNumericConverter<O> {
 	/**
 	 * Converts the source output of type {@code O} into a double numeric value.
 	 */
-	public Double convert(O sourceOutput);
+	public Double convert(Opinion<O, Void> sourceOutput);
 }

@@ -13,6 +13,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import weka.classifiers.bayes.NaiveBayes;
+import weka.classifiers.trees.J48;
 
 public class MLWekaNominalAggregatorTest extends TestCase {
 
@@ -26,9 +27,9 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 
 	public void testValidNaiveBayes() throws Exception {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
-				"./vote-consistentNominals.arff", new NaiveBayes());
+				"./vote-consistentNominalsTrain.arff", new NaiveBayes());
 		assertNotNull(agg);
-		
+
 		// removed instance from training data:
 		// 'republican','democrat','republican','democrat','democrat','democrat','republican','republican','republican','republican','democrat','democrat',?,'democrat','republican','republican','democrat'
 		// 15 attributes (the last is the classification, and one is missing)
@@ -41,13 +42,47 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 				"immigration", "synfuels-corporation-cutback", "education-spending", "crime", "duty-free-exports",
 				"export-administration-act-south-africa" };
 		List<Opinion<String, Void>> instance = arraysToOpinions(values, opinionNames);
-		
+
 		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
-		Result<String, double []> result= resultOpt.get();
-		System.out.println(result.getValue());
-		System.out.println("Probability Democrat:"+result.getQuality()[0]);
-		System.out.println("Probability Republican:"+result.getQuality()[1]);
+		Result<String, double[]> result = resultOpt.get();
+
+		double[] quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(1.0, quality[0] + quality[1]);
+		assertTrue(quality[0]>.999);
+	}
+	
+	public void testValidJ48() throws Exception {
+		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
+				"./vote-consistentNominalsTrain.arff", new J48());
+		assertNotNull(agg);
+
+		// removed instance from training data:
+		// 'republican','democrat','republican','democrat','democrat','democrat','republican','republican','republican','republican','democrat','democrat',?,'democrat','republican','republican','democrat'
+		// 15 attributes (the last is the classification, and one is missing)
+		String[] values = new String[] { "republican", "democrat", "republican", "democrat", "democrat", "democrat",
+				"republican", "republican", "republican", "republican", "democrat", "democrat", "democrat",
+				"republican", "republican" };
+		String[] opinionNames = new String[] { "handicapped-infants", "water-project-cost-sharing",
+				"adoption-of-the-budget-resolution", "physician-fee-freeze", "el-salvador-aid",
+				"religious-groups-in-schools", "anti-satellite-test-ban", "aid-to-nicaraguan-contras", "mx-missile",
+				"immigration", "synfuels-corporation-cutback", "education-spending", "crime", "duty-free-exports",
+				"export-administration-act-south-africa" };
+		List<Opinion<String, Void>> instance = arraysToOpinions(values, opinionNames);
+
+		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance);
+		assertTrue(resultOpt.isPresent());
+		Result<String, double[]> result = resultOpt.get();
+
+		double[] quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(1.0, quality[0] + quality[1]);
+		System.out.println(quality[0]);
+		assertTrue(quality[0]>=.985);
+		assertTrue(quality[0]<.986);
 	}
 
 	private List<Opinion<String, Void>> arraysToOpinions(String[] value, String[] opinionName) {
@@ -61,8 +96,8 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 
 	public class NoActionConverter implements MLWekaNominalConverter<String> {
 		@Override
-		public String convert(String sourceOutput) {
-			return sourceOutput;
+		public String convert(Opinion<String, Void> sourceOutput) {
+			return sourceOutput.getValue();
 		}
 	}
 }

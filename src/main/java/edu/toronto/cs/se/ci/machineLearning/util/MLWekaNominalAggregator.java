@@ -108,7 +108,7 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 				 * into the Instance as the matching attribute.
 				 */
 				if (attribute.name().equals(opinion.getName())) {
-					instance.setValue(attribute, converter.convert(opinion.getValue()));
+					instance.setValue(attribute, converter.convert(opinion));
 					break;
 				}
 			}
