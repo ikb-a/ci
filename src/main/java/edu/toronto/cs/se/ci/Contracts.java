@@ -17,6 +17,8 @@ public final class Contracts {
 	private Contracts() {
 	}
 
+	// TODO: Determine if it would be better to use a HashSet so as to preserve
+	// order and prevent duplication of sources?
 	private static List<Object> providers = new ArrayList<>();
 
 	/**
@@ -74,10 +76,17 @@ public final class Contracts {
 				@SuppressWarnings("unchecked")
 				MLContract<I, O> provider = (MLContract<I, O>) maybeProvider;
 
-				sources.addAll(provider.provide());
+				sources.addAll(provider.provideML());
 			}
 		}
 		return sources;
+	}
+
+	/**
+	 * Removes all registered sources.
+	 */
+	public static void clear() {
+		providers = new ArrayList<>();
 	}
 
 }

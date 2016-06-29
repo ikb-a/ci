@@ -40,6 +40,17 @@ public abstract class Source<I, O, T> {
 	}
 
 	/**
+	 * Provides this source as a {@code Source<I, O, ?>}. Means that ML
+	 * contracts do not have to be implemented manually for every source.
+	 * 
+	 * @return A single element list of type {@code Source<I, O, ?>} containing
+	 *         only this source.
+	 */
+	public List<Source<I, O, ?>> provideML() {
+		return ImmutableList.of(this);
+	}
+
+	/**
 	 * Get the cost of querying the source
 	 * 
 	 * @param args
@@ -97,5 +108,10 @@ public abstract class Source<I, O, T> {
 	 * @return A double representing the trust in the response
 	 */
 	public abstract T getTrust(I args, Optional<O> value);
+	
+	@Override
+	public String toString(){
+		return getName();
+	}
 
 }

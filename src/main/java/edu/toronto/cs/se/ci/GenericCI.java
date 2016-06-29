@@ -421,8 +421,7 @@ public class GenericCI<I, O, FO, T, Q> {
 
 					budget = newBudget.get();
 
-					System.out.println("Calling " + next.getName()); // TODO:
-																		// DEBUG
+					System.out.println("Calling " + next.getName()); // TODO:DEBUG
 
 					// Query the source & augment the estimate
 					ListenableFuture<Opinion<O, T>> opinion = pool

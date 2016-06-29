@@ -82,6 +82,10 @@ public class MLToCIContract<I, O> implements Contract<I, O, Void> {
 			this.originalSource = originalSource;
 		}
 
+		@Override public String getName(){
+			return originalSource.getName();
+		}
+		
 		@Override
 		public Expenditure[] getCost(II args) throws Exception {
 			return originalSource.getCost(args);

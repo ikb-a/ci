@@ -40,6 +40,6 @@ public interface MLContract<I, O> {
 	 *         return whatever the contract states the must return, and are of
 	 *         type {@link edu.toronto.cs.se.ci.Source}{@code <I,O,?>}.
 	 */
-	public List<Source<I, O, ?>> provide();
+	public List<Source<I, O, ?>> provideML();
 
 }
