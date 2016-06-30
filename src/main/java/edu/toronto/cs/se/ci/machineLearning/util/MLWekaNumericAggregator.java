@@ -12,8 +12,12 @@ import weka.core.Instances;
 import edu.toronto.cs.se.ci.data.Opinion;
 import edu.toronto.cs.se.ci.data.Result;
 import edu.toronto.cs.se.ci.machineLearning.aggregators.MLNominalWekaAggregator;
-import edu.toronto.cs.se.ci.machineLearning.aggregators.MLWekaNominalConverter;
+import edu.toronto.cs.se.ci.machineLearning.aggregators.MLWekaNumericConverter;
 
+//TODO: Problem is that currently, the trust value produced by the numeric classifiers is useless
+// (it is simply the result). The WEKA interface InvervalEstimator (http://weka.sourceforge.net/doc.dev/weka/classifiers/IntervalEstimator.html)
+//could be used to resolve this; but only 2 Classifiers (GaussianProcesses and RegressionByDiscretization) implement this interface, meaning that many of the classifiers
+//such as LinearRegression and MultilayerPerceptron would be unusable.
 /**
  * This class is a
  * {@link edu.toronto.cs.se.ci.machineLearning.aggregators.MLNominalWekaAggregator}
@@ -26,9 +30,9 @@ import edu.toronto.cs.se.ci.machineLearning.aggregators.MLWekaNominalConverter;
  * @param <O>
  *            The output type of the sources being aggregated.
  */
-public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, String> {
+public class MLWekaNumericAggregator<O> implements MLNominalWekaAggregator<O, Double> {
 	// The converter that converts from O to a String
-	private MLWekaNominalConverter<O> converter;
+	private MLWekaNumericConverter<O> converter;
 	// The Weka classifier given
 	private Classifier classifier;
 	// The training data as an Instances object.
@@ -37,13 +41,13 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 	/**
 	 * Constructs the aggregator using {@code classifier} as the internal
 	 * Classifier, and the file located at {@code inputFilePath} as training
-	 * data. Note that a classifier that classifies into nominal values (NOT a
-	 * Weka classifier which does Regression, and produces a numeric value) must
-	 * be used.
+	 * data. Note that a classifier that classifies into numeric values (a Weka
+	 * classifier which does Regression, NOT a classifier that classifies into a
+	 * nominal class) must be used.
 	 * 
-	 * @param nominalConverter
-	 *            The converter to be used to turn values of type O into nominal
-	 *            String
+	 * @param numericConverter
+	 *            The converter to be used to turn values of type O into numeric
+	 *            Double
 	 * @param inputFilePath
 	 *            The path of the file containing training data
 	 * @param classifier
@@ -51,9 +55,9 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 	 *            classifying (aggregating) the opinions given.
 	 * @throws Exception
 	 */
-	public MLWekaNominalAggregator(MLWekaNominalConverter<O> nominalConverter, String inputFilePath,
+	public MLWekaNumericAggregator(MLWekaNumericConverter<O> numericConverter, String inputFilePath,
 			Classifier classifier) throws Exception {
-		this.converter = nominalConverter;
+		this.converter = numericConverter;
 		this.classifier = classifier;
 		this.trainingData = MLUtility.fileToInstances(inputFilePath);
 		classifier.buildClassifier(trainingData);
@@ -74,9 +78,9 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 	 *            classifying (aggregating) the opinions given.
 	 * @throws Exception
 	 */
-	public MLWekaNominalAggregator(MLWekaNominalConverter<O> nominalConverter, Instances trainingData,
+	public MLWekaNumericAggregator(MLWekaNumericConverter<O> numericConverter, Instances trainingData,
 			Classifier classifier) throws Exception {
-		this.converter = nominalConverter;
+		this.converter = numericConverter;
 		this.classifier = classifier;
 		this.trainingData = trainingData;
 		classifier.buildClassifier(trainingData);
@@ -119,7 +123,7 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 	}
 
 	@Override
-	public Optional<Result<String, double[]>> aggregate(List<Opinion<O, Void>> opinions) {
+	public Optional<Result<Double, double[]>> aggregate(List<Opinion<O, Void>> opinions) {
 		DenseInstance opinionsAsInstance = convertOpinionsToDenseInstance(opinions);
 		// The class distribution (probability of the instance belonging to a
 		// specific class)
@@ -138,10 +142,8 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 			return Optional.absent();
 		}
 
-		// convert the double classification into the String name of the class
-		String responseAsString = trainingData.classAttribute().value((int) classification);
 		// return the result
-		return Optional.of(new Result<String, double[]>(responseAsString, distribution));
+		return Optional.of(new Result<Double, double[]>(classification, distribution));
 	}
 
 }

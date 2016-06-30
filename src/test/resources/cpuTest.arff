@@ -1,0 +1,16 @@
+%Information removed from the training for cpu.arff
+@relation 'cpu'
+@attribute MYCT numeric
+@attribute MMIN numeric
+@attribute MMAX numeric
+@attribute CACH numeric
+@attribute CHMIN numeric
+@attribute CHMAX numeric
+@attribute class numeric
+@data
+
+23,16000,64000,64,16,32,636
+400,512,3500,4,1,6,40
+110,5000,5000,142,8,64,120
+40,8000,32000,64,8,24,277
+35,8000,32000,64,8,24,370

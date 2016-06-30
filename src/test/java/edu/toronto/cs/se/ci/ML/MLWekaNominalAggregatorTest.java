@@ -13,7 +13,9 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import weka.classifiers.bayes.NaiveBayes;
+import weka.classifiers.functions.LinearRegression;
 import weka.classifiers.trees.J48;
+import weka.core.UnsupportedAttributeTypeException;
 
 public class MLWekaNominalAggregatorTest extends TestCase {
 
@@ -51,9 +53,9 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		assertEquals("democrat", result.getValue());
 		assertEquals(2, quality.length);
 		assertEquals(1.0, quality[0] + quality[1]);
-		assertTrue(quality[0]>.999);
+		assertTrue(quality[0] > .999);
 	}
-	
+
 	public void testValidJ48() throws Exception {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
 				"./vote-consistentNominalsTrain.arff", new J48());
@@ -81,8 +83,22 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		assertEquals(2, quality.length);
 		assertEquals(1.0, quality[0] + quality[1]);
 		System.out.println(quality[0]);
-		assertTrue(quality[0]>=.985);
-		assertTrue(quality[0]<.986);
+		assertTrue(quality[0] >= .985);
+		assertTrue(quality[0] < .986);
+	}
+
+	// TODO: Determine if this works for all invalid classifiers, and if
+	// increasing userfriendliness is desired. (Regression classifiers do not
+	// have their own class/interface)
+	public void testValidLinearRegression() throws Exception {
+		try {
+			MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
+					"./vote-consistentNominalsTrain.arff", new LinearRegression());
+			fail(agg.toString()
+					+ " Should not have been created, as a Regression classifier cannot support a nominal datatype");
+		} catch (UnsupportedAttributeTypeException e) {
+		}
+
 	}
 
 	private List<Opinion<String, Void>> arraysToOpinions(String[] value, String[] opinionName) {
