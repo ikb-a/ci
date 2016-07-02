@@ -1,5 +1,9 @@
 package edu.toronto.cs.se.ci.data;
 
+import java.util.List;
+
+import com.google.common.primitives.Doubles;
+
 /**
  * The aggregated result of a CI.
  * 
@@ -38,8 +42,9 @@ public final class Result<FO, Q> {
 	
 	@Override
 	public String toString() {
-		if (value != null)
-			return "Result " + value.toString() + " " + quality.toString();
+		if (value != null){
+			return "Result " + value.toString() + " " + quality;
+		}
 		else
 			return "UnknownResult";
 	}

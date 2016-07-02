@@ -31,6 +31,7 @@ public class AllSelector<I, O, T> implements Selector<I, O, T> {
 					return Optional.of(source);
 			}
 		} catch (Exception e) {
+			System.out.println("Exception thrown by source budget in selector."+e);
 			return Optional.absent();
 		}
 

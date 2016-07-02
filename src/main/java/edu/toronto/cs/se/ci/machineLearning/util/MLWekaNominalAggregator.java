@@ -143,5 +143,4 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 		// return the result
 		return Optional.of(new Result<String, double[]>(responseAsString, distribution));
 	}
-
 }

@@ -49,6 +49,10 @@ public final class Budgets {
 	 */
 	public static Optional<Allowance[]> expend(Allowance[] budget, Expenditure[] cost,
 			Optional<GenericCI<?, ?, ?, ?, ?>.Invocation> invocation) {
+		if (cost == null) {
+			throw new IllegalArgumentException("Cost of a source cannot be null.");
+		}
+
 		for (Expenditure expenditure : cost) {
 			Optional<Allowance[]> spent = expenditure.expend(budget, invocation);
 			if (spent.isPresent())

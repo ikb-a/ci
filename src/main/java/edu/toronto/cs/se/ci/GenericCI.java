@@ -374,6 +374,7 @@ public class GenericCI<I, O, FO, T, Q> {
 			// Create the timeout timer
 			Optional<Time> timeAllowance = Budgets.getByClass(budget, Time.class);
 			if (timeAllowance.isPresent()) {
+				System.out.println("Starting time-out timer");
 				long time = timeAllowance.get().getDuration(TimeUnit.NANOSECONDS);
 
 				// A Lambda expression is used to create a Runnable that will
@@ -383,7 +384,7 @@ public class GenericCI<I, O, FO, T, Q> {
 						synchronized (this) {
 							this.wait(time / 1000000, (int) (time % 1000000));
 						}
-
+						System.out.println("CI has timed out.");
 						estimate.done(); // If the estimate isn't done yet -
 											// force it to be so.
 					} catch (InterruptedException e) {
@@ -392,7 +393,7 @@ public class GenericCI<I, O, FO, T, Q> {
 			}
 
 			Source<I, O, T> next;
-			for (;;) {
+			while (true) {
 				// Get the next source (this might block)
 				Optional<Source<I, O, T>> maybeNext = sel.getNextSource(this);
 				if (maybeNext.isPresent())

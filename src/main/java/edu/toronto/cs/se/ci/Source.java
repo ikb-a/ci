@@ -51,7 +51,8 @@ public abstract class Source<I, O, T> {
 	}
 
 	/**
-	 * Get the cost of querying the source
+	 * Get the cost of querying the source. The cost CANNOT be {@code null}. If
+	 * the source has no cost, return an empty array of Expenditure.
 	 * 
 	 * @param args
 	 *            The arguments which would be passed to {@code apply}
@@ -108,9 +109,9 @@ public abstract class Source<I, O, T> {
 	 * @return A double representing the trust in the response
 	 */
 	public abstract T getTrust(I args, Optional<O> value);
-	
+
 	@Override
-	public String toString(){
+	public String toString() {
 		return getName();
 	}
 
