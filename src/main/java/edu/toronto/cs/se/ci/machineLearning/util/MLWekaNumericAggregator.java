@@ -7,6 +7,7 @@ import com.google.common.base.Optional;
 
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Classifier;
+import weka.classifiers.Evaluation;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instances;
@@ -150,6 +151,18 @@ public class MLWekaNumericAggregator<O> implements MLNominalWekaAggregator<O, Do
 	@Override
 	public Classifier getClassifier() throws Exception {
 		return AbstractClassifier.makeCopy(classifier);
+	}
+	
+	@Override
+	public Evaluation testClassifier(String filePath) throws Exception {
+		return testClassifier(MLUtility.fileToInstances(filePath));
+	}
+
+	@Override
+	public Evaluation testClassifier(Instances instances) throws Exception {
+		Evaluation result = new Evaluation(trainingData);
+		result.evaluateModel(classifier, instances);
+		return result;
 	}
 
 }
