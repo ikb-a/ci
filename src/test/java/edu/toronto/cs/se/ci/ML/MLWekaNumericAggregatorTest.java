@@ -50,7 +50,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 
 		// TODO: determine if Weka is SUPPOSED to have this behaviour.
 		try {
-			assertNull(eval.confusionMatrix());
+			eval.confusionMatrix();
 			fail();
 		} catch (NullPointerException e) {
 		}
@@ -76,9 +76,8 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 		double[] quality = result.getQuality();
 		assertEquals(636, result.getValue(), 20);
 		assertEquals(1, quality.length);
-		assertEquals(quality[0], result.getValue(), 0.001); // TODO: Current
-															// issue with
-															// NumericAggregator
+		assertEquals(quality[0], result.getValue(), 0.001);
+		// TODO: Fix issue with NumericAggregator where quality = value returned
 	}
 
 	public void testValidMultilayerPerceptron() throws Exception {

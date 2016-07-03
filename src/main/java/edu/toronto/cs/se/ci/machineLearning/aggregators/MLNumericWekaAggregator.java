@@ -1,6 +1,6 @@
 package edu.toronto.cs.se.ci.machineLearning.aggregators;
 
-//TODO confirm type of "class distribution" for numeric classifier.
+//TODO fix type of "class distribution" for numeric classifier.
 /**
  * This Interface represents a Weka aggregator, which aggregates opinions which
  * are numeric values, and returns a representation of type FO of a numeric

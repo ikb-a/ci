@@ -66,9 +66,6 @@ public class GenericCITest extends TestCase {
 		MLWekaNominalConverter<String> conv = new NoActionConverter();
 		GenericAggregator<String, String, Void, double[]> agg = new MLWekaNominalAggregator<String>(conv,
 				"./vote-consistentNominalsCITrain .arff", new NaiveBayes());
-		// TODO: MLToCIContract CANNOT be used as a contract to a CI. Create a
-		// new interface (i.e. provider) and fix this so that a CI can accept a
-		// provider; OR a contract; OR a list of sources.
 		Contracts.register(new Adoption());
 		Contracts.register(new Crime());
 		Contracts.register(new DutyFree());
@@ -150,14 +147,10 @@ public class GenericCITest extends TestCase {
 		MLWekaNominalConverter<String> conv = new NoActionConverter();
 		GenericAggregator<String, String, Void, double[]> agg = new MLWekaNominalAggregator<String>(conv,
 				"./vote-consistentNominalsCITrain .arff", new NaiveBayes());
-		// TODO: fix documentation, MLToCIContract CANNOT be used as a contract
-		// to a CI.
+
 		GenericCI<Boolean, String, String, Void, double[]> test1 = new GenericCI<Boolean, String, String, Void, double[]>(
 				contract.provide(), agg, sel, acc);
 
-		// TODO: Improve this; right now it times out (as it should), resulting
-		// in an undecipherable stack trace as the estimate is of
-		// Acceptability.BAD
 		Allowance[] budget = new Allowance[] { new Dollars(new BigDecimal(5)) };
 
 		// Estimate<String, double[]> resultEstimate = test1.apply(true,
@@ -261,9 +254,6 @@ public class GenericCITest extends TestCase {
 		GenericCI<Boolean, String, String, Void, double[]> test1 = new GenericCI<Boolean, String, String, Void, double[]>(
 				contract.provide(), agg, sel, acc);
 
-		// TODO: Improve this; right now it times out (as it should), resulting
-		// in an undecipherable stack trace as the estimate is of
-		// Acceptability.BAD
 		Allowance[] budget = new Allowance[] { new Dollars(new BigDecimal(5)) };
 
 		// Estimate<String, double[]> resultEstimate = test1.apply(true,
@@ -320,9 +310,6 @@ public class GenericCITest extends TestCase {
 		GenericCI<Boolean, String, String, Void, double[]> test1 = new GenericCI<Boolean, String, String, Void, double[]>(
 				contract.provide(), agg, sel, acc);
 
-		// TODO: Improve this; right now it times out (as it should), resulting
-		// in an undecipherable stack trace as the estimate is of
-		// Acceptability.BAD
 		Allowance[] budget = new Allowance[] { new Dollars(new BigDecimal(5)) };
 
 		Estimate<String, double[]> resultEstimate = test1.apply(true, budget);

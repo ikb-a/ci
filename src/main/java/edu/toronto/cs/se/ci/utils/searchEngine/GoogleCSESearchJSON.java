@@ -203,6 +203,8 @@ public class GoogleCSESearchJSON implements JSONSearchEngine {
 	 *            The page number for {@code json}
 	 * @return A {@link SearchResults} representing the search results contained
 	 *         in {@code json}.
+	 * @throws RuntimeException
+	 *             if the total result of the search cannot be found.
 	 */
 	private SearchResults convertJSONToSearchResults(JSONObject json, String query, int pageNumber) {
 		// Get the number of hits. If we can't get this number then there was
@@ -211,7 +213,7 @@ public class GoogleCSESearchJSON implements JSONSearchEngine {
 		try {
 			hits = json.getJSONObject("queries").getJSONArray("request").getJSONObject(0).getInt("totalResults");
 		} catch (JSONException e) {
-			throw new RuntimeException(e);// TODO: Make this less terrible
+			throw new RuntimeException(e);
 		}
 
 		// get the results

@@ -1,6 +1,8 @@
 package edu.toronto.cs.se.ci;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import edu.toronto.cs.se.ci.machineLearning.MLContract;
@@ -17,9 +19,7 @@ public final class Contracts {
 	private Contracts() {
 	}
 
-	// TODO: Determine if it would be better to use a HashSet so as to preserve
-	// order and prevent duplication of sources?
-	private static List<Object> providers = new ArrayList<>();
+	private static Collection<Object> providers = new HashSet<>();
 
 	/**
 	 * Register an object as a provider for a given contract
@@ -29,6 +29,9 @@ public final class Contracts {
 	 *            {@link Contract}
 	 */
 	public static void register(Object provider) {
+		if (provider == null) {
+			throw new IllegalArgumentException("Source cannot be null.");
+		}
 		if (!(provider instanceof Contract<?, ?, ?>) && !(provider instanceof MLContract<?, ?>))
 			throw new Error("Provider " + provider.getClass().getName() + " must provide at least one Contract");
 

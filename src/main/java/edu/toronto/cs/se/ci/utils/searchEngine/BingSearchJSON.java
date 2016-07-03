@@ -134,14 +134,14 @@ public class BingSearchJSON implements JSONSearchEngine {
 
 	/**
 	 * Calculates the skip value required in the BING API rest request, to reach
-	 * the {@code pageNumber} page of results.
+	 * the {@code pageNumber} page of results. Note that skip cannot exceed
+	 * 1000, this is the Bing API limit.
 	 * 
 	 * @param pageNumber
 	 *            The page number for the results wanted. Should be between 1-21
 	 *            inclusive.
 	 * @return The value required for the skip to reach that page number.
 	 */
-	// TODO: Note skip cannot exceed 1000 (that is the Bing API limit)
 	private int calcSkip(int pageNumber) {
 		return (pageNumber - 1) * pageSize;
 	}

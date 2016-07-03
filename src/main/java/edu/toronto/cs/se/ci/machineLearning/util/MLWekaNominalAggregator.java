@@ -56,6 +56,8 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 	public MLWekaNominalAggregator(MLWekaNominalConverter<O> nominalConverter, String inputFilePath,
 			Classifier classifier) throws Exception {
 		this.converter = nominalConverter;
+		// TODO find out why makeCopy does not work in Aggregator constructor
+		// this.classifier = AbstractClassifier.makeCopy(classifier);
 		this.classifier = classifier;
 		this.trainingData = MLUtility.fileToInstances(inputFilePath);
 		classifier.buildClassifier(trainingData);
@@ -93,7 +95,8 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 	 * @param opinions
 	 * @return {@code opinions} as an {@link weka.core.Instance}.
 	 */
-	// TODO: Refactor into MLUtility?
+	// cannot be refactored into MLUtility without copying verbatim, as the
+	// setValue method will only accept specific datatypes
 	private DenseInstance convertOpinionsToDenseInstance(List<Opinion<O, Void>> opinions) {
 		DenseInstance instance = new DenseInstance(trainingData.numAttributes());
 		/*

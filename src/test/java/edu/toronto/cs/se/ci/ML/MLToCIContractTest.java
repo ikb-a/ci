@@ -103,7 +103,8 @@ public class MLToCIContractTest extends TestCase {
 		assertSame(res, res.provide().get(0));
 		assertEquals("edu.toronto.cs.se.ci.ML.MLToCIContractTest$RetB", res.getName());
 		assertSame(res, res.provideML().get(0));
-		assertEquals(1, res.getCost(null).length); //TODO add check that it is Dollars
+		assertEquals(1, res.getCost(null).length);
+		assertTrue(res.getCost(null)[0] instanceof Dollars);
 		opinion = res.getOpinion(null);
 		assertNull(opinion.getTrust());
 		assertEquals("B", opinion.getValue());
@@ -114,7 +115,10 @@ public class MLToCIContractTest extends TestCase {
 		assertSame(res, res.provide().get(0));
 		assertEquals("edu.toronto.cs.se.ci.ML.MLToCIContractTest$RetC", res.getName());
 		assertSame(res, res.provideML().get(0));
-		assertEquals(2, res.getCost(5).length); //TODO add check that it is Dollars and Time
+		assertEquals(2, res.getCost(5).length);
+		assertTrue(res.getCost(null)[0] instanceof Time);
+		assertTrue(res.getCost(null)[1] instanceof Dollars);
+		
 		opinion = res.getOpinion(null);
 		assertNull(opinion.getTrust());
 		assertEquals("C", opinion.getValue());

@@ -60,6 +60,7 @@ public class MLWekaNumericAggregator<O> implements MLNominalWekaAggregator<O, Do
 	public MLWekaNumericAggregator(MLWekaNumericConverter<O> numericConverter, String inputFilePath,
 			Classifier classifier) throws Exception {
 		this.converter = numericConverter;
+		// this.classifier = AbstractClassifier.makeCopy(classifier);
 		this.classifier = classifier;
 		this.trainingData = MLUtility.fileToInstances(inputFilePath);
 		classifier.buildClassifier(trainingData);
@@ -97,7 +98,6 @@ public class MLWekaNumericAggregator<O> implements MLNominalWekaAggregator<O, Do
 	 * @param opinions
 	 * @return {@code opinions} as an {@link weka.core.Instance}.
 	 */
-	// TODO: Refactor into MLUtility?
 	private DenseInstance convertOpinionsToDenseInstance(List<Opinion<O, Void>> opinions) {
 		DenseInstance instance = new DenseInstance(trainingData.numAttributes());
 		/*
@@ -152,7 +152,7 @@ public class MLWekaNumericAggregator<O> implements MLNominalWekaAggregator<O, Do
 	public Classifier getClassifier() throws Exception {
 		return AbstractClassifier.makeCopy(classifier);
 	}
-	
+
 	@Override
 	public Evaluation testClassifier(String filePath) throws Exception {
 		return testClassifier(MLUtility.fileToInstances(filePath));

@@ -172,9 +172,8 @@ public class EstimateImpl<O,FO, T, Q> extends AbstractFuture<Result<FO, Q>> impl
 		value = getCurrent();
 
 		if (!value.isPresent() || (acceptor != null && acceptor.isAcceptable(value.get()) == Acceptability.BAD))
-			setException(new UnknownException("Unknown")); // TODO: More
-															// meaningful error?
-															// Should it throw?
+			setException(new UnknownException("Unknown")); 
+		// TODO: More meaningful error? Should it throw?
 		else
 			set(value.get());
 	}

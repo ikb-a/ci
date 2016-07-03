@@ -13,9 +13,10 @@ import edu.toronto.cs.se.ci.data.Opinion;
  * @param <O>
  *            The type that the converter turns into a nominal value.
  */
-public interface MLWekaNominalConverter<O> {
+public interface MLWekaNominalConverter<O> extends MLWekaGenericConverter<O, String> {
 	/**
 	 * Converts the source output of type {@code O} into a String nominal value.
 	 */
+	@Override
 	public String convert(Opinion<O, Void> sourceOutput);
 }

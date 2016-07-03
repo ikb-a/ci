@@ -13,9 +13,10 @@ import edu.toronto.cs.se.ci.data.Opinion;
  * @param <O>
  *            The type that the converter turns into a numeric value.
  */
-public interface MLWekaNumericConverter<O> {
+public interface MLWekaNumericConverter<O> extends MLWekaGenericConverter<O, Double>{
 	/**
 	 * Converts the source output of type {@code O} into a double numeric value.
 	 */
+	@Override
 	public Double convert(Opinion<O, Void> sourceOutput);
 }
