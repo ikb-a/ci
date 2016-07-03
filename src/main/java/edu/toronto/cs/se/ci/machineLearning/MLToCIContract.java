@@ -7,6 +7,7 @@ import com.google.common.base.Optional;
 
 import edu.toronto.cs.se.ci.Contract;
 import edu.toronto.cs.se.ci.Contracts;
+import edu.toronto.cs.se.ci.Provider;
 import edu.toronto.cs.se.ci.Source;
 import edu.toronto.cs.se.ci.UnknownException;
 import edu.toronto.cs.se.ci.budget.Expenditure;
@@ -25,7 +26,7 @@ import edu.toronto.cs.se.ci.data.Opinion;
  * @param <O>
  *            The output type of the {@link MLContract} to be wrapped.
  */
-public class MLToCIContract<I, O> implements Contract<I, O, Void> {
+public class MLToCIContract<I, O> implements Contract<I, O, Void>, Provider<I, O, Void> {
 	/**
 	 * The contract that this {@link MLCIContract} wraps
 	 */
@@ -65,8 +66,8 @@ public class MLToCIContract<I, O> implements Contract<I, O, Void> {
 	}
 
 	/**
-	 * This class wraps a {@link edu.toronto.cs.se.ci.Source}{@code <II, IO, ?>} into a
-	 * {@code Source<II, IO, Void>}.
+	 * This class wraps a {@link edu.toronto.cs.se.ci.Source}{@code <II, IO, ?>}
+	 * into a {@code Source<II, IO, Void>}.
 	 * 
 	 * @author ikba
 	 *
@@ -82,10 +83,11 @@ public class MLToCIContract<I, O> implements Contract<I, O, Void> {
 			this.originalSource = originalSource;
 		}
 
-		@Override public String getName(){
+		@Override
+		public String getName() {
 			return originalSource.getName();
 		}
-		
+
 		@Override
 		public Expenditure[] getCost(II args) throws Exception {
 			return originalSource.getCost(args);

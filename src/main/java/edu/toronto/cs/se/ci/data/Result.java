@@ -1,9 +1,5 @@
 package edu.toronto.cs.se.ci.data;
 
-import java.util.List;
-
-import com.google.common.primitives.Doubles;
-
 /**
  * The aggregated result of a CI.
  * 

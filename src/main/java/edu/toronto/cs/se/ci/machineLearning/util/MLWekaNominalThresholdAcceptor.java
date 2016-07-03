@@ -4,11 +4,11 @@ import edu.toronto.cs.se.ci.Acceptability;
 import edu.toronto.cs.se.ci.Acceptor;
 import edu.toronto.cs.se.ci.data.Result;
 
-public class MLNominalThresholdAcceptor<FO> implements Acceptor<FO, double[]> {
+public class MLWekaNominalThresholdAcceptor<FO> implements Acceptor<FO, double[]> {
 	private final double ok;
 	private final double good;
 
-	public MLNominalThresholdAcceptor(double ok, double good) {
+	public MLWekaNominalThresholdAcceptor(double ok, double good) {
 		this.ok = ok;
 		this.good = good;
 	}

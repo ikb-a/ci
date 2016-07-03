@@ -8,9 +8,9 @@ import edu.toronto.cs.se.ci.Source;
  * An interface representing a source contract that will be used with an ML
  * aggregator. All instances should use a non-generic sub-interface. The class
  * {@link MLToCIContract} converts an MLContract into a
- * {@link edu.toronto.cs.se.ci.Contract} of type {@code <I, O, Void>}, which can be used
- * with a CI, along with an {@link edu.toronto.cs.se.ci.GenericAggregator} of
- * type {@code <O,?,Void,?>}.
+ * {@link edu.toronto.cs.se.ci.Contract} of type {@code <I, O, Void>}, which can
+ * be used with a CI, along with an
+ * {@link edu.toronto.cs.se.ci.GenericAggregator} of type {@code <O,?,Void,?>}.
  * <p>
  * For example, a subinterface could be
  * {@code ChecksIntegersAreOdd extends MContract<Integer, Boolean>}, then any

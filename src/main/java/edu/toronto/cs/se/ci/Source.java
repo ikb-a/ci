@@ -18,7 +18,7 @@ import edu.toronto.cs.se.ci.data.Opinion;
  * @param <O>
  * @param <T>
  */
-public abstract class Source<I, O, T> {
+public abstract class Source<I, O, T> implements Provider<I, O, T> {
 
 	/**
 	 * Provides this source. Means that contracts don't have to be implemented

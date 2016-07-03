@@ -123,6 +123,43 @@ public class GenericCI<I, O, FO, T, Q> {
 	}
 
 	/**
+	 * Create a CI using a {@link Provider}
+	 * 
+	 * @param provider
+	 *            The {@link Source}s to select from
+	 * @param agg
+	 *            The {@link GenericAggregator} to use
+	 * @param sel
+	 *            The {@link Selector} to use
+	 */
+	public GenericCI(Provider<I, O, T> provider, GenericAggregator<O, FO, T, Q> agg, Selector<I, O, T> sel) {
+		this.sources = ImmutableSet.copyOf(provider.provide());
+		this.agg = agg;
+		this.sel = sel;
+		this.acceptor = null;
+	}
+
+	/**
+	 * Create a CI using a {@link Provider}
+	 * 
+	 * @param provider
+	 *            The {@link Source}s to select from
+	 * @param agg
+	 *            The {@link GenericAggregator} to use
+	 * @param sel
+	 *            The {@link Selector} to use
+	 * @param acceptor
+	 *            The {@link Acceptor}
+	 */
+	public GenericCI(Provider<I, O, T> provider, GenericAggregator<O, FO, T, Q> agg, Selector<I, O, T> sel,
+			Acceptor<FO, Q> acceptor) {
+		this.sources = ImmutableSet.copyOf(provider.provide());
+		this.agg = agg;
+		this.sel = sel;
+		this.acceptor = acceptor;
+	}
+
+	/**
 	 * Invokes the CI
 	 * 
 	 * @param args

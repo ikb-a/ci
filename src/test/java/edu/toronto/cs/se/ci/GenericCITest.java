@@ -18,7 +18,7 @@ import edu.toronto.cs.se.ci.machineLearning.MLBasicSource;
 import edu.toronto.cs.se.ci.machineLearning.MLSource;
 import edu.toronto.cs.se.ci.machineLearning.MLToCIContract;
 import edu.toronto.cs.se.ci.machineLearning.aggregators.MLWekaNominalConverter;
-import edu.toronto.cs.se.ci.machineLearning.util.MLNominalThresholdAcceptor;
+import edu.toronto.cs.se.ci.machineLearning.util.MLWekaNominalThresholdAcceptor;
 import edu.toronto.cs.se.ci.machineLearning.util.MLWekaNominalAggregator;
 import edu.toronto.cs.se.ci.selectors.AllSelector;
 import edu.toronto.cs.se.ci.utils.BasicSource;
@@ -60,16 +60,15 @@ public class GenericCITest extends TestCase {
 	 */
 	public void testCI1() throws Exception {
 		System.out.println("CI1");
-		MLNominalThresholdAcceptor<String> acc = new MLNominalThresholdAcceptor<String>(0.75, 0.95);
+		MLWekaNominalThresholdAcceptor<String> acc = new MLWekaNominalThresholdAcceptor<String>(0.75, 0.95);
 		AllSelector<Boolean, String, Void> sel = new AllSelector<Boolean, String, Void>();
-		Contract<Boolean, String, Void> contract = new MLToCIContract<Boolean, String>(RepublicanOrDemocrat.class);
+		Contract<Boolean, String, Void> provider = new MLToCIContract<Boolean, String>(RepublicanOrDemocrat.class);
 		MLWekaNominalConverter<String> conv = new NoActionConverter();
 		GenericAggregator<String, String, Void, double[]> agg = new MLWekaNominalAggregator<String>(conv,
 				"./vote-consistentNominalsCITrain .arff", new NaiveBayes());
 		// TODO: MLToCIContract CANNOT be used as a contract to a CI. Create a
 		// new interface (i.e. provider) and fix this so that a CI can accept a
 		// provider; OR a contract; OR a list of sources.
-
 		Contracts.register(new Adoption());
 		Contracts.register(new Crime());
 		Contracts.register(new DutyFree());
@@ -85,8 +84,9 @@ public class GenericCITest extends TestCase {
 		Contracts.register(new Superfund());
 		Contracts.register(new Synfuel());
 		Contracts.register(new WaterProject());
+
 		GenericCI<Boolean, String, String, Void, double[]> test1 = new GenericCI<Boolean, String, String, Void, double[]>(
-				contract.provide(), agg, sel, acc);
+				provider, agg, sel, acc);
 
 		// TODO: Improve this; right now it times out (as it should), resulting
 		// in an undecipherable stack trace as the estimate is of
@@ -109,7 +109,7 @@ public class GenericCITest extends TestCase {
 	 */
 	public void testCI2() throws Exception {
 		System.out.println("CI2");
-		MLNominalThresholdAcceptor<String> acc = new MLNominalThresholdAcceptor<String>(0.5, 0.95);
+		MLWekaNominalThresholdAcceptor<String> acc = new MLWekaNominalThresholdAcceptor<String>(0.5, 0.95);
 		AllSelector<Boolean, String, Void> sel = new AllSelector<Boolean, String, Void>();
 		Contract<Boolean, String, Void> contract = new MLToCIContract<Boolean, String>(RepublicanOrDemocrat.class);
 		MLWekaNominalConverter<String> conv = new NoActionConverter();
@@ -117,7 +117,7 @@ public class GenericCITest extends TestCase {
 				"./vote-consistentNominalsCITrain .arff", new NaiveBayes());
 
 		GenericCI<Boolean, String, String, Void, double[]> test1 = new GenericCI<Boolean, String, String, Void, double[]>(
-				contract.provide(), agg, sel, acc);
+				contract, agg, sel, acc);
 
 		Allowance[] budget = new Allowance[] { new Dollars(new BigDecimal(5)) };
 
@@ -144,7 +144,7 @@ public class GenericCITest extends TestCase {
 	 */
 	public void testCI4() throws Exception {
 		System.out.println("CI4");
-		MLNominalThresholdAcceptor<String> acc = new MLNominalThresholdAcceptor<String>(0.75, 0.95);
+		MLWekaNominalThresholdAcceptor<String> acc = new MLWekaNominalThresholdAcceptor<String>(0.75, 0.95);
 		AllSelector<Boolean, String, Void> sel = new AllSelector<Boolean, String, Void>();
 		Contract<Boolean, String, Void> contract = new MLToCIContract<Boolean, String>(RepublicanOrDemocrat.class);
 		MLWekaNominalConverter<String> conv = new NoActionConverter();
@@ -180,7 +180,7 @@ public class GenericCITest extends TestCase {
 	 */
 	public void testCI3() throws Exception {
 		System.out.println("CI3");
-		MLNominalThresholdAcceptor<String> acc = new MLNominalThresholdAcceptor<String>(0.5, 0.99);
+		MLWekaNominalThresholdAcceptor<String> acc = new MLWekaNominalThresholdAcceptor<String>(0.5, 0.99);
 		AllSelector<Boolean, String, Void> sel = new AllSelector<Boolean, String, Void>();
 		Contract<Boolean, String, Void> contract = new MLToCIContract<Boolean, String>(RepublicanOrDemocrat.class);
 		MLWekaNominalConverter<String> conv = new NoActionConverter();
@@ -202,8 +202,9 @@ public class GenericCITest extends TestCase {
 		Contracts.register(new Superfund());
 		Contracts.register(new Synfuel());
 		Contracts.register(new WaterProject());
+
 		GenericCI<Boolean, String, String, Void, double[]> test1 = new GenericCI<Boolean, String, String, Void, double[]>(
-				contract.provide(), agg, sel, acc);
+				contract, agg, sel, acc);
 
 		Allowance[] budget = new Allowance[] { new Dollars(new BigDecimal(5)) };
 
@@ -234,7 +235,7 @@ public class GenericCITest extends TestCase {
 	public void testCI6() throws Exception {
 		System.out.println("CI6");
 		// A GOOD threshold of 2 cannot be reached
-		MLNominalThresholdAcceptor<String> acc = new MLNominalThresholdAcceptor<String>(0.5, 2);
+		MLWekaNominalThresholdAcceptor<String> acc = new MLWekaNominalThresholdAcceptor<String>(0.5, 2);
 		AllSelector<Boolean, String, Void> sel = new AllSelector<Boolean, String, Void>();
 		Contract<Boolean, String, Void> contract = new MLToCIContract<Boolean, String>(RepublicanOrDemocrat.class);
 		MLWekaNominalConverter<String> conv = new NoActionConverter();
@@ -256,6 +257,7 @@ public class GenericCITest extends TestCase {
 		Contracts.register(new Superfund());
 		Contracts.register(new Synfuel());
 		Contracts.register(new WaterProject());
+
 		GenericCI<Boolean, String, String, Void, double[]> test1 = new GenericCI<Boolean, String, String, Void, double[]>(
 				contract.provide(), agg, sel, acc);
 
@@ -291,7 +293,7 @@ public class GenericCITest extends TestCase {
 	 */
 	public void testCI5() throws Exception {
 		System.out.println("CI5");
-		MLNominalThresholdAcceptor<String> acc = new MLNominalThresholdAcceptor<String>(0.5, 0.99);
+		MLWekaNominalThresholdAcceptor<String> acc = new MLWekaNominalThresholdAcceptor<String>(0.5, 0.99);
 		AllSelector<Boolean, String, Void> sel = new AllSelector<Boolean, String, Void>();
 		Contract<Boolean, String, Void> contract = new MLToCIContract<Boolean, String>(RepublicanOrDemocrat.class);
 		MLWekaNominalConverter<String> conv = new NoActionConverter();
@@ -314,6 +316,7 @@ public class GenericCITest extends TestCase {
 		Contracts.register(new Synfuel());
 		Contracts.register(new WaterProject());
 		// System.out.println(contract.provide());
+
 		GenericCI<Boolean, String, String, Void, double[]> test1 = new GenericCI<Boolean, String, String, Void, double[]>(
 				contract.provide(), agg, sel, acc);
 
@@ -338,6 +341,78 @@ public class GenericCITest extends TestCase {
 		assertEquals("republican", resultResult.getValue());
 		quality = resultResult.getQuality();
 		assertTrue(quality[1] >= .99);
+	}
+
+	/**
+	 * Testing the CI giving it a single source which returns unknown, when the
+	 * result is considered Acceptability.OK; but not Acceptability.GOOD (Run
+	 * using
+	 * {@link edu.toronto.cs.se.ci.GenericCI #applySync(Object, Allowance[])})
+	 * 
+	 * @throws Exception
+	 */
+	public void testCI7() throws Exception {
+		System.out.println("CI7");
+		MLWekaNominalThresholdAcceptor<String> acc = new MLWekaNominalThresholdAcceptor<String>(0.5, 0.95);
+		AllSelector<Boolean, String, Void> sel = new AllSelector<Boolean, String, Void>();
+		Contract<Boolean, String, Void> contract = new MLToCIContract<Boolean, String>(RepublicanOrDemocrat.class);
+		MLWekaNominalConverter<String> conv = new NoActionConverter();
+		GenericAggregator<String, String, Void, double[]> agg = new MLWekaNominalAggregator<String>(conv,
+				"./vote-consistentNominalsCITrain .arff", new NaiveBayes());
+
+		Contracts.register(new Synfuel());
+
+		GenericCI<Boolean, String, String, Void, double[]> test1 = new GenericCI<Boolean, String, String, Void, double[]>(
+				contract, agg, sel, acc);
+
+		Allowance[] budget = new Allowance[] { new Dollars(new BigDecimal(5)) };
+
+		// The only registered source {@link Synfuel} throws an unknown
+		// exception for the value false
+		Result<String, double[]> resultResult = test1.applySync(false, budget);
+		System.out.println(resultResult);
+		double[] quality = resultResult.getQuality();
+		List<Double> list = Doubles.asList(quality);
+		System.out.println(list);
+
+		assertEquals("democrat", resultResult.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.61, quality[0], 0.1);
+	}
+
+	/**
+	 * Testing the CI giving it a single source which returns unknown, when the
+	 * result is considered Acceptability.OK; but not Acceptability.GOOD (Run
+	 * using {@link edu.toronto.cs.se.ci.GenericCI #apply(Object, Allowance[])})
+	 * 
+	 * @throws Exception
+	 */
+	public void testCI8() throws Exception {
+		System.out.println("CI8");
+		MLWekaNominalThresholdAcceptor<String> acc = new MLWekaNominalThresholdAcceptor<String>(0.5, 0.95);
+		AllSelector<Boolean, String, Void> sel = new AllSelector<Boolean, String, Void>();
+		Contract<Boolean, String, Void> contract = new MLToCIContract<Boolean, String>(RepublicanOrDemocrat.class);
+		MLWekaNominalConverter<String> conv = new NoActionConverter();
+		GenericAggregator<String, String, Void, double[]> agg = new MLWekaNominalAggregator<String>(conv,
+				"./vote-consistentNominalsCITrain .arff", new NaiveBayes());
+
+		Contracts.register(new Synfuel());
+
+		GenericCI<Boolean, String, String, Void, double[]> test1 = new GenericCI<Boolean, String, String, Void, double[]>(
+				contract, agg, sel, acc);
+
+		Allowance[] budget = new Allowance[] { new Dollars(new BigDecimal(5)) };
+
+		Estimate<String, double[]> resultEstimate = test1.apply(false, budget);
+		Result<String, double[]> resultResult = resultEstimate.get();
+		System.out.println(resultResult);
+		double[] quality = resultResult.getQuality();
+		List<Double> list = Doubles.asList(quality);
+		System.out.println(list);
+
+		assertEquals("democrat", resultResult.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.61, quality[0], 0.1);
 	}
 
 	public class Handicap extends BasicSource<Boolean, String, Integer> implements RepublicanOrDemocrat {
@@ -506,7 +581,7 @@ public class GenericCITest extends TestCase {
 			if (input) {
 				return "democrat";
 			}
-			return "republican";
+			throw new UnknownException();
 		}
 
 		@Override

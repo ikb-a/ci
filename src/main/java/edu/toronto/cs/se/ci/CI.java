@@ -83,4 +83,34 @@ public class CI<I, O, T, Q> extends GenericCI<I, O, O, T, Q> {
 			Acceptor<O, Q> acceptor) {
 		super(sources, agg, sel, acceptor);
 	}
+
+	/**
+	 * Create a CI using a {@link Provider}
+	 * 
+	 * @param provider
+	 *            The {@link Source}s to select from
+	 * @param agg
+	 *            The {@link GenericAggregator} to use
+	 * @param sel
+	 *            The {@link Selector} to use
+	 */
+	public CI(Provider<I, O, T> provider, Aggregator<O, T, Q> agg, Selector<I, O, T> sel) {
+		super(provider, agg, sel);
+	}
+
+	/**
+	 * Create a CI using a {@link Provider}
+	 * 
+	 * @param provider
+	 *            The {@link Source}s to select from
+	 * @param agg
+	 *            The {@link GenericAggregator} to use
+	 * @param sel
+	 *            The {@link Selector} to use
+	 * @param acceptor
+	 *            The {@link Acceptor}
+	 */
+	public CI(Provider<I, O, T> provider, Aggregator<O, T, Q> agg, Selector<I, O, T> sel, Acceptor<O, Q> acceptor) {
+		super(provider, agg, sel, acceptor);
+	}
 }
