@@ -13,6 +13,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import weka.classifiers.Classifier;
+import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.functions.GaussianProcesses;
 import weka.classifiers.functions.LinearRegression;
@@ -39,6 +40,39 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		assertTrue(copy instanceof NaiveBayes);
 		assertFalse(copy instanceof J48);
 		assertFalse(copy instanceof GaussianProcesses);
+	}
+
+	public void testTestClassifier() throws Exception {
+		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
+				"./vote-consistentNominalsTrain.arff", new NaiveBayes());
+		assertNotNull(agg);
+
+		Evaluation eval = agg.testClassifier("./vote-consistentNominalsTest.arff");
+		// System.out.println(eval.toSummaryString());
+
+		// asserts 3 instances were classified correctly
+		assertEquals(3, eval.correct(), 0.0001);
+		// assert that one of the 4 instances was misclassified or unclassified
+		assertEquals(1, eval.incorrect(), 0.0001);
+		/*
+		 * first value in matrix is the row (corresponds to actual
+		 * classification; 0 being democrat and 1 being republican, due to the
+		 * order they are stated in in the arff file); the second value is the
+		 * column (corresponding to what they were classified as by the
+		 * classifier. Same meaning for 1 and 0 apply).
+		 */
+		double[][] confusionMatrix = eval.confusionMatrix();
+		assertEquals(2, confusionMatrix.length);
+		assertEquals(2, confusionMatrix[0].length);
+		assertEquals(2, confusionMatrix[1].length);
+		// asserts 2 democrats were classified as democrats
+		assertEquals(2, confusionMatrix[0][0], 0.00001);
+		// asserts 1 republican was classified as a republican
+		assertEquals(1, confusionMatrix[1][1], 0.00001);
+		// asserts one democrat was classified as a republican
+		assertEquals(1, confusionMatrix[0][1], 0.00001);
+		// asserts no republicans where classified as democrats
+		assertEquals(0, confusionMatrix[1][0], 0.00001);
 	}
 
 	public void testValidNaiveBayes() throws Exception {
@@ -96,7 +130,6 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		assertEquals("democrat", result.getValue());
 		assertEquals(2, quality.length);
 		assertEquals(1.0, quality[0] + quality[1]);
-		System.out.println(quality[0]);
 		assertTrue(quality[0] >= .985);
 		assertTrue(quality[0] < .986);
 	}

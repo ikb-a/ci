@@ -13,6 +13,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import weka.classifiers.Classifier;
+import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.functions.LinearRegression;
 import weka.classifiers.functions.MultilayerPerceptron;
@@ -37,6 +38,24 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 		assertNotNull(copy);
 		assertFalse(copy instanceof NaiveBayes);
 		assertTrue(copy instanceof LinearRegression);
+	}
+
+	public void testTestClassifier() throws Exception {
+		MLWekaNumericAggregator<Integer> agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(),
+				"./cpu.arff", new LinearRegression());
+		assertNotNull(agg);
+
+		Evaluation eval = agg.testClassifier("./cpuTest.arff");
+		System.out.println(eval.toSummaryString());
+
+		// TODO: determine if Weka is SUPPOSED to have this behaviour.
+		try {
+			assertNull(eval.confusionMatrix());
+			fail();
+		} catch (NullPointerException e) {
+		}
+
+		assertEquals(0.9492, eval.correlationCoefficient(), 0.0001);
 	}
 
 	public void testValidLinearRegression() throws Exception {
