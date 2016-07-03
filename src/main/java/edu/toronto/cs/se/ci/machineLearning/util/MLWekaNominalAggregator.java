@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.common.base.Optional;
 
+import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -142,5 +143,10 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 		String responseAsString = trainingData.classAttribute().value((int) classification);
 		// return the result
 		return Optional.of(new Result<String, double[]>(responseAsString, distribution));
+	}
+
+	@Override
+	public Classifier getClassifier() throws Exception {
+		return AbstractClassifier.makeCopy(classifier);
 	}
 }

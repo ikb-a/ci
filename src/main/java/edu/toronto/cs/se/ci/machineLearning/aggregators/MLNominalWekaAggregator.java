@@ -14,7 +14,7 @@ package edu.toronto.cs.se.ci.machineLearning.aggregators;
  *            The value returned by the aggregator (a representation of the
  *            nominal value returned by the Weka aggregator).
  */
-public interface MLNominalWekaAggregator<O, FO> extends MLAggregator<O, FO, double[]> {
+public interface MLNominalWekaAggregator<O, FO> extends MLWekaAggregator<O, FO, double[]> {
 
 	// Problem: <O> can only be: "Nominal Attribute" (enum) (in this case, bool
 	// would be considered an enum);

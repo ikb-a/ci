@@ -12,6 +12,7 @@ import edu.toronto.cs.se.ci.machineLearning.util.MLWekaNumericAggregator;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import weka.classifiers.Classifier;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.functions.LinearRegression;
 import weka.classifiers.functions.MultilayerPerceptron;
@@ -25,6 +26,17 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 
 	public static Test suite() {
 		return new TestSuite(MLWekaNumericAggregatorTest.class);
+	}
+
+	public void testGetClassifier() throws Exception {
+		MLWekaNumericAggregator<Integer> agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(),
+				"./cpu.arff", new LinearRegression());
+		assertNotNull(agg);
+
+		Classifier copy = agg.getClassifier();
+		assertNotNull(copy);
+		assertFalse(copy instanceof NaiveBayes);
+		assertTrue(copy instanceof LinearRegression);
 	}
 
 	public void testValidLinearRegression() throws Exception {

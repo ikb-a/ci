@@ -12,7 +12,9 @@ import edu.toronto.cs.se.ci.machineLearning.util.MLWekaNominalAggregator;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import weka.classifiers.Classifier;
 import weka.classifiers.bayes.NaiveBayes;
+import weka.classifiers.functions.GaussianProcesses;
 import weka.classifiers.functions.LinearRegression;
 import weka.classifiers.trees.J48;
 import weka.core.UnsupportedAttributeTypeException;
@@ -25,6 +27,18 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 
 	public static Test suite() {
 		return new TestSuite(MLWekaNominalAggregatorTest.class);
+	}
+
+	public void testGetClassifier() throws Exception {
+		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
+				"./vote-consistentNominalsTrain.arff", new NaiveBayes());
+		assertNotNull(agg);
+
+		Classifier copy = agg.getClassifier();
+		assertNotNull(copy);
+		assertTrue(copy instanceof NaiveBayes);
+		assertFalse(copy instanceof J48);
+		assertFalse(copy instanceof GaussianProcesses);
 	}
 
 	public void testValidNaiveBayes() throws Exception {
