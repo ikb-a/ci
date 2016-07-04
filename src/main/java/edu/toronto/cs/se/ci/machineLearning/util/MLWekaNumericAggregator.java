@@ -9,10 +9,12 @@ import com.google.common.base.Optional;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
+import weka.classifiers.meta.FilteredClassifier;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instances;
 import weka.filters.Filter;
+import weka.filters.MultiFilter;
 import edu.toronto.cs.se.ci.data.Opinion;
 import edu.toronto.cs.se.ci.data.Result;
 import edu.toronto.cs.se.ci.machineLearning.aggregators.MLNominalWekaAggregator;
@@ -166,16 +168,47 @@ public class MLWekaNumericAggregator<O> implements MLNominalWekaAggregator<O, Do
 		return result;
 	}
 
+	// TODO: Try to refactor shared code of Numeric & Nominal aggregators.
 	@Override
-	public void addFilter(Filter filter) {
-		// TODO Auto-generated method stub
-		
+	public void addFilter(Filter filter) throws Exception {
+		FilteredClassifier fc = getFC();
+
+		filters.add(filter);
+		MultiFilter mf = new MultiFilter();
+		mf.setFilters(filters.toArray(new Filter[] {}));
+		fc.setFilter(mf);
+		fc.buildClassifier(trainingData);
+		this.classifier = fc;
+
 	}
 
 	@Override
-	public void addFilters(List<Filter> filters) {
-		// TODO Auto-generated method stub
-		
+	public void addFilters(List<Filter> filters) throws Exception {
+		FilteredClassifier fc = getFC();
+
+		this.filters.addAll(filters);
+		MultiFilter mf = new MultiFilter();
+		mf.setFilters(this.filters.toArray(new Filter[] {}));
+		fc.setFilter(mf);
+		fc.buildClassifier(trainingData);
+		this.classifier = fc;
+	}
+
+	/**
+	 * If there are no filters, returns a filtered classifier containing the
+	 * original {@link #classifier}. Otherwise it returns {@link #classifier}
+	 * which should be a FilteredClassifier.
+	 */
+	private FilteredClassifier getFC() {
+		FilteredClassifier fc;
+		if (filters.size() == 0) {
+			fc = new FilteredClassifier();
+			fc.setClassifier(classifier);
+		} else {
+			assert (classifier instanceof FilteredClassifier);
+			fc = (FilteredClassifier) classifier;
+		}
+		return fc;
 	}
 
 }

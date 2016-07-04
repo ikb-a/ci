@@ -194,8 +194,8 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
 				"./vote-consistentNominalsTrain.arff", new J48());
 
-		Filter removeHandicap = new Remove();
-		removeHandicap.setOptions(new String[] { "-R", "4" });
+		Filter removePhysician = new Remove();
+		removePhysician.setOptions(new String[] { "-R", "4" });
 
 		Filter add = new Add();
 		add.setOptions(new String[] { "-T", "NOM", "-C", "first", "-N", "physician-fee-freeze" });
@@ -223,14 +223,14 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		assertEquals(0.985, quality[0], 0.001);
 
 		// adds remove filter
-		agg.addFilter(removeHandicap);
+		agg.addFilter(removePhysician);
 		resultOpt = agg.aggregate(instance);
 		result = resultOpt.get();
 		quality = result.getQuality();
 		assertEquals("democrat", result.getValue());
 		assertEquals(2, quality.length);
 		assertEquals(0.99, quality[0], 0.001);
-		// adds handicap attribute back
+		// adds physician-fee-freeze attribute back
 		agg.addFilter(add);
 		resultOpt = agg.aggregate(instance);
 		result = resultOpt.get();
@@ -264,7 +264,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		assertEquals(2, quality.length);
 		assertEquals(0.985, quality[0], 0.001);
 
-		// adds remove filter
+		// adds remove filter for physician-fee-freeze
 		agg.addFilter(remove1);
 		resultOpt = agg.aggregate(instance);
 		result = resultOpt.get();
@@ -272,7 +272,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		assertEquals("democrat", result.getValue());
 		assertEquals(2, quality.length);
 		assertEquals(0.99, quality[0], 0.001);
-		// adds handicap attribute back
+		// adds remove filter for crime
 		agg.addFilter(remove2);
 		resultOpt = agg.aggregate(instance);
 		result = resultOpt.get();
@@ -334,8 +334,8 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
 				"./vote-consistentNominalsTrain.arff", new J48());
 
-		Filter removeHandicap = new Remove();
-		removeHandicap.setOptions(new String[] { "-R", "4" });
+		Filter removePhysician = new Remove();
+		removePhysician.setOptions(new String[] { "-R", "4" });
 
 		Filter add = new Add();
 		add.setOptions(new String[] { "-T", "NOM", "-C", "first", "-N", "physician-fee-freeze" });
@@ -366,7 +366,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 
 		// adds remove filter
 		allFilters = new ArrayList<Filter>();
-		allFilters.add(removeHandicap);
+		allFilters.add(removePhysician);
 		agg.addFilters(allFilters);
 		resultOpt = agg.aggregate(instance);
 		result = resultOpt.get();
@@ -379,7 +379,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		assertEquals(1, allFilters.size());
 		assertTrue(allFilters.get(0) instanceof Remove);
 
-		// adds handicap attribute back
+		// adds physician-fee-freeze attribute back
 		allFilters = new ArrayList<Filter>();
 		allFilters.add(add);
 		agg.addFilters(allFilters);
@@ -389,17 +389,6 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		assertEquals("democrat", result.getValue());
 		assertEquals(2, quality.length);
 		assertEquals(0.99, quality[0], 0.001);
-
-		// creates new aggregator and again checks that it works correctly
-		agg = new MLWekaNominalAggregator<String>(new NoActionConverter(), "./vote-consistentNominalsTrain.arff",
-				new J48());
-		resultOpt = agg.aggregate(instance);
-		assertTrue(resultOpt.isPresent());
-		result = resultOpt.get();
-		quality = result.getQuality();
-		assertEquals("democrat", result.getValue());
-		assertEquals(2, quality.length);
-		assertEquals(0.985, quality[0], 0.001);
 	}
 
 	/**
@@ -413,15 +402,15 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
 				"./vote-consistentNominalsTrain.arff", new J48());
 
-		Filter removeHandicap = new Remove();
-		removeHandicap.setOptions(new String[] { "-R", "4" });
+		Filter removePhysician = new Remove();
+		removePhysician.setOptions(new String[] { "-R", "4" });
 
 		Filter add = new Add();
 		add.setOptions(new String[] { "-T", "NOM", "-C", "first", "-N", "physician-fee-freeze" });
 
 		// Checks that both filters could have been added simultaneously
 		List<Filter> allFilters = new ArrayList<Filter>();
-		allFilters.add(removeHandicap);
+		allFilters.add(removePhysician);
 		allFilters.add(add);
 		agg.addFilters(allFilters);
 		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance);
@@ -441,7 +430,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		// error
 		allFilters = new ArrayList<Filter>();
 		allFilters.add(add);
-		allFilters.add(removeHandicap);
+		allFilters.add(removePhysician);
 		try {
 			agg.addFilters(allFilters);
 			fail("Add filter should result in duplicate attribute");
@@ -449,7 +438,6 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		}
 	}
 
-	// TODO refactor
 	/**
 	 * The same test as {@link #testTwoFilter()}, except using
 	 * {@link MLWekaNominalAggregator #addFilters(List)} method.
@@ -478,7 +466,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 
 		List<Filter> allFilters = new ArrayList<Filter>();
 
-		// adds remove filter
+		// adds remove1 filter (physician fee freeze)
 		allFilters.add(remove1);
 		agg.addFilters(allFilters);
 		resultOpt = agg.aggregate(instance);
@@ -488,7 +476,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		assertEquals(2, quality.length);
 		assertEquals(0.99, quality[0], 0.001);
 
-		// adds handicap attribute back
+		// adds remove1 filter (crime)
 		allFilters = new ArrayList<Filter>();
 		allFilters.add(remove2);
 		agg.addFilters(allFilters);
