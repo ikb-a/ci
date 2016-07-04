@@ -561,6 +561,47 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		assertEquals(0.79, result.kappa(), 0.1);
 	}
 
+	public void testRetrain() throws Exception {
+		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
+				"./vote-consistentNominalsTrain.arff", new NaiveBayes());
+
+		// retrains the aggregator on a file with different attribute names.
+		agg.retrain("./vote-consistentNominalsCITrain.arff");
+
+		String[] values = new String[] { "republican", "democrat", "republican", "democrat", "democrat", "democrat",
+				"republican", "republican", "republican", "republican", "democrat", "democrat", "democrat",
+				"republican", "republican" };
+		String[] opinionNames = new String[] { "edu.toronto.cs.se.ci.GenericCITest$Handicap",
+				"edu.toronto.cs.se.ci.GenericCITest$WaterProject", "edu.toronto.cs.se.ci.GenericCITest$Adoption",
+				"edu.toronto.cs.se.ci.GenericCITest$Physician", "edu.toronto.cs.se.ci.GenericCITest$Salvador",
+				"edu.toronto.cs.se.ci.GenericCITest$Religious", "edu.toronto.cs.se.ci.GenericCITest$Satellite",
+				"edu.toronto.cs.se.ci.GenericCITest$Nicaraguan", "edu.toronto.cs.se.ci.GenericCITest$Missile",
+				"edu.toronto.cs.se.ci.GenericCITest$Immigration", "edu.toronto.cs.se.ci.GenericCITest$Synfuel",
+				"edu.toronto.cs.se.ci.GenericCITest$Education", "edu.toronto.cs.se.ci.GenericCITest$Crime",
+				"edu.toronto.cs.se.ci.GenericCITest$DutyFree", "edu.toronto.cs.se.ci.GenericCITest$Export" };
+		List<Opinion<String, Void>> instance2 = arraysToOpinions(values, opinionNames);
+
+		// Testing the new, correcly named instance works as expected.
+		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance2);
+		assertTrue(resultOpt.isPresent());
+		Result<String, double[]> result = resultOpt.get();
+		double[] quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(1.0, quality[0] + quality[1]);
+		assertEquals(0.999, quality[0], 0.001);
+
+		// Using the old instance results in the classifier being given no
+		// information, and giving the result for an instance where all
+		// attributes are unknown.
+		resultOpt = agg.aggregate(instance);
+		result = resultOpt.get();
+		quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.612, quality[0], 0.001);
+	}
+
 	private List<Opinion<String, Void>> arraysToOpinions(String[] value, String[] opinionName) {
 		List<Opinion<String, Void>> instance = new ArrayList<Opinion<String, Void>>();
 		assertTrue("helper method used wrong", value.length == opinionName.length);

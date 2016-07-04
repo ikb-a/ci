@@ -233,4 +233,15 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 		result.crossValidateModel(classifier, trainingData, n, new Random(1));
 		return result;
 	}
+
+	@Override
+	public void retrain(String filePathToTrainingData) throws Exception {
+		retrain(MLUtility.fileToInstances(filePathToTrainingData));
+	}
+
+	@Override
+	public void retrain(Instances trainingData) throws Exception {
+		this.trainingData = trainingData;
+		classifier.buildClassifier(this.trainingData);
+	}
 }

@@ -7,6 +7,7 @@ import weka.classifiers.Evaluation;
 import weka.core.Instances;
 import weka.filters.Filter;
 
+//TODO: See what can be refactored/moved into MLAggregator
 public interface MLWekaAggregator<O, FO, Q> extends MLAggregator<O, FO, Q> {
 	/**
 	 * Return a copy of the {@link Classifier} being used in the aggregator.
@@ -93,4 +94,25 @@ public interface MLWekaAggregator<O, FO, Q> extends MLAggregator<O, FO, Q> {
 	 * @throws Exception
 	 */
 	public Evaluation nFoldCrossValidate(int n) throws Exception;
+
+	/**
+	 * Retrains the classifier on the data in the file at
+	 * {@code filePathToTrainingData}. Note that this method works only if the
+	 * Classifier provided at construction obeys the Weka convention of
+	 * re-initializing when the buildClassifier method is called. Any applied
+	 * filters will apply during retraining.
+	 * 
+	 * @param filePathToTrainingData
+	 */
+	public void retrain(String filePathToTrainingData) throws Exception;
+
+	/**
+	 * Retrains the classifier on {@code trainingData}. Note that this method
+	 * works only if the Classifier provided at construction obeys the Weka
+	 * convention of re-initializing when the buildClassifier method is called.
+	 * Any applied filters will apply during retraining.
+	 * 
+	 * @param filePathToTrainingData
+	 */
+	public void retrain(Instances trainingData) throws Exception;
 }
