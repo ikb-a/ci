@@ -7,67 +7,60 @@ import java.util.Random;
 
 import com.google.common.base.Optional;
 
+import edu.toronto.cs.se.ci.data.Opinion;
+import edu.toronto.cs.se.ci.data.Result;
+import edu.toronto.cs.se.ci.machineLearning.aggregators.MLNumericWekaAggregatorInt;
+import edu.toronto.cs.se.ci.machineLearning.aggregators.MLWekaNumericConverter;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
-import weka.classifiers.meta.FilteredClassifier;
+import weka.classifiers.IntervalEstimator;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.Filter;
 import weka.filters.MultiFilter;
-import edu.toronto.cs.se.ci.data.Opinion;
-import edu.toronto.cs.se.ci.data.Result;
-import edu.toronto.cs.se.ci.machineLearning.aggregators.MLNominalWekaAggregatorInt;
-import edu.toronto.cs.se.ci.machineLearning.aggregators.MLWekaNominalConverter;
 
-/**
- * This class is a
- * {@link edu.toronto.cs.se.ci.machineLearning.aggregators.MLNominalWekaAggregatorInt}
- * which aggregates nominal values, and returns the {@code String} name of the
- * nominal class which it believes the list of Opinions to be.
- * 
- * @author Ian Berlot-Attwell
- * @author wginsberg (Parts of Will's code for PlanIt was refactored and reused)
- *
- * @param <O>
- *            The output type of the sources being aggregated.
- */
-public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregatorInt<O, String> {
+//TODO: Refactor this and MLWekaNumericAggregator
+public class MLWekaNumericQualityAggregator<O> implements MLNumericWekaAggregatorInt<O, Double, double[][]> {
 	// The converter that converts from O to a String
-	private MLWekaNominalConverter<O> converter;
-	/*
-	 * The Weka classifier given. If there are no filters, it should be the
-	 * original classifier. Otherwise it should be a FilteredClassifier, with
-	 * the original classifier as the classifier, and a Multifilter of all the
-	 * filters as the filter.
-	 */
+	private MLWekaNumericConverter<O> converter;
+	// The Weka classifier given
 	private Classifier classifier;
 	// The training data as an Instances object.
 	private Instances trainingData;
-
+	// all the filter in the order in which they are to be applied
 	private List<Filter> filters;
+	// The fiter
+	private MultiFilter filter;
+
+	private double confidenceLevel;
 
 	/**
 	 * Constructs the aggregator using {@code classifier} as the internal
 	 * Classifier, and the file located at {@code inputFilePath} as training
-	 * data. Note that a classifier that classifies into nominal values (NOT a
-	 * Weka classifier which does Regression, and produces a numeric value) must
-	 * be used.
+	 * data. Note that a classifier that classifies into numeric values (a Weka
+	 * classifier which does Regression, NOT a classifier that classifies into a
+	 * nominal class) must be used.
 	 * 
-	 * @param nominalConverter
-	 *            The converter to be used to turn values of type O into nominal
-	 *            String
+	 * @param numericConverter
+	 *            The converter to be used to turn values of type O into numeric
+	 *            Double
 	 * @param inputFilePath
 	 *            The path of the file containing training data
 	 * @param classifier
 	 *            The Weka classifier to be trained and to be used in
-	 *            classifying (aggregating) the opinions given.
+	 *            classifying (aggregating) the opinions given. Must implement
+	 *            {@link IntervalEstimator}
+	 * @param confidenceLevel
+	 *            The confidence level for the confidence intervals produced as
+	 *            output
 	 * @throws Exception
 	 */
-	public MLWekaNominalAggregator(MLWekaNominalConverter<O> nominalConverter, String inputFilePath,
-			Classifier classifier) throws Exception {
-		this(nominalConverter, MLUtility.fileToInstances(inputFilePath), classifier);
+	public MLWekaNumericQualityAggregator(MLWekaNumericConverter<O> numericConverter, String inputFilePath,
+			Classifier classifier, double confidenceLevel) throws Exception {
+		this(numericConverter, MLUtility.fileToInstances(inputFilePath), classifier, confidenceLevel);
 	}
 
 	/**
@@ -82,20 +75,30 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregatorInt<O,
 	 *            The Instances to train the classifier on.
 	 * @param classifier
 	 *            The Weka classifier to be trained and to be used in
-	 *            classifying (aggregating) the opinions given.
+	 *            classifying (aggregating) the opinions given. Must implement
+	 *            {@link IntervalEstimator}
+	 * @param confidenceLevel
+	 *            The confidence level for the confidence intervals produced as
+	 *            output
 	 * @throws Exception
 	 */
-	public MLWekaNominalAggregator(MLWekaNominalConverter<O> nominalConverter, Instances trainingData,
-			Classifier classifier) throws Exception {
-
-		if (nominalConverter == null || trainingData == null || classifier == null) {
+	public MLWekaNumericQualityAggregator(MLWekaNumericConverter<O> numericConverter, Instances trainingData,
+			Classifier classifier, double confidenceLevel) throws Exception {
+		if (numericConverter == null || trainingData == null || classifier == null) {
 			throw new IllegalArgumentException("null arguments to the constructor are not acceptable.");
 		}
-		this.converter = nominalConverter;
+		if (!(classifier instanceof IntervalEstimator)) {
+			throw new IllegalArgumentException();
+		}
+
+		this.converter = numericConverter;
 		this.classifier = classifier;
 		this.trainingData = trainingData;
-		classifier.buildClassifier(trainingData);
-		filters = new ArrayList<Filter>();
+		this.classifier.buildClassifier(trainingData);
+		this.filters = new ArrayList<Filter>();
+		this.confidenceLevel = confidenceLevel;
+		this.filter = new MultiFilter();
+		this.filter.setInputFormat(trainingData);
 	}
 
 	/**
@@ -107,8 +110,6 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregatorInt<O,
 	 * @param opinions
 	 * @return {@code opinions} as an {@link weka.core.Instance}.
 	 */
-	// cannot be refactored into MLUtility without copying verbatim, as the
-	// setValue method will only accept specific datatypes
 	private DenseInstance convertOpinionsToDenseInstance(List<Opinion<O, Void>> opinions) {
 		DenseInstance instance = new DenseInstance(trainingData.numAttributes());
 		/*
@@ -136,17 +137,27 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregatorInt<O,
 	}
 
 	@Override
-	public Optional<Result<String, double[]>> aggregate(List<Opinion<O, Void>> opinions) {
-		DenseInstance opinionsAsInstance = convertOpinionsToDenseInstance(opinions);
+	public Optional<Result<Double, double[][]>> aggregate(List<Opinion<O, Void>> opinions) {
 		// The class distribution (probability of the instance belonging to a
 		// specific class)
 		double[] distribution = null;
 		// The classification determined by the Classifier
 		double classification = 0d;
+		// Confidence intervals
+		double[][] confidenceInterval = null;
 
 		try {
-			distribution = classifier.distributionForInstance(opinionsAsInstance);
-			classification = classifier.classifyInstance(opinionsAsInstance);
+			DenseInstance opinionsAsInstance = convertOpinionsToDenseInstance(opinions);
+			Instances toFilter = new Instances(trainingData, 1);
+			toFilter.add(0, opinionsAsInstance);
+			Instances filteredOpinionsAsInstances = Filter.useFilter(toFilter, this.filter);
+			Instance filteredOpinionsAsInstance = filteredOpinionsAsInstances.get(0);
+
+			distribution = classifier.distributionForInstance(filteredOpinionsAsInstance);
+			classification = classifier.classifyInstance(filteredOpinionsAsInstance);
+			IntervalEstimator estimator = (IntervalEstimator) classifier;
+			confidenceInterval = estimator.predictIntervals(filteredOpinionsAsInstance, confidenceLevel);
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -155,12 +166,13 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregatorInt<O,
 			return Optional.absent();
 		}
 
-		// convert the double classification into the String name of the class
-		String responseAsString = trainingData.classAttribute().value((int) classification);
 		// return the result
-		return Optional.of(new Result<String, double[]>(responseAsString, distribution));
+		return Optional.of(new Result<Double, double[][]>(classification, confidenceInterval));
 	}
 
+	/**
+	 * Returns the classifier, not the filter.
+	 */
 	@Override
 	public Classifier getClassifier() throws Exception {
 		return AbstractClassifier.makeCopy(classifier);
@@ -173,64 +185,37 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregatorInt<O,
 
 	@Override
 	public Evaluation testClassifier(Instances instances) throws Exception {
-		Evaluation result = new Evaluation(trainingData);
-		result.evaluateModel(classifier, instances);
+		Instances filteredInstances = Filter.useFilter(instances, this.filter);
+		Evaluation result = new Evaluation(filteredInstances);
+		result.evaluateModel(classifier, filteredInstances);
 		return result;
 	}
 
-	// TODO: Determine how to deep copy filters to prevent mutability
-	/**
-	 * Operating on convention that rebuilding the classifier will have the same
-	 * effect as building
-	 * 
-	 * @param filter
-	 * @throws Exception
-	 */
 	@Override
 	public void addFilter(Filter filter) throws Exception {
-		FilteredClassifier fc = getFC();
-
 		filters.add(filter);
 		MultiFilter mf = new MultiFilter();
 		mf.setFilters(filters.toArray(new Filter[] {}));
-		fc.setFilter(mf);
-		fc.buildClassifier(trainingData);
-		this.classifier = fc;
+		mf.setInputFormat(trainingData);
+		this.filter = mf;
+		retrain(trainingData);
 	}
 
 	@Override
 	public void addFilters(List<Filter> filters) throws Exception {
-		FilteredClassifier fc = getFC();
-
 		this.filters.addAll(filters);
 		MultiFilter mf = new MultiFilter();
 		mf.setFilters(this.filters.toArray(new Filter[] {}));
-		fc.setFilter(mf);
-		fc.buildClassifier(trainingData);
-		this.classifier = fc;
-	}
-
-	/**
-	 * If there are no filters, returns a filtered classifier containing the
-	 * original {@link #classifier}. Otherwise it returns {@link #classifier}
-	 * which should be a FilteredClassifier.
-	 */
-	private FilteredClassifier getFC() {
-		FilteredClassifier fc;
-		if (filters.size() == 0) {
-			fc = new FilteredClassifier();
-			fc.setClassifier(classifier);
-		} else {
-			assert (classifier instanceof FilteredClassifier);
-			fc = (FilteredClassifier) classifier;
-		}
-		return fc;
+		mf.setInputFormat(trainingData);
+		this.filter = mf;
+		retrain(trainingData);
 	}
 
 	@Override
 	public Evaluation nFoldCrossValidate(int n) throws Exception {
-		Evaluation result = new Evaluation(trainingData);
-		result.crossValidateModel(classifier, trainingData, n, new Random(1));
+		Instances filteredTrainingData = Filter.useFilter(this.trainingData, this.filter);
+		Evaluation result = new Evaluation(filteredTrainingData);
+		result.crossValidateModel(classifier, filteredTrainingData, n, new Random(1));
 		return result;
 	}
 
@@ -242,6 +227,7 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregatorInt<O,
 	@Override
 	public void retrain(Instances trainingData) throws Exception {
 		this.trainingData = trainingData;
-		classifier.buildClassifier(this.trainingData);
+		Instances filteredTrainingData = Filter.useFilter(this.trainingData, this.filter);
+		classifier.buildClassifier(filteredTrainingData);
 	}
 }

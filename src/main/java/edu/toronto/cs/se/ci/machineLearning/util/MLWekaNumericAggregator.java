@@ -18,7 +18,7 @@ import weka.filters.Filter;
 import weka.filters.MultiFilter;
 import edu.toronto.cs.se.ci.data.Opinion;
 import edu.toronto.cs.se.ci.data.Result;
-import edu.toronto.cs.se.ci.machineLearning.aggregators.MLNominalWekaAggregator;
+import edu.toronto.cs.se.ci.machineLearning.aggregators.MLNumericWekaAggregatorInt;
 import edu.toronto.cs.se.ci.machineLearning.aggregators.MLWekaNumericConverter;
 
 //TODO: Problem is that currently, the trust value produced by the numeric classifiers is useless
@@ -27,9 +27,12 @@ import edu.toronto.cs.se.ci.machineLearning.aggregators.MLWekaNumericConverter;
 //such as LinearRegression and MultilayerPerceptron would be unusable.
 /**
  * This class is a
- * {@link edu.toronto.cs.se.ci.machineLearning.aggregators.MLNominalWekaAggregator}
+ * {@link edu.toronto.cs.se.ci.machineLearning.aggregators.MLNominalWekaAggregatorInt}
  * which aggregates nominal values, and returns the {@code String} name of the
- * nominal class which it believes the list of Opinions to be.
+ * nominal class which it believes the list of Opinions to be. As most Weka
+ * classifiers that do regression do not have a means of deriving confidence,
+ * Void is the Quality type. If Quality is absolutely needed, then TODO should
+ * be used.
  * 
  * @author Ian Berlot-Attwell
  * @author wginsberg (Parts of Will's code for PlanIt was refactored and reused)
@@ -37,7 +40,7 @@ import edu.toronto.cs.se.ci.machineLearning.aggregators.MLWekaNumericConverter;
  * @param <O>
  *            The output type of the sources being aggregated.
  */
-public class MLWekaNumericAggregator<O> implements MLNominalWekaAggregator<O, Double> {
+public class MLWekaNumericAggregator<O> implements MLNumericWekaAggregatorInt<O, Double, Void> {
 	// The converter that converts from O to a String
 	private MLWekaNumericConverter<O> converter;
 	// The Weka classifier given
@@ -133,7 +136,7 @@ public class MLWekaNumericAggregator<O> implements MLNominalWekaAggregator<O, Do
 	}
 
 	@Override
-	public Optional<Result<Double, double[]>> aggregate(List<Opinion<O, Void>> opinions) {
+	public Optional<Result<Double, Void>> aggregate(List<Opinion<O, Void>> opinions) {
 		DenseInstance opinionsAsInstance = convertOpinionsToDenseInstance(opinions);
 		// The class distribution (probability of the instance belonging to a
 		// specific class)
@@ -153,7 +156,7 @@ public class MLWekaNumericAggregator<O> implements MLNominalWekaAggregator<O, Do
 		}
 
 		// return the result
-		return Optional.of(new Result<Double, double[]>(classification, distribution));
+		return Optional.of(new Result<Double, Void>(classification, null));
 	}
 
 	@Override

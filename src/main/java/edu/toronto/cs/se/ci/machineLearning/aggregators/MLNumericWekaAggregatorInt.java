@@ -14,8 +14,10 @@ package edu.toronto.cs.se.ci.machineLearning.aggregators;
  * @param <FO>
  *            The value returned by the aggregator (a representation of the
  *            numeric value returned by the Weka aggregator).
+ * @param <Q>
+ *            The type of the quality returned by the numeric aggregator.
  */
-public interface MLNumericWekaAggregator<O, FO> extends MLWekaAggregator<O, FO, double[]> {
+public interface MLNumericWekaAggregatorInt<O, FO, Q> extends MLWekaAggregator<O, FO, Q> {
 
 	// Problem: <O> can only be: "Nominal Attribute" (enum) (in this case, bool
 	// would be considered an enum);
