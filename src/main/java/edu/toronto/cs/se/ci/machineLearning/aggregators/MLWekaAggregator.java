@@ -1,7 +1,10 @@
 package edu.toronto.cs.se.ci.machineLearning.aggregators;
 
+import java.util.List;
+
 import weka.classifiers.Classifier;
 import weka.core.Instances;
+import weka.filters.Filter;
 
 public interface MLWekaAggregator<O, FO, Q> extends MLAggregator<O, FO, Q> {
 	/**
@@ -41,4 +44,34 @@ public interface MLWekaAggregator<O, FO, Q> extends MLAggregator<O, FO, Q> {
 	 *            The path to the test file.
 	 */
 	public weka.classifiers.Evaluation testClassifier(Instances instances) throws Exception;
+
+	/**
+	 * Adds a single filter to the classifier and retrains it. If the classifier
+	 * already has a filter, this filter will be applied after the existing
+	 * filter(s).
+	 * 
+	 * @param filter
+	 *            The Weka filter must have the desired options set BEFORE it is
+	 *            passed to this method.
+	 * @throws Exception
+	 *             Thrown if Weka throws an exception training the
+	 *             FilteredClassifier containing the filters given.
+	 */
+	// TODO: Consider returning a boolean rather than throwing an exception?
+	// (Then the cause of the failure is lost)
+	public void addFilter(Filter filter) throws Exception;
+
+	/**
+	 * Adds multiple filters to the classifier and retrains it. If the
+	 * classifier already has a filter(s), these filters will be applied in the
+	 * same order as the list after the existing filter(s).
+	 * 
+	 * @param filter
+	 *            The Weka filter must have the desired options set BEFORE it is
+	 *            passed to this method.
+	 * @throws Exception
+	 *             Thrown if Weka throws an exception training the
+	 *             FilteredClassifier containing the filters given.
+	 */
+	public void addFilters(List<Filter> filters) throws Exception;
 }

@@ -19,8 +19,13 @@ import weka.classifiers.functions.GaussianProcesses;
 import weka.classifiers.functions.LinearRegression;
 import weka.classifiers.trees.J48;
 import weka.core.UnsupportedAttributeTypeException;
+import weka.filters.Filter;
+import weka.filters.unsupervised.attribute.Add;
+import weka.filters.unsupervised.attribute.Remove;
+import weka.filters.unsupervised.attribute.RemoveByName;
 
 public class MLWekaNominalAggregatorTest extends TestCase {
+	List<Opinion<String, Void>> instance;
 
 	public MLWekaNominalAggregatorTest() {
 		super("MLWekaNominalAggregatorTest");
@@ -28,6 +33,22 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 
 	public static Test suite() {
 		return new TestSuite(MLWekaNominalAggregatorTest.class);
+	}
+
+	@Override
+	public void setUp() {
+		// removed instance from training data:
+		// 'republican','democrat','republican','democrat','democrat','democrat','republican','republican','republican','republican','democrat','democrat',?,'democrat','republican','republican','democrat'
+		// 15 attributes (the last is the classification, and one is missing)
+		String[] values = new String[] { "republican", "democrat", "republican", "democrat", "democrat", "democrat",
+				"republican", "republican", "republican", "republican", "democrat", "democrat", "democrat",
+				"republican", "republican" };
+		String[] opinionNames = new String[] { "handicapped-infants", "water-project-cost-sharing",
+				"adoption-of-the-budget-resolution", "physician-fee-freeze", "el-salvador-aid",
+				"religious-groups-in-schools", "anti-satellite-test-ban", "aid-to-nicaraguan-contras", "mx-missile",
+				"immigration", "synfuels-corporation-cutback", "education-spending", "crime", "duty-free-exports",
+				"export-administration-act-south-africa" };
+		instance = arraysToOpinions(values, opinionNames);
 	}
 
 	public void testGetClassifier() throws Exception {
@@ -80,19 +101,6 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 				"./vote-consistentNominalsTrain.arff", new NaiveBayes());
 		assertNotNull(agg);
 
-		// removed instance from training data:
-		// 'republican','democrat','republican','democrat','democrat','democrat','republican','republican','republican','republican','democrat','democrat',?,'democrat','republican','republican','democrat'
-		// 15 attributes (the last is the classification, and one is missing)
-		String[] values = new String[] { "republican", "democrat", "republican", "democrat", "democrat", "democrat",
-				"republican", "republican", "republican", "republican", "democrat", "democrat", "democrat",
-				"republican", "republican" };
-		String[] opinionNames = new String[] { "handicapped-infants", "water-project-cost-sharing",
-				"adoption-of-the-budget-resolution", "physician-fee-freeze", "el-salvador-aid",
-				"religious-groups-in-schools", "anti-satellite-test-ban", "aid-to-nicaraguan-contras", "mx-missile",
-				"immigration", "synfuels-corporation-cutback", "education-spending", "crime", "duty-free-exports",
-				"export-administration-act-south-africa" };
-		List<Opinion<String, Void>> instance = arraysToOpinions(values, opinionNames);
-
 		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
 		Result<String, double[]> result = resultOpt.get();
@@ -108,19 +116,6 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
 				"./vote-consistentNominalsTrain.arff", new J48());
 		assertNotNull(agg);
-
-		// removed instance from training data:
-		// 'republican','democrat','republican','democrat','democrat','democrat','republican','republican','republican','republican','democrat','democrat',?,'democrat','republican','republican','democrat'
-		// 15 attributes (the last is the classification, and one is missing)
-		String[] values = new String[] { "republican", "democrat", "republican", "democrat", "democrat", "democrat",
-				"republican", "republican", "republican", "republican", "democrat", "democrat", "democrat",
-				"republican", "republican" };
-		String[] opinionNames = new String[] { "handicapped-infants", "water-project-cost-sharing",
-				"adoption-of-the-budget-resolution", "physician-fee-freeze", "el-salvador-aid",
-				"religious-groups-in-schools", "anti-satellite-test-ban", "aid-to-nicaraguan-contras", "mx-missile",
-				"immigration", "synfuels-corporation-cutback", "education-spending", "crime", "duty-free-exports",
-				"export-administration-act-south-africa" };
-		List<Opinion<String, Void>> instance = arraysToOpinions(values, opinionNames);
 
 		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
@@ -146,6 +141,420 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		} catch (UnsupportedAttributeTypeException e) {
 		}
 
+	}
+
+	/**
+	 * Tests the {@link MLWekaNominalAggregator #addFilter(Filter)} method by
+	 * adding a single remove filter, and checking that the aggregation suffers
+	 * as a result.
+	 * 
+	 * @throws Exception
+	 */
+	public void testSingleFilter() throws Exception {
+		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
+				"./vote-consistentNominalsTrain.arff", new NaiveBayes());
+
+		Filter remove = new Remove();
+		remove.setDebug(true);
+		String[] options = new String[] { "-R", "1,3-16" };
+		remove.setOptions(options);
+
+		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance);
+		assertTrue(resultOpt.isPresent());
+		Result<String, double[]> result = resultOpt.get();
+
+		double[] quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(1.0, quality[0] + quality[1]);
+		assertTrue(quality[0] > .999);
+
+		// add remove filter which removed all attributes except for
+		// "water-project-cost-sharing" and class
+		agg.addFilter(remove);
+
+		// check the quality of the aggregation has decreased
+		resultOpt = agg.aggregate(instance);
+		assertTrue(resultOpt.isPresent());
+		result = resultOpt.get();
+		quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(1.0, quality[0] + quality[1]);
+		assertEquals(0.61, quality[0], 0.01);
+	}
+
+	/**
+	 * Tests the {@link MLWekaNominalAggregator #addFilter(Filter)} obeys the
+	 * correct order of filtering, by removing and then adding an attribute.
+	 * 
+	 * @throws Exception
+	 */
+	public void testTwoFilterOrder() throws Exception {
+		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
+				"./vote-consistentNominalsTrain.arff", new J48());
+
+		Filter removeHandicap = new Remove();
+		removeHandicap.setOptions(new String[] { "-R", "4" });
+
+		Filter add = new Add();
+		add.setOptions(new String[] { "-T", "NOM", "-C", "first", "-N", "physician-fee-freeze" });
+
+		// does not throw an exception
+		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance);
+
+		// Next checks that adding the add filter for an existing attribute
+		// results in an error
+		try {
+			agg.addFilter(add);
+			fail("Add filter should result in duplicate attribute");
+		} catch (IllegalArgumentException e) {
+		}
+
+		// creates new aggregator and again checks that it works correctly
+		agg = new MLWekaNominalAggregator<String>(new NoActionConverter(), "./vote-consistentNominalsTrain.arff",
+				new J48());
+		resultOpt = agg.aggregate(instance);
+		assertTrue(resultOpt.isPresent());
+		Result<String, double[]> result = resultOpt.get();
+		double[] quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.985, quality[0], 0.001);
+
+		// adds remove filter
+		agg.addFilter(removeHandicap);
+		resultOpt = agg.aggregate(instance);
+		result = resultOpt.get();
+		quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.99, quality[0], 0.001);
+		// adds handicap attribute back
+		agg.addFilter(add);
+		resultOpt = agg.aggregate(instance);
+		result = resultOpt.get();
+		quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.99, quality[0], 0.001);
+	}
+
+	/**
+	 * Tests the {@link MLWekaNominalAggregator #addFilter(Filter)} correctly
+	 * adds filters, by adding 2 filters.
+	 * 
+	 * @throws Exception
+	 */
+	public void testTwoFilter() throws Exception {
+		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
+				"./vote-consistentNominalsTrain.arff", new J48());
+
+		Filter remove1 = new RemoveByName();
+		remove1.setOptions(new String[] { "-E", "physician-fee-freeze" });
+
+		Filter remove2 = new RemoveByName();
+		remove2.setOptions(new String[] { "-E", "crime" });
+
+		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance);
+		assertTrue(resultOpt.isPresent());
+		Result<String, double[]> result = resultOpt.get();
+		double[] quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.985, quality[0], 0.001);
+
+		// adds remove filter
+		agg.addFilter(remove1);
+		resultOpt = agg.aggregate(instance);
+		result = resultOpt.get();
+		quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.99, quality[0], 0.001);
+		// adds handicap attribute back
+		agg.addFilter(remove2);
+		resultOpt = agg.aggregate(instance);
+		result = resultOpt.get();
+		quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.972, quality[0], 0.001);
+	}
+
+	/**
+	 * The same test as {@link #testSingleFilter()}, except using
+	 * {@link MLWekaNominalAggregator #addFilters(List)} method.
+	 * 
+	 * @throws Exception
+	 */
+	public void testSingleFilterAsList() throws Exception {
+		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
+				"./vote-consistentNominalsTrain.arff", new NaiveBayes());
+
+		Filter remove = new Remove();
+		remove.setDebug(true);
+		remove.setOptions(new String[] { "-R", "1,3-16" });
+
+		List<Filter> allFilters = new ArrayList<Filter>();
+		allFilters.add(remove);
+
+		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance);
+		assertTrue(resultOpt.isPresent());
+		Result<String, double[]> result = resultOpt.get();
+
+		double[] quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(1.0, quality[0] + quality[1]);
+		assertTrue(quality[0] > .999);
+
+		// add remove filter which removed all attributes except for
+		// "water-project-cost-sharing" and class
+		agg.addFilters(allFilters);
+
+		// check the quality of the aggregation has decreased
+		resultOpt = agg.aggregate(instance);
+		assertTrue(resultOpt.isPresent());
+		result = resultOpt.get();
+		quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(1.0, quality[0] + quality[1]);
+		assertEquals(0.61, quality[0], 0.01);
+	}
+
+	/**
+	 * The same test as {@link #testTwoFilterOrder()}, except using
+	 * {@link MLWekaNominalAggregator #addFilters(List)} method.
+	 * 
+	 * @throws Exception
+	 */
+	public void testTwoFilterOrderAsListOf1Element() throws Exception {
+		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
+				"./vote-consistentNominalsTrain.arff", new J48());
+
+		Filter removeHandicap = new Remove();
+		removeHandicap.setOptions(new String[] { "-R", "4" });
+
+		Filter add = new Add();
+		add.setOptions(new String[] { "-T", "NOM", "-C", "first", "-N", "physician-fee-freeze" });
+
+		// does not throw an exception
+		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance);
+
+		// Next checks that adding the add filter for an existing attribute
+		// results in an error
+		List<Filter> allFilters = new ArrayList<Filter>();
+		allFilters.add(add);
+		try {
+			agg.addFilters(allFilters);
+			fail("Add filter should result in duplicate attribute");
+		} catch (IllegalArgumentException e) {
+		}
+
+		// creates new aggregator and again checks that it works correctly
+		agg = new MLWekaNominalAggregator<String>(new NoActionConverter(), "./vote-consistentNominalsTrain.arff",
+				new J48());
+		resultOpt = agg.aggregate(instance);
+		assertTrue(resultOpt.isPresent());
+		Result<String, double[]> result = resultOpt.get();
+		double[] quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.985, quality[0], 0.001);
+
+		// adds remove filter
+		allFilters = new ArrayList<Filter>();
+		allFilters.add(removeHandicap);
+		agg.addFilters(allFilters);
+		resultOpt = agg.aggregate(instance);
+		result = resultOpt.get();
+		quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.99, quality[0], 0.001);
+
+		// allFilters has not changed
+		assertEquals(1, allFilters.size());
+		assertTrue(allFilters.get(0) instanceof Remove);
+
+		// adds handicap attribute back
+		allFilters = new ArrayList<Filter>();
+		allFilters.add(add);
+		agg.addFilters(allFilters);
+		resultOpt = agg.aggregate(instance);
+		result = resultOpt.get();
+		quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.99, quality[0], 0.001);
+
+		// creates new aggregator and again checks that it works correctly
+		agg = new MLWekaNominalAggregator<String>(new NoActionConverter(), "./vote-consistentNominalsTrain.arff",
+				new J48());
+		resultOpt = agg.aggregate(instance);
+		assertTrue(resultOpt.isPresent());
+		result = resultOpt.get();
+		quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.985, quality[0], 0.001);
+	}
+
+	/**
+	 * Similar test to {@link #testTwoFilterOrder()}, except it tests a valid
+	 * order and an invalid order of filters as a list of 2 filters using
+	 * {@link MLWekaNominalAggregator #addFilters(List)}.
+	 * 
+	 * @throws Exception
+	 */
+	public void testTwoFilterOrderAsListOf2Elements() throws Exception {
+		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
+				"./vote-consistentNominalsTrain.arff", new J48());
+
+		Filter removeHandicap = new Remove();
+		removeHandicap.setOptions(new String[] { "-R", "4" });
+
+		Filter add = new Add();
+		add.setOptions(new String[] { "-T", "NOM", "-C", "first", "-N", "physician-fee-freeze" });
+
+		// Checks that both filters could have been added simultaneously
+		List<Filter> allFilters = new ArrayList<Filter>();
+		allFilters.add(removeHandicap);
+		allFilters.add(add);
+		agg.addFilters(allFilters);
+		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance);
+		Result<String, double[]> result = resultOpt.get();
+		double[] quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.99, quality[0], 0.001);
+
+		// creates new aggregator and again checks that it works correctly
+		agg = new MLWekaNominalAggregator<String>(new NoActionConverter(), "./vote-consistentNominalsTrain.arff",
+				new J48());
+		resultOpt = agg.aggregate(instance);
+		assertTrue(resultOpt.isPresent());
+
+		// Checks that the filters being placed in the wrong order results in an
+		// error
+		allFilters = new ArrayList<Filter>();
+		allFilters.add(add);
+		allFilters.add(removeHandicap);
+		try {
+			agg.addFilters(allFilters);
+			fail("Add filter should result in duplicate attribute");
+		} catch (IllegalArgumentException e) {
+		}
+	}
+
+	// TODO refactor
+	/**
+	 * The same test as {@link #testTwoFilter()}, except using
+	 * {@link MLWekaNominalAggregator #addFilters(List)} method.
+	 * 
+	 * @throws Exception
+	 */
+	public void testTwoFilterAsListOfSingleElement() throws Exception {
+		// first checks expected behaviour holds
+		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
+				"./vote-consistentNominalsTrain.arff", new J48());
+
+		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance);
+		assertTrue(resultOpt.isPresent());
+		Result<String, double[]> result = resultOpt.get();
+		double[] quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.985, quality[0], 0.001);
+
+		// Then begins tests with filters
+		Filter remove1 = new RemoveByName();
+		remove1.setOptions(new String[] { "-E", "physician-fee-freeze" });
+
+		Filter remove2 = new RemoveByName();
+		remove2.setOptions(new String[] { "-E", "crime" });
+
+		List<Filter> allFilters = new ArrayList<Filter>();
+
+		// adds remove filter
+		allFilters.add(remove1);
+		agg.addFilters(allFilters);
+		resultOpt = agg.aggregate(instance);
+		result = resultOpt.get();
+		quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.99, quality[0], 0.001);
+
+		// adds handicap attribute back
+		allFilters = new ArrayList<Filter>();
+		allFilters.add(remove2);
+		agg.addFilters(allFilters);
+		resultOpt = agg.aggregate(instance);
+		result = resultOpt.get();
+		quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.972, quality[0], 0.001);
+	}
+
+	/**
+	 * The same test as {@link #testTwoFilter()}, except using
+	 * {@link MLWekaNominalAggregator #addFilters(List)} method with lists of 2
+	 * Filters.
+	 * 
+	 * @throws Exception
+	 */
+	public void testTwoFilterAsListOfTwoElements() throws Exception {
+		// First checks that expected behaviour of unaltered aggregator holds
+		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
+				"./vote-consistentNominalsTrain.arff", new J48());
+
+		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance);
+		assertTrue(resultOpt.isPresent());
+		Result<String, double[]> result = resultOpt.get();
+		double[] quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.985, quality[0], 0.001);
+
+		// Then adds filters and checks if behaviour changes as expected.
+		Filter remove1 = new RemoveByName();
+		remove1.setOptions(new String[] { "-E", "physician-fee-freeze" });
+
+		Filter remove2 = new RemoveByName();
+		remove2.setOptions(new String[] { "-E", "crime" });
+
+		List<Filter> allFilters = new ArrayList<Filter>();
+
+		// Checks adding both filters at the same time, in both orders
+		agg = new MLWekaNominalAggregator<String>(new NoActionConverter(), "./vote-consistentNominalsTrain.arff",
+				new J48());
+		allFilters = new ArrayList<Filter>();
+		allFilters.add(remove1);
+		allFilters.add(remove2);
+		agg.addFilters(allFilters);
+		resultOpt = agg.aggregate(instance);
+		result = resultOpt.get();
+		quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.972, quality[0], 0.001);
+
+		agg = new MLWekaNominalAggregator<String>(new NoActionConverter(), "./vote-consistentNominalsTrain.arff",
+				new J48());
+		allFilters = new ArrayList<Filter>();
+		allFilters.add(remove2);
+		allFilters.add(remove1);
+		agg.addFilters(allFilters);
+		resultOpt = agg.aggregate(instance);
+		result = resultOpt.get();
+		quality = result.getQuality();
+		assertEquals("democrat", result.getValue());
+		assertEquals(2, quality.length);
+		assertEquals(0.972, quality[0], 0.001);
 	}
 
 	private List<Opinion<String, Void>> arraysToOpinions(String[] value, String[] opinionName) {

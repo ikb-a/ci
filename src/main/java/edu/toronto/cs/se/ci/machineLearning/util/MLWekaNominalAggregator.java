@@ -1,5 +1,6 @@
 package edu.toronto.cs.se.ci.machineLearning.util;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -8,9 +9,12 @@ import com.google.common.base.Optional;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
+import weka.classifiers.meta.FilteredClassifier;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instances;
+import weka.filters.Filter;
+import weka.filters.MultiFilter;
 import edu.toronto.cs.se.ci.data.Opinion;
 import edu.toronto.cs.se.ci.data.Result;
 import edu.toronto.cs.se.ci.machineLearning.aggregators.MLNominalWekaAggregator;
@@ -31,10 +35,17 @@ import edu.toronto.cs.se.ci.machineLearning.aggregators.MLWekaNominalConverter;
 public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, String> {
 	// The converter that converts from O to a String
 	private MLWekaNominalConverter<O> converter;
-	// The Weka classifier given
+	/*
+	 * The Weka classifier given. If there are no filters, it should be the
+	 * original classifier. Otherwise it should be a FilteredClassifier, with
+	 * the original classifier as the classifier, and a Multifilter of all the
+	 * filters as the filter.
+	 */
 	private Classifier classifier;
 	// The training data as an Instances object.
 	private Instances trainingData;
+
+	private List<Filter> filters;
 
 	/**
 	 * Constructs the aggregator using {@code classifier} as the internal
@@ -55,12 +66,7 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 	 */
 	public MLWekaNominalAggregator(MLWekaNominalConverter<O> nominalConverter, String inputFilePath,
 			Classifier classifier) throws Exception {
-		this.converter = nominalConverter;
-		// TODO find out why makeCopy does not work in Aggregator constructor
-		// this.classifier = AbstractClassifier.makeCopy(classifier);
-		this.classifier = classifier;
-		this.trainingData = MLUtility.fileToInstances(inputFilePath);
-		classifier.buildClassifier(trainingData);
+		this(nominalConverter, MLUtility.fileToInstances(inputFilePath), classifier);
 	}
 
 	/**
@@ -84,6 +90,7 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 		this.classifier = classifier;
 		this.trainingData = trainingData;
 		classifier.buildClassifier(trainingData);
+		filters = new ArrayList<Filter>();
 	}
 
 	/**
@@ -164,5 +171,54 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 		Evaluation result = new Evaluation(trainingData);
 		result.evaluateModel(classifier, instances);
 		return result;
+	}
+
+	//TODO: Determine how to deep copy filters to prevent mutability
+	/**
+	 * Operating on convention that rebuilding the classifier will have the same
+	 * effect as building
+	 * 
+	 * @param filter
+	 * @throws Exception 
+	 */
+	@Override
+	public void addFilter(Filter filter) throws Exception {
+		FilteredClassifier fc = getFC();
+
+		filters.add(filter);
+		MultiFilter mf = new MultiFilter();
+		mf.setFilters(filters.toArray(new Filter[]{}));
+		fc.setFilter(mf);
+		fc.buildClassifier(trainingData);
+		this.classifier = fc;
+	}
+
+	@Override
+	public void addFilters(List<Filter> filters) throws Exception {
+		FilteredClassifier fc = getFC();
+
+		this.filters.addAll(filters);
+		MultiFilter mf = new MultiFilter();
+		mf.setFilters(this.filters.toArray(new Filter[]{}));
+		fc.setFilter(mf);
+		fc.buildClassifier(trainingData);
+		this.classifier = fc;
+	}
+
+	/**
+	 * If there are no filters, returns a filtered classifier containing the
+	 * original {@link #classifier}. Otherwise it returns {@link #classifier}
+	 * which should be a FilteredClassifier.
+	 */
+	private FilteredClassifier getFC() {
+		FilteredClassifier fc;
+		if (filters.size() == 0) {
+			fc = new FilteredClassifier();
+			fc.setClassifier(classifier);
+		} else {
+			assert (classifier instanceof FilteredClassifier);
+			fc = (FilteredClassifier) classifier;
+		}
+		return fc;
 	}
 }

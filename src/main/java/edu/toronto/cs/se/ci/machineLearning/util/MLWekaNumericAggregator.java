@@ -1,5 +1,6 @@
 package edu.toronto.cs.se.ci.machineLearning.util;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -11,6 +12,7 @@ import weka.classifiers.Evaluation;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instances;
+import weka.filters.Filter;
 import edu.toronto.cs.se.ci.data.Opinion;
 import edu.toronto.cs.se.ci.data.Result;
 import edu.toronto.cs.se.ci.machineLearning.aggregators.MLNominalWekaAggregator;
@@ -39,6 +41,8 @@ public class MLWekaNumericAggregator<O> implements MLNominalWekaAggregator<O, Do
 	private Classifier classifier;
 	// The training data as an Instances object.
 	private Instances trainingData;
+	// all the filter in the order in which they are to be applied
+	private List<Filter> filters;
 
 	/**
 	 * Constructs the aggregator using {@code classifier} as the internal
@@ -59,11 +63,7 @@ public class MLWekaNumericAggregator<O> implements MLNominalWekaAggregator<O, Do
 	 */
 	public MLWekaNumericAggregator(MLWekaNumericConverter<O> numericConverter, String inputFilePath,
 			Classifier classifier) throws Exception {
-		this.converter = numericConverter;
-		// this.classifier = AbstractClassifier.makeCopy(classifier);
-		this.classifier = classifier;
-		this.trainingData = MLUtility.fileToInstances(inputFilePath);
-		classifier.buildClassifier(trainingData);
+		this(numericConverter, MLUtility.fileToInstances(inputFilePath), classifier);
 	}
 
 	/**
@@ -86,7 +86,8 @@ public class MLWekaNumericAggregator<O> implements MLNominalWekaAggregator<O, Do
 		this.converter = numericConverter;
 		this.classifier = classifier;
 		this.trainingData = trainingData;
-		classifier.buildClassifier(trainingData);
+		this.classifier.buildClassifier(trainingData);
+		this.filters = new ArrayList<Filter>();
 	}
 
 	/**
@@ -163,6 +164,18 @@ public class MLWekaNumericAggregator<O> implements MLNominalWekaAggregator<O, Do
 		Evaluation result = new Evaluation(trainingData);
 		result.evaluateModel(classifier, instances);
 		return result;
+	}
+
+	@Override
+	public void addFilter(Filter filter) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void addFilters(List<Filter> filters) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }
