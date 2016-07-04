@@ -3,6 +3,7 @@ package edu.toronto.cs.se.ci.machineLearning.util;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Random;
 
 import com.google.common.base.Optional;
 
@@ -86,6 +87,10 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 	 */
 	public MLWekaNominalAggregator(MLWekaNominalConverter<O> nominalConverter, Instances trainingData,
 			Classifier classifier) throws Exception {
+
+		if (nominalConverter == null || trainingData == null || classifier == null) {
+			throw new IllegalArgumentException("null arguments to the constructor are not acceptable.");
+		}
 		this.converter = nominalConverter;
 		this.classifier = classifier;
 		this.trainingData = trainingData;
@@ -173,13 +178,13 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 		return result;
 	}
 
-	//TODO: Determine how to deep copy filters to prevent mutability
+	// TODO: Determine how to deep copy filters to prevent mutability
 	/**
 	 * Operating on convention that rebuilding the classifier will have the same
 	 * effect as building
 	 * 
 	 * @param filter
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	@Override
 	public void addFilter(Filter filter) throws Exception {
@@ -187,7 +192,7 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 
 		filters.add(filter);
 		MultiFilter mf = new MultiFilter();
-		mf.setFilters(filters.toArray(new Filter[]{}));
+		mf.setFilters(filters.toArray(new Filter[] {}));
 		fc.setFilter(mf);
 		fc.buildClassifier(trainingData);
 		this.classifier = fc;
@@ -199,7 +204,7 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 
 		this.filters.addAll(filters);
 		MultiFilter mf = new MultiFilter();
-		mf.setFilters(this.filters.toArray(new Filter[]{}));
+		mf.setFilters(this.filters.toArray(new Filter[] {}));
 		fc.setFilter(mf);
 		fc.buildClassifier(trainingData);
 		this.classifier = fc;
@@ -220,5 +225,12 @@ public class MLWekaNominalAggregator<O> implements MLNominalWekaAggregator<O, St
 			fc = (FilteredClassifier) classifier;
 		}
 		return fc;
+	}
+
+	@Override
+	public Evaluation nFoldCrossValidate(int n) throws Exception {
+		Evaluation result = new Evaluation(trainingData);
+		result.crossValidateModel(classifier, trainingData, n, new Random(1));
+		return result;
 	}
 }

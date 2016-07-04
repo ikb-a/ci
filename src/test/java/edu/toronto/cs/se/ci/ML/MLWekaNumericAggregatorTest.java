@@ -512,4 +512,29 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 		assertEquals(622.3, result.getValue(), 0.1);
 	}
 
+	public void testNFoldCrossValidate() throws Exception {
+		MLWekaNumericAggregator<Integer> agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(),
+				"./cpu.arff", new LinearRegression());
+
+		Evaluation result = agg.nFoldCrossValidate(10);
+
+		// TODO: Confirm the following are expected Weka behaviours
+		assertEquals(0, result.correct(), .1);
+		assertEquals(0, result.incorrect(), .1);
+
+		try {
+			result.confusionMatrix();
+			fail();
+		} catch (NullPointerException e) {
+		}
+
+		try {
+			result.kappa();
+			fail();
+		} catch (NullPointerException e) {
+		}
+
+		assertEquals(0.89, result.correlationCoefficient(), 0.1);
+	}
+
 }

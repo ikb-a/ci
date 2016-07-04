@@ -545,6 +545,22 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		assertEquals(0.972, quality[0], 0.001);
 	}
 
+	public void testNFoldCrossValidate() throws Exception {
+		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
+				"./vote-consistentNominalsTrain.arff", new NaiveBayes());
+
+		Evaluation result = agg.nFoldCrossValidate(10);
+		// some variation occurs as the cros validation has a random seed
+		assertEquals(390, result.correct(), 10);
+		assertEquals(44, result.incorrect(), 10);
+		double[][] confusionMatrix = result.confusionMatrix();
+		assertEquals(236, confusionMatrix[0][0], 10);
+		assertEquals(154, confusionMatrix[1][1], 10);
+		assertEquals(30, confusionMatrix[0][1], 10);
+		assertEquals(14, confusionMatrix[1][0], 10);
+		assertEquals(0.79, result.kappa(), 0.1);
+	}
+
 	private List<Opinion<String, Void>> arraysToOpinions(String[] value, String[] opinionName) {
 		List<Opinion<String, Void>> instance = new ArrayList<Opinion<String, Void>>();
 		assertTrue("helper method used wrong", value.length == opinionName.length);

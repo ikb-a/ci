@@ -3,6 +3,7 @@ package edu.toronto.cs.se.ci.machineLearning.util;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Random;
 
 import com.google.common.base.Optional;
 
@@ -85,6 +86,10 @@ public class MLWekaNumericAggregator<O> implements MLNominalWekaAggregator<O, Do
 	 */
 	public MLWekaNumericAggregator(MLWekaNumericConverter<O> numericConverter, Instances trainingData,
 			Classifier classifier) throws Exception {
+		if (numericConverter == null || trainingData == null || classifier == null) {
+			throw new IllegalArgumentException("null arguments to the constructor are not acceptable.");
+		}
+
 		this.converter = numericConverter;
 		this.classifier = classifier;
 		this.trainingData = trainingData;
@@ -211,4 +216,10 @@ public class MLWekaNumericAggregator<O> implements MLNominalWekaAggregator<O, Do
 		return fc;
 	}
 
+	@Override
+	public Evaluation nFoldCrossValidate(int n) throws Exception {
+		Evaluation result = new Evaluation(trainingData);
+		result.crossValidateModel(classifier, trainingData, n, new Random(1));
+		return result;
+	}
 }

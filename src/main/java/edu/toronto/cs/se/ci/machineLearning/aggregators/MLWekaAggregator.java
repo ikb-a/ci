@@ -3,6 +3,7 @@ package edu.toronto.cs.se.ci.machineLearning.aggregators;
 import java.util.List;
 
 import weka.classifiers.Classifier;
+import weka.classifiers.Evaluation;
 import weka.core.Instances;
 import weka.filters.Filter;
 
@@ -74,4 +75,22 @@ public interface MLWekaAggregator<O, FO, Q> extends MLAggregator<O, FO, Q> {
 	 *             FilteredClassifier containing the filters given.
 	 */
 	public void addFilters(List<Filter> filters) throws Exception;
+
+	/**
+	 * Performs {@code n}-fold cross validation on the classifier using the
+	 * training data.
+	 * 
+	 * Note that the Classifier being used in the Aggregator must abide to the
+	 * Weka convention that a classifier must be re-initialized every time the
+	 * buildClassifier method is called
+	 * (https://weka.wikispaces.com/Use+Weka+in+your+Java+code#Classification-
+	 * Evaluating).
+	 * 
+	 * @param n
+	 *            The number of folds for the validation (usually n = 10)
+	 * @return An Evaluation object created by cross validating the classifier
+	 *         being used.
+	 * @throws Exception
+	 */
+	public Evaluation nFoldCrossValidate(int n) throws Exception;
 }
