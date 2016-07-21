@@ -1,5 +1,6 @@
 package edu.toronto.cs.se.ci;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -65,7 +66,7 @@ public class GenericCITest extends TestCase {
 		Contract<Boolean, String, Void> provider = new MLToCIContract<Boolean, String>(RepublicanOrDemocrat.class);
 		MLWekaNominalConverter<String> conv = new NoActionConverter();
 		GenericAggregator<String, String, Void, double[]> agg = new MLWekaNominalAggregator<String>(conv,
-				"./vote-consistentNominalsCITrain .arff", new NaiveBayes());
+				"./target/test-classes/vote-consistentNominalsCITrain.arff", new NaiveBayes());
 		Contracts.register(new Adoption());
 		Contracts.register(new Crime());
 		Contracts.register(new DutyFree());
@@ -111,7 +112,7 @@ public class GenericCITest extends TestCase {
 		Contract<Boolean, String, Void> contract = new MLToCIContract<Boolean, String>(RepublicanOrDemocrat.class);
 		MLWekaNominalConverter<String> conv = new NoActionConverter();
 		GenericAggregator<String, String, Void, double[]> agg = new MLWekaNominalAggregator<String>(conv,
-				"./vote-consistentNominalsCITrain .arff", new NaiveBayes());
+				"./target/test-classes/vote-consistentNominalsCITrain.arff", new NaiveBayes());
 
 		GenericCI<Boolean, String, String, Void, double[]> test1 = new GenericCI<Boolean, String, String, Void, double[]>(
 				contract, agg, sel, acc);
@@ -146,7 +147,7 @@ public class GenericCITest extends TestCase {
 		Contract<Boolean, String, Void> contract = new MLToCIContract<Boolean, String>(RepublicanOrDemocrat.class);
 		MLWekaNominalConverter<String> conv = new NoActionConverter();
 		GenericAggregator<String, String, Void, double[]> agg = new MLWekaNominalAggregator<String>(conv,
-				"./vote-consistentNominalsCITrain .arff", new NaiveBayes());
+				"./target/test-classes/vote-consistentNominalsCITrain.arff", new NaiveBayes());
 
 		GenericCI<Boolean, String, String, Void, double[]> test1 = new GenericCI<Boolean, String, String, Void, double[]>(
 				contract.provide(), agg, sel, acc);
@@ -178,7 +179,7 @@ public class GenericCITest extends TestCase {
 		Contract<Boolean, String, Void> contract = new MLToCIContract<Boolean, String>(RepublicanOrDemocrat.class);
 		MLWekaNominalConverter<String> conv = new NoActionConverter();
 		GenericAggregator<String, String, Void, double[]> agg = new MLWekaNominalAggregator<String>(conv,
-				"./vote-consistentNominalsCITrain .arff", new NaiveBayes());
+				"./target/test-classes/vote-consistentNominalsCITrain.arff", new NaiveBayes());
 
 		Contracts.register(new Adoption());
 		Contracts.register(new Crime());
@@ -233,7 +234,7 @@ public class GenericCITest extends TestCase {
 		Contract<Boolean, String, Void> contract = new MLToCIContract<Boolean, String>(RepublicanOrDemocrat.class);
 		MLWekaNominalConverter<String> conv = new NoActionConverter();
 		GenericAggregator<String, String, Void, double[]> agg = new MLWekaNominalAggregator<String>(conv,
-				"./vote-consistentNominalsCITrain .arff", new NaiveBayes());
+				"./target/test-classes/vote-consistentNominalsCITrain.arff", new NaiveBayes());
 
 		Contracts.register(new Adoption());
 		Contracts.register(new Crime());
@@ -288,7 +289,7 @@ public class GenericCITest extends TestCase {
 		Contract<Boolean, String, Void> contract = new MLToCIContract<Boolean, String>(RepublicanOrDemocrat.class);
 		MLWekaNominalConverter<String> conv = new NoActionConverter();
 		GenericAggregator<String, String, Void, double[]> agg = new MLWekaNominalAggregator<String>(conv,
-				"./vote-consistentNominalsCITrain .arff", new NaiveBayes());
+				"./target/test-classes/vote-consistentNominalsCITrain.arff", new NaiveBayes());
 
 		Contracts.register(new Adoption());
 		Contracts.register(new Crime());
@@ -345,7 +346,7 @@ public class GenericCITest extends TestCase {
 		Contract<Boolean, String, Void> contract = new MLToCIContract<Boolean, String>(RepublicanOrDemocrat.class);
 		MLWekaNominalConverter<String> conv = new NoActionConverter();
 		GenericAggregator<String, String, Void, double[]> agg = new MLWekaNominalAggregator<String>(conv,
-				"./vote-consistentNominalsCITrain .arff", new NaiveBayes());
+				"./target/test-classes/vote-consistentNominalsCITrain.arff", new NaiveBayes());
 
 		Contracts.register(new Synfuel());
 
@@ -381,7 +382,7 @@ public class GenericCITest extends TestCase {
 		Contract<Boolean, String, Void> contract = new MLToCIContract<Boolean, String>(RepublicanOrDemocrat.class);
 		MLWekaNominalConverter<String> conv = new NoActionConverter();
 		GenericAggregator<String, String, Void, double[]> agg = new MLWekaNominalAggregator<String>(conv,
-				"./vote-consistentNominalsCITrain .arff", new NaiveBayes());
+				"./target/test-classes/vote-consistentNominalsCITrain.arff", new NaiveBayes());
 
 		Contracts.register(new Synfuel());
 

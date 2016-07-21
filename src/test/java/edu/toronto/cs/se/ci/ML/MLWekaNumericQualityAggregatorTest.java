@@ -64,7 +64,7 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 	 */
 	public void TOFIXtestGetClassifier() throws Exception {
 		MLWekaNumericQualityAggregator<Integer> agg = new MLWekaNumericQualityAggregator<Integer>(
-				new IntegerToDoubleConverter(), "./cpu.arff", new GaussianProcesses(), 0.95);
+				new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff", new GaussianProcesses(), 0.95);
 		assertNotNull(agg);
 
 		Classifier copy = agg.getClassifier();
@@ -81,7 +81,8 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 	 */
 	public void testGetClassifier2() throws Exception {
 		MLWekaNumericQualityAggregator<Integer> agg = new MLWekaNumericQualityAggregator<Integer>(
-				new IntegerToDoubleConverter(), "./cpu.arff", new RegressionByDiscretization(), 0.95);
+				new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff", new RegressionByDiscretization(),
+				0.95);
 		assertNotNull(agg);
 
 		Classifier copy = agg.getClassifier();
@@ -98,10 +99,10 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 	 */
 	public void testTestClassifier() throws Exception {
 		MLWekaNumericQualityAggregator<Integer> agg = new MLWekaNumericQualityAggregator<Integer>(
-				new IntegerToDoubleConverter(), "./cpu.arff", new GaussianProcesses(), 0.95);
+				new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff", new GaussianProcesses(), 0.95);
 		assertNotNull(agg);
 
-		Evaluation eval = agg.testClassifier("./cpuTest.arff");
+		Evaluation eval = agg.testClassifier("./target/test-classes/cpuTest.arff");
 		// TODO: determine if Weka is SUPPOSED to have this behaviour.
 		try {
 			eval.confusionMatrix();
@@ -119,10 +120,11 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 	 */
 	public void testTestClassifier2() throws Exception {
 		MLWekaNumericQualityAggregator<Integer> agg = new MLWekaNumericQualityAggregator<Integer>(
-				new IntegerToDoubleConverter(), "./cpu.arff", new RegressionByDiscretization(), 0.95);
+				new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff", new RegressionByDiscretization(),
+				0.95);
 		assertNotNull(agg);
 
-		Evaluation eval = agg.testClassifier("./cpuTest.arff");
+		Evaluation eval = agg.testClassifier("./target/test-classes/cpuTest.arff");
 		// TODO: determine if Weka is SUPPOSED to have this behaviour.
 		try {
 			eval.confusionMatrix();
@@ -141,7 +143,7 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 	 */
 	public void testValidGaussianProcesses() throws Exception {
 		MLWekaNumericQualityAggregator<Integer> agg = new MLWekaNumericQualityAggregator<Integer>(
-				new IntegerToDoubleConverter(), "./cpu.arff", new GaussianProcesses(), 0.95);
+				new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff", new GaussianProcesses(), 0.95);
 		assertNotNull(agg);
 
 		Optional<Result<Double, double[][]>> resultOpt = agg.aggregate(instance);
@@ -162,7 +164,8 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 	 */
 	public void testValidRegressionByDiscretization() throws Exception {
 		MLWekaNumericQualityAggregator<Integer> agg = new MLWekaNumericQualityAggregator<Integer>(
-				new IntegerToDoubleConverter(), "./cpu.arff", new RegressionByDiscretization(), 0.95);
+				new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff", new RegressionByDiscretization(),
+				0.95);
 		assertNotNull(agg);
 
 		Optional<Result<Double, double[][]>> resultOpt = agg.aggregate(instance);
@@ -171,7 +174,8 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 
 		double[][] quality = result.getQuality();
 		assertEquals(1066.6, result.getValue(), 300);
-		// TODO: Determine how to determine confidence intervals, so as to complete these tests
+		// TODO: Determine how to determine confidence intervals, so as to
+		// complete these tests
 		assertEquals(4, quality.length);
 		System.out.println(arrayToListOfList(quality));
 
@@ -187,7 +191,7 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 	public void testValidNaiveBayes() throws Exception {
 		try {
 			MLWekaNumericQualityAggregator<Integer> agg = new MLWekaNumericQualityAggregator<Integer>(
-					new IntegerToDoubleConverter(), "./cpu.arff", new NaiveBayes(), 0.95);
+					new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff", new NaiveBayes(), 0.95);
 			fail(agg.toString()
 					+ " Should not have been created, as a bayes classifier does not implement IntervalEstimator");
 		} catch (IllegalArgumentException e) {
@@ -226,7 +230,8 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 	public void testSingleFilter() throws Exception {
 		// creates the aggregator
 		MLWekaNumericQualityAggregator<Integer> agg = new MLWekaNumericQualityAggregator<Integer>(
-				new IntegerToDoubleConverter(), "./cpu.arff", new RegressionByDiscretization(), 0.95);
+				new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff", new RegressionByDiscretization(),
+				0.95);
 		assertNotNull(agg);
 
 		// checks the expected value witout the filter
@@ -259,7 +264,7 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 	 */
 	public void testTwoFilterOrder() throws Exception {
 		MLWekaNumericQualityAggregator<Integer> agg = new MLWekaNumericQualityAggregator<Integer>(
-				new IntegerToDoubleConverter(), "./cpu.arff", new GaussianProcesses(), 0.95);
+				new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff", new GaussianProcesses(), 0.95);
 		assertNotNull(agg);
 		// does not throw an exception
 		Optional<Result<Double, double[][]>> resultOpt = agg.aggregate(instance);
@@ -280,8 +285,8 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 		}
 
 		// creates new aggregator and again checks that it works correctly
-		agg = new MLWekaNumericQualityAggregator<Integer>(new IntegerToDoubleConverter(), "./cpu.arff",
-				new GaussianProcesses(), 0.95);
+		agg = new MLWekaNumericQualityAggregator<Integer>(new IntegerToDoubleConverter(),
+				"./target/test-classes/cpu.arff", new GaussianProcesses(), 0.95);
 		resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
 		Result<Double, double[][]> result = resultOpt.get();
@@ -307,7 +312,7 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 	 */
 	public void testTwoFilter() throws Exception {
 		MLWekaNumericQualityAggregator<Integer> agg = new MLWekaNumericQualityAggregator<Integer>(
-				new IntegerToDoubleConverter(), "./cpu.arff", new GaussianProcesses(), 0.95);
+				new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff", new GaussianProcesses(), 0.95);
 
 		Optional<Result<Double, double[][]>> resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
@@ -340,7 +345,8 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 	 */
 	public void testSingleFilterAsList() throws Exception {
 		MLWekaNumericQualityAggregator<Integer> agg = new MLWekaNumericQualityAggregator<Integer>(
-				new IntegerToDoubleConverter(), "./cpu.arff", new RegressionByDiscretization(), 0.95);
+				new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff", new RegressionByDiscretization(),
+				0.95);
 		assertNotNull(agg);
 
 		// checks the expected value witout the filter
@@ -375,7 +381,7 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 	 */
 	public void testTwoFilterOrderAsListOf1Element() throws Exception {
 		MLWekaNumericQualityAggregator<Integer> agg = new MLWekaNumericQualityAggregator<Integer>(
-				new IntegerToDoubleConverter(), "./cpu.arff", new GaussianProcesses(), 0.95);
+				new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff", new GaussianProcesses(), 0.95);
 		assertNotNull(agg);
 		// does not throw an exception
 		Optional<Result<Double, double[][]>> resultOpt = agg.aggregate(instance);
@@ -398,8 +404,8 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 		}
 
 		// creates new aggregator and again checks that it works correctly
-		agg = new MLWekaNumericQualityAggregator<Integer>(new IntegerToDoubleConverter(), "./cpu.arff",
-				new GaussianProcesses(), 0.95);
+		agg = new MLWekaNumericQualityAggregator<Integer>(new IntegerToDoubleConverter(),
+				"./target/test-classes/cpu.arff", new GaussianProcesses(), 0.95);
 		resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
 		Result<Double, double[][]> result = resultOpt.get();
@@ -430,7 +436,7 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 	 */
 	public void testTwoFilterOrderAsListOf2Elements() throws Exception {
 		MLWekaNumericQualityAggregator<Integer> agg = new MLWekaNumericQualityAggregator<Integer>(
-				new IntegerToDoubleConverter(), "./cpu.arff", new GaussianProcesses(), 0.95);
+				new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff", new GaussianProcesses(), 0.95);
 
 		Filter removeMyct = new Remove();
 		removeMyct.setOptions(new String[] { "-R", "1" });
@@ -448,8 +454,8 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 		assertEquals(386.8, result.getValue(), 0.1);
 
 		// creates new aggregator and again checks that it works correctly
-		agg = new MLWekaNumericQualityAggregator<Integer>(new IntegerToDoubleConverter(), "./cpu.arff",
-				new GaussianProcesses(), 0.95);
+		agg = new MLWekaNumericQualityAggregator<Integer>(new IntegerToDoubleConverter(),
+				"./target/test-classes/cpu.arff", new GaussianProcesses(), 0.95);
 		resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
 
@@ -474,7 +480,7 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 	public void testTwoFilterAsListOfSingleElement() throws Exception {
 		// first checks expected behaviour holds
 		MLWekaNumericQualityAggregator<Integer> agg = new MLWekaNumericQualityAggregator<Integer>(
-				new IntegerToDoubleConverter(), "./cpu.arff", new GaussianProcesses(), 0.95);
+				new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff", new GaussianProcesses(), 0.95);
 
 		Optional<Result<Double, double[][]>> resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
@@ -516,7 +522,7 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 	public void testTwoFilterAsListOfTwoElements() throws Exception {
 		// First checks that expected behaviour of unaltered aggregator holds
 		MLWekaNumericQualityAggregator<Integer> agg = new MLWekaNumericQualityAggregator<Integer>(
-				new IntegerToDoubleConverter(), "./cpu.arff", new GaussianProcesses(), 0.95);
+				new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff", new GaussianProcesses(), 0.95);
 
 		Optional<Result<Double, double[][]>> resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
@@ -533,8 +539,8 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 		List<Filter> allFilters = new ArrayList<Filter>();
 
 		// Checks adding both filters at the same time, in both orders
-		agg = new MLWekaNumericQualityAggregator<Integer>(new IntegerToDoubleConverter(), "./cpu.arff",
-				new GaussianProcesses(), 0.95);
+		agg = new MLWekaNumericQualityAggregator<Integer>(new IntegerToDoubleConverter(),
+				"./target/test-classes/cpu.arff", new GaussianProcesses(), 0.95);
 		allFilters = new ArrayList<Filter>();
 		allFilters.add(remove1);
 		allFilters.add(remove2);
@@ -543,8 +549,8 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 		result = resultOpt.get();
 		assertEquals(371.8, result.getValue(), 0.1);
 
-		agg = new MLWekaNumericQualityAggregator<Integer>(new IntegerToDoubleConverter(), "./cpu.arff",
-				new GaussianProcesses(), 0.95);
+		agg = new MLWekaNumericQualityAggregator<Integer>(new IntegerToDoubleConverter(),
+				"./target/test-classes/cpu.arff", new GaussianProcesses(), 0.95);
 		allFilters = new ArrayList<Filter>();
 		allFilters.add(remove2);
 		allFilters.add(remove1);
@@ -564,7 +570,7 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 	 */
 	public void TOFIXtestNFoldCrossValidate() throws Exception {
 		MLWekaNumericQualityAggregator<Integer> agg = new MLWekaNumericQualityAggregator<Integer>(
-				new IntegerToDoubleConverter(), "./cpu.arff", new GaussianProcesses(), 0.95);
+				new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff", new GaussianProcesses(), 0.95);
 
 		Evaluation result = agg.nFoldCrossValidate(10);
 
@@ -589,7 +595,8 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 
 	public void testNFoldCrossValidate2() throws Exception {
 		MLWekaNumericQualityAggregator<Integer> agg = new MLWekaNumericQualityAggregator<Integer>(
-				new IntegerToDoubleConverter(), "./cpu.arff", new RegressionByDiscretization(), 0.95);
+				new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff", new RegressionByDiscretization(),
+				0.95);
 
 		Evaluation result = agg.nFoldCrossValidate(10);
 

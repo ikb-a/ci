@@ -58,7 +58,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 	 */
 	public void testGetClassifier() throws Exception {
 		MLWekaNumericAggregator<Integer> agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(),
-				"./cpu.arff", new LinearRegression());
+				"./target/test-classes/cpu.arff", new LinearRegression());
 		assertNotNull(agg);
 
 		Classifier copy = agg.getClassifier();
@@ -75,10 +75,10 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 	 */
 	public void testTestClassifier() throws Exception {
 		MLWekaNumericAggregator<Integer> agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(),
-				"./cpu.arff", new LinearRegression());
+				"./target/test-classes/cpu.arff", new LinearRegression());
 		assertNotNull(agg);
 
-		Evaluation eval = agg.testClassifier("./cpuTest.arff");
+		Evaluation eval = agg.testClassifier("./target/test-classes/cpuTest.arff");
 		// TODO: determine if Weka is SUPPOSED to have this behaviour.
 		try {
 			eval.confusionMatrix();
@@ -96,7 +96,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 	 */
 	public void testValidLinearRegression() throws Exception {
 		MLWekaNumericAggregator<Integer> agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(),
-				"./cpu.arff", new LinearRegression());
+				"./target/test-classes/cpu.arff", new LinearRegression());
 		assertNotNull(agg);
 
 		Optional<Result<Double, Void>> resultOpt = agg.aggregate(instance);
@@ -115,7 +115,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 	 */
 	public void testValidMultilayerPerceptron() throws Exception {
 		MLWekaNumericAggregator<Integer> agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(),
-				"./cpu.arff", new MultilayerPerceptron());
+				"./target/test-classes/cpu.arff", new MultilayerPerceptron());
 		assertNotNull(agg);
 
 		Optional<Result<Double, Void>> resultOpt = agg.aggregate(instance);
@@ -138,7 +138,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 	public void testValidNaiveBayes() throws Exception {
 		try {
 			MLWekaNumericAggregator<Integer> agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(),
-					"./cpu.arff", new NaiveBayes());
+					"./target/test-classes/cpu.arff", new NaiveBayes());
 			fail(agg.toString()
 					+ " Should not have been created, as a bayes classifier cannot support a numeric datatype");
 		} catch (UnsupportedAttributeTypeException e) {
@@ -177,7 +177,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 	public void testSingleFilter() throws Exception {
 		// creates the aggregator
 		MLWekaNumericAggregator<Integer> agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(),
-				"./cpu.arff", new MultilayerPerceptron());
+				"./target/test-classes/cpu.arff", new MultilayerPerceptron());
 		assertNotNull(agg);
 
 		// checks the expected value witout the filter
@@ -210,7 +210,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 	 */
 	public void testTwoFilterOrder() throws Exception {
 		MLWekaNumericAggregator<Integer> agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(),
-				"./cpu.arff", new LinearRegression());
+				"./target/test-classes/cpu.arff", new LinearRegression());
 		assertNotNull(agg);
 		// does not throw an exception
 		Optional<Result<Double, Void>> resultOpt = agg.aggregate(instance);
@@ -231,7 +231,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 		}
 
 		// creates new aggregator and again checks that it works correctly
-		agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(), "./cpu.arff",
+		agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff",
 				new LinearRegression());
 		resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
@@ -258,7 +258,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 	 */
 	public void testTwoFilter() throws Exception {
 		MLWekaNumericAggregator<Integer> agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(),
-				"./cpu.arff", new LinearRegression());
+				"./target/test-classes/cpu.arff", new LinearRegression());
 
 		Optional<Result<Double, Void>> resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
@@ -291,7 +291,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 	 */
 	public void testSingleFilterAsList() throws Exception {
 		MLWekaNumericAggregator<Integer> agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(),
-				"./cpu.arff", new MultilayerPerceptron());
+				"./target/test-classes/cpu.arff", new MultilayerPerceptron());
 		assertNotNull(agg);
 
 		// checks the expected value witout the filter
@@ -326,7 +326,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 	 */
 	public void testTwoFilterOrderAsListOf1Element() throws Exception {
 		MLWekaNumericAggregator<Integer> agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(),
-				"./cpu.arff", new LinearRegression());
+				"./target/test-classes/cpu.arff", new LinearRegression());
 		assertNotNull(agg);
 		// does not throw an exception
 		Optional<Result<Double, Void>> resultOpt = agg.aggregate(instance);
@@ -349,7 +349,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 		}
 
 		// creates new aggregator and again checks that it works correctly
-		agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(), "./cpu.arff",
+		agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff",
 				new LinearRegression());
 		resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
@@ -381,7 +381,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 	 */
 	public void testTwoFilterOrderAsListOf2Elements() throws Exception {
 		MLWekaNumericAggregator<Integer> agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(),
-				"./cpu.arff", new LinearRegression());
+				"./target/test-classes/cpu.arff", new LinearRegression());
 
 		Filter removeMyct = new Remove();
 		removeMyct.setOptions(new String[] { "-R", "1" });
@@ -399,7 +399,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 		assertEquals(612, result.getValue(), 0.1);
 
 		// creates new aggregator and again checks that it works correctly
-		agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(), "./cpu.arff",
+		agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff",
 				new LinearRegression());
 		resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
@@ -425,7 +425,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 	public void testTwoFilterAsListOfSingleElement() throws Exception {
 		// first checks expected behaviour holds
 		MLWekaNumericAggregator<Integer> agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(),
-				"./cpu.arff", new LinearRegression());
+				"./target/test-classes/cpu.arff", new LinearRegression());
 
 		Optional<Result<Double, Void>> resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
@@ -467,7 +467,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 	public void testTwoFilterAsListOfTwoElements() throws Exception {
 		// First checks that expected behaviour of unaltered aggregator holds
 		MLWekaNumericAggregator<Integer> agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(),
-				"./cpu.arff", new LinearRegression());
+				"./target/test-classes/cpu.arff", new LinearRegression());
 
 		Optional<Result<Double, Void>> resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
@@ -484,7 +484,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 		List<Filter> allFilters = new ArrayList<Filter>();
 
 		// Checks adding both filters at the same time, in both orders
-		agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(), "./cpu.arff",
+		agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff",
 				new LinearRegression());
 		allFilters = new ArrayList<Filter>();
 		allFilters.add(remove1);
@@ -494,7 +494,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 		result = resultOpt.get();
 		assertEquals(622.1, result.getValue(), 0.1);
 
-		agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(), "./cpu.arff",
+		agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(), "./target/test-classes/cpu.arff",
 				new LinearRegression());
 		allFilters = new ArrayList<Filter>();
 		allFilters.add(remove2);
@@ -507,7 +507,7 @@ public class MLWekaNumericAggregatorTest extends TestCase {
 
 	public void testNFoldCrossValidate() throws Exception {
 		MLWekaNumericAggregator<Integer> agg = new MLWekaNumericAggregator<Integer>(new IntegerToDoubleConverter(),
-				"./cpu.arff", new LinearRegression());
+				"./target/test-classes/cpu.arff", new LinearRegression());
 
 		Evaluation result = agg.nFoldCrossValidate(10);
 

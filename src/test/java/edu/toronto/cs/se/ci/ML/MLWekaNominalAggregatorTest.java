@@ -53,7 +53,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 
 	public void testGetClassifier() throws Exception {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
-				"./vote-consistentNominalsTrain.arff", new NaiveBayes());
+				"./target/test-classes/vote-consistentNominalsTrain.arff", new NaiveBayes());
 		assertNotNull(agg);
 
 		Classifier copy = agg.getClassifier();
@@ -65,10 +65,10 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 
 	public void testTestClassifier() throws Exception {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
-				"./vote-consistentNominalsTrain.arff", new NaiveBayes());
+				"./target/test-classes/vote-consistentNominalsTrain.arff", new NaiveBayes());
 		assertNotNull(agg);
 
-		Evaluation eval = agg.testClassifier("./vote-consistentNominalsTest.arff");
+		Evaluation eval = agg.testClassifier("./target/test-classes/vote-consistentNominalsTest.arff");
 		// System.out.println(eval.toSummaryString());
 
 		// asserts 3 instances were classified correctly
@@ -98,7 +98,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 
 	public void testValidNaiveBayes() throws Exception {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
-				"./vote-consistentNominalsTrain.arff", new NaiveBayes());
+				"./target/test-classes/vote-consistentNominalsTrain.arff", new NaiveBayes());
 		assertNotNull(agg);
 
 		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance);
@@ -114,7 +114,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 
 	public void testValidJ48() throws Exception {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
-				"./vote-consistentNominalsTrain.arff", new J48());
+				"./target/test-classes/vote-consistentNominalsTrain.arff", new J48());
 		assertNotNull(agg);
 
 		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance);
@@ -135,7 +135,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 	public void testValidLinearRegression() throws Exception {
 		try {
 			MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
-					"./vote-consistentNominalsTrain.arff", new LinearRegression());
+					"./target/test-classes/vote-consistentNominalsTrain.arff", new LinearRegression());
 			fail(agg.toString()
 					+ " Should not have been created, as a Regression classifier cannot support a nominal datatype");
 		} catch (UnsupportedAttributeTypeException e) {
@@ -152,7 +152,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 	 */
 	public void testSingleFilter() throws Exception {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
-				"./vote-consistentNominalsTrain.arff", new NaiveBayes());
+				"./target/test-classes/vote-consistentNominalsTrain.arff", new NaiveBayes());
 
 		Filter remove = new Remove();
 		remove.setDebug(true);
@@ -192,7 +192,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 	 */
 	public void testTwoFilterOrder() throws Exception {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
-				"./vote-consistentNominalsTrain.arff", new J48());
+				"./target/test-classes/vote-consistentNominalsTrain.arff", new J48());
 
 		Filter removePhysician = new Remove();
 		removePhysician.setOptions(new String[] { "-R", "4" });
@@ -212,7 +212,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		}
 
 		// creates new aggregator and again checks that it works correctly
-		agg = new MLWekaNominalAggregator<String>(new NoActionConverter(), "./vote-consistentNominalsTrain.arff",
+		agg = new MLWekaNominalAggregator<String>(new NoActionConverter(), "./target/test-classes/vote-consistentNominalsTrain.arff",
 				new J48());
 		resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
@@ -248,7 +248,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 	 */
 	public void testTwoFilter() throws Exception {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
-				"./vote-consistentNominalsTrain.arff", new J48());
+				"./target/test-classes/vote-consistentNominalsTrain.arff", new J48());
 
 		Filter remove1 = new RemoveByName();
 		remove1.setOptions(new String[] { "-E", "physician-fee-freeze" });
@@ -290,7 +290,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 	 */
 	public void testSingleFilterAsList() throws Exception {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
-				"./vote-consistentNominalsTrain.arff", new NaiveBayes());
+				"./target/test-classes/vote-consistentNominalsTrain.arff", new NaiveBayes());
 
 		Filter remove = new Remove();
 		remove.setDebug(true);
@@ -332,7 +332,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 	 */
 	public void testTwoFilterOrderAsListOf1Element() throws Exception {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
-				"./vote-consistentNominalsTrain.arff", new J48());
+				"./target/test-classes/vote-consistentNominalsTrain.arff", new J48());
 
 		Filter removePhysician = new Remove();
 		removePhysician.setOptions(new String[] { "-R", "4" });
@@ -354,7 +354,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		}
 
 		// creates new aggregator and again checks that it works correctly
-		agg = new MLWekaNominalAggregator<String>(new NoActionConverter(), "./vote-consistentNominalsTrain.arff",
+		agg = new MLWekaNominalAggregator<String>(new NoActionConverter(), "./target/test-classes/vote-consistentNominalsTrain.arff",
 				new J48());
 		resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
@@ -400,7 +400,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 	 */
 	public void testTwoFilterOrderAsListOf2Elements() throws Exception {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
-				"./vote-consistentNominalsTrain.arff", new J48());
+				"./target/test-classes/vote-consistentNominalsTrain.arff", new J48());
 
 		Filter removePhysician = new Remove();
 		removePhysician.setOptions(new String[] { "-R", "4" });
@@ -421,7 +421,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		assertEquals(0.99, quality[0], 0.001);
 
 		// creates new aggregator and again checks that it works correctly
-		agg = new MLWekaNominalAggregator<String>(new NoActionConverter(), "./vote-consistentNominalsTrain.arff",
+		agg = new MLWekaNominalAggregator<String>(new NoActionConverter(), "./target/test-classes/vote-consistentNominalsTrain.arff",
 				new J48());
 		resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
@@ -447,7 +447,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 	public void testTwoFilterAsListOfSingleElement() throws Exception {
 		// first checks expected behaviour holds
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
-				"./vote-consistentNominalsTrain.arff", new J48());
+				"./target/test-classes/vote-consistentNominalsTrain.arff", new J48());
 
 		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
@@ -498,7 +498,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 	public void testTwoFilterAsListOfTwoElements() throws Exception {
 		// First checks that expected behaviour of unaltered aggregator holds
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
-				"./vote-consistentNominalsTrain.arff", new J48());
+				"./target/test-classes/vote-consistentNominalsTrain.arff", new J48());
 
 		Optional<Result<String, double[]>> resultOpt = agg.aggregate(instance);
 		assertTrue(resultOpt.isPresent());
@@ -518,7 +518,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		List<Filter> allFilters = new ArrayList<Filter>();
 
 		// Checks adding both filters at the same time, in both orders
-		agg = new MLWekaNominalAggregator<String>(new NoActionConverter(), "./vote-consistentNominalsTrain.arff",
+		agg = new MLWekaNominalAggregator<String>(new NoActionConverter(), "./target/test-classes/vote-consistentNominalsTrain.arff",
 				new J48());
 		allFilters = new ArrayList<Filter>();
 		allFilters.add(remove1);
@@ -531,7 +531,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 		assertEquals(2, quality.length);
 		assertEquals(0.972, quality[0], 0.001);
 
-		agg = new MLWekaNominalAggregator<String>(new NoActionConverter(), "./vote-consistentNominalsTrain.arff",
+		agg = new MLWekaNominalAggregator<String>(new NoActionConverter(), "./target/test-classes/vote-consistentNominalsTrain.arff",
 				new J48());
 		allFilters = new ArrayList<Filter>();
 		allFilters.add(remove2);
@@ -547,7 +547,7 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 
 	public void testNFoldCrossValidate() throws Exception {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
-				"./vote-consistentNominalsTrain.arff", new NaiveBayes());
+				"./target/test-classes/vote-consistentNominalsTrain.arff", new NaiveBayes());
 
 		Evaluation result = agg.nFoldCrossValidate(10);
 		// some variation occurs as the cros validation has a random seed
@@ -563,10 +563,10 @@ public class MLWekaNominalAggregatorTest extends TestCase {
 
 	public void testRetrain() throws Exception {
 		MLWekaNominalAggregator<String> agg = new MLWekaNominalAggregator<String>(new NoActionConverter(),
-				"./vote-consistentNominalsTrain.arff", new NaiveBayes());
+				"./target/test-classes/vote-consistentNominalsTrain.arff", new NaiveBayes());
 
 		// retrains the aggregator on a file with different attribute names.
-		agg.retrain("./vote-consistentNominalsCITrain.arff");
+		agg.retrain("./target/test-classes/vote-consistentNominalsCITrain.arff");
 
 		String[] values = new String[] { "republican", "democrat", "republican", "democrat", "democrat", "democrat",
 				"republican", "republican", "republican", "republican", "democrat", "democrat", "democrat",
