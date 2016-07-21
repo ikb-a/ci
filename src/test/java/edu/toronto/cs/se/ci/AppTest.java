@@ -1,5 +1,7 @@
 package edu.toronto.cs.se.ci;
 
+import java.io.File;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -34,5 +36,25 @@ public class AppTest
     public void testApp()
     {
         assertTrue( true );
+    }
+    
+    public void testMain(){
+    	File f = new File(".");
+    	System.out.println(f.getAbsolutePath());
+    	String [] files =(f.list());
+    	for(String file: files)
+    		System.out.println(file);
+    	
+    	System.out.println("----target---");
+    	f = new File("./target");
+    	files =(f.list());
+    	for(String file: files)
+    		System.out.println(file);
+    	
+    	System.out.println("-----test-classes=====");
+    	f = new File("./target/test-classes");
+    	files =(f.list());
+    	for(String file: files)
+    		System.out.println(file);
     }
 }

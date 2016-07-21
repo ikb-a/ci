@@ -171,7 +171,7 @@ public class MLWekaNumericQualityAggregatorTest extends TestCase {
 
 		double[][] quality = result.getQuality();
 		assertEquals(1066.6, result.getValue(), 300);
-		// TODO: Determine how to determine confidence intervals
+		// TODO: Determine how to determine confidence intervals, so as to complete these tests
 		assertEquals(4, quality.length);
 		System.out.println(arrayToListOfList(quality));
 

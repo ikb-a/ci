@@ -21,17 +21,13 @@ import edu.toronto.cs.se.ci.data.Result;
 import edu.toronto.cs.se.ci.machineLearning.aggregators.MLNumericWekaAggregatorInt;
 import edu.toronto.cs.se.ci.machineLearning.aggregators.MLWekaNumericConverter;
 
-//TODO: Problem is that currently, the trust value produced by the numeric classifiers is useless
-// (it is simply the result). The WEKA interface InvervalEstimator (http://weka.sourceforge.net/doc.dev/weka/classifiers/IntervalEstimator.html)
-//could be used to resolve this; but only 2 Classifiers (GaussianProcesses and RegressionByDiscretization) implement this interface, meaning that many of the classifiers
-//such as LinearRegression and MultilayerPerceptron would be unusable.
 /**
  * This class is a
  * {@link edu.toronto.cs.se.ci.machineLearning.aggregators.MLNominalWekaAggregatorInt}
  * which aggregates nominal values, and returns the {@code String} name of the
  * nominal class which it believes the list of Opinions to be. As most Weka
  * classifiers that do regression do not have a means of deriving confidence,
- * Void is the Quality type. If Quality is absolutely needed, then TODO should
+ * Void is the Quality type. If Quality is absolutely needed, then {@link MLWekaNumericQualityAggregator} should
  * be used.
  * 
  * @author Ian Berlot-Attwell

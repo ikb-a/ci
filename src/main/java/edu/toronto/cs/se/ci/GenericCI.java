@@ -96,6 +96,9 @@ public class GenericCI<I, O, FO, T, Q> {
 	 *            The {@link Selector} to use
 	 */
 	public GenericCI(Collection<Source<I, O, T>> sources, GenericAggregator<O, FO, T, Q> agg, Selector<I, O, T> sel) {
+		if (sources == null || agg == null || sel == null) {
+			throw new IllegalArgumentException("Null arguments are invalid");
+		}
 		this.sources = ImmutableSet.copyOf(sources);
 		this.agg = agg;
 		this.sel = sel;
@@ -116,6 +119,9 @@ public class GenericCI<I, O, FO, T, Q> {
 	 */
 	public GenericCI(Collection<Source<I, O, T>> sources, GenericAggregator<O, FO, T, Q> agg, Selector<I, O, T> sel,
 			Acceptor<FO, Q> acceptor) {
+		if (sources == null || agg == null || sel == null || acceptor == null) {
+			throw new IllegalArgumentException("Null arguments are invalid");
+		}
 		this.sources = ImmutableSet.copyOf(sources);
 		this.agg = agg;
 		this.sel = sel;
@@ -133,6 +139,9 @@ public class GenericCI<I, O, FO, T, Q> {
 	 *            The {@link Selector} to use
 	 */
 	public GenericCI(Provider<I, O, T> provider, GenericAggregator<O, FO, T, Q> agg, Selector<I, O, T> sel) {
+		if (provider == null || agg == null || sel == null) {
+			throw new IllegalArgumentException("Null arguments are invalid");
+		}
 		this.sources = ImmutableSet.copyOf(provider.provide());
 		this.agg = agg;
 		this.sel = sel;
@@ -153,6 +162,9 @@ public class GenericCI<I, O, FO, T, Q> {
 	 */
 	public GenericCI(Provider<I, O, T> provider, GenericAggregator<O, FO, T, Q> agg, Selector<I, O, T> sel,
 			Acceptor<FO, Q> acceptor) {
+		if (provider == null || agg == null || sel == null || acceptor == null) {
+			throw new IllegalArgumentException("Null arguments are invalid");
+		}
 		this.sources = ImmutableSet.copyOf(provider.provide());
 		this.agg = agg;
 		this.sel = sel;

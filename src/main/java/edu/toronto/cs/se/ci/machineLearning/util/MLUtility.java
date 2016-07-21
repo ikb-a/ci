@@ -1,5 +1,8 @@
 package edu.toronto.cs.se.ci.machineLearning.util;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 
@@ -25,8 +28,18 @@ public class MLUtility {
 	 *            The path to the file.
 	 * @return The data file as a {@link weka.core.Instances}.
 	 * @throws Exception
+	 * @throws FileNotFoundException
+	 *             Thrown if the {@code inputFilePath} is not a real path, or if
+	 *             the path does not lead to a file.
 	 */
 	public static Instances fileToInstances(String inputFilePath) throws Exception {
+		File toRead = new File(inputFilePath);
+		if (!(toRead.exists())) {
+			throw new FileNotFoundException("The file " + inputFilePath + " was not found.");
+		} else if (!toRead.isFile()) {
+			throw new FileNotFoundException(inputFilePath + " is not a path to a file.");
+		}
+
 		DataSource source = new DataSource(inputFilePath);
 		Instances data = source.getDataSet();
 		// setting class attribute if the data format does not provide this
