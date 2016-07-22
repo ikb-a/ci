@@ -1,6 +1,5 @@
 package edu.toronto.cs.se.ci;
 
-import java.io.File;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.ExecutionException;

@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -114,15 +113,25 @@ public class SimpleOpenEval extends Source<String, Boolean, double[]> {
 		classifier = new SMO();
 		this.keyword = keyword;
 		Instances wordBags = createTrainingData(positiveExamples, negativeExamples);
+		// TODO remove later
+		ArffSaver saver = new ArffSaver();
+		saver.setInstances(wordBags);
+		saver.setFile(new File(pathToSaveTrainingData));
+		saver.writeBatch();
+
 		filter = new StringToWordVector();
 		String[] options = new String[] { "-C" };
 		filter.setOptions(options);
 		this.trainingData = wordBagsToWordFrequencies(wordBags);
-
-		ArffSaver saver = new ArffSaver();
-		saver.setInstances(this.trainingData);
-		saver.setFile(new File(pathToSaveTrainingData));
-		saver.writeBatch();
+		// TODO: Remove later
+		try {
+			saver = new ArffSaver();
+			saver.setInstances(this.trainingData);
+			saver.setFile(new File("./filteredResults.arff"));
+			saver.writeBatch();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 		classifier.buildClassifier(this.trainingData);
 	}
@@ -133,9 +142,9 @@ public class SimpleOpenEval extends Source<String, Boolean, double[]> {
 		return Filter.useFilter(wordBags, filter);
 	}
 
-	// training data would be numeric, each source is the name of a word, and
-	// it's value is the number of occurrences in the word bag
-	public SimpleOpenEval(Instances wordBagTrainingData, String keyword) throws Exception {
+	// training data would be text, one source which is text corpus
+	// class is true or false
+	public SimpleOpenEval(Instances wordBags, String keyword) throws Exception {
 		// search = new BingSearchJSON();
 		search = new GoogleCSESearchJSON();
 		classifier = new SMO();
@@ -153,7 +162,7 @@ public class SimpleOpenEval extends Source<String, Boolean, double[]> {
 			throw new RuntimeException(e);
 		}
 		// TODO: check how to copy word bag
-		this.trainingData = wordBagTrainingData;
+		this.trainingData = wordBagsToWordFrequencies(wordBags);
 		classifier.buildClassifier(this.trainingData);
 	}
 
@@ -187,16 +196,6 @@ public class SimpleOpenEval extends Source<String, Boolean, double[]> {
 
 		addWordBagInstances(posOrNegWordBags, "true", positiveWordBags, featureVector);
 		addWordBagInstances(posOrNegWordBags, "false", negativeWordBags, featureVector);
-
-		// TODO remove later
-		ArffSaver saver = new ArffSaver();
-		saver.setInstances(posOrNegWordBags);
-		try {
-			saver.setFile(new File("./rawResults.arff"));
-			saver.writeBatch();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 		return posOrNegWordBags;
 	}
 
@@ -327,7 +326,9 @@ public class SimpleOpenEval extends Source<String, Boolean, double[]> {
 	@Override
 	public Opinion<Boolean, double[]> getOpinion(String args) throws UnknownException {
 		List<String> text = getText(args);
-		
+		Map<String, List<String>> argToText = new HashMap<String, List<String>>();
+		argToText.put(args, text);
+
 		return null;
 	}
 
@@ -341,7 +342,7 @@ public class SimpleOpenEval extends Source<String, Boolean, double[]> {
 		List<String> texts = new ArrayList<String>();
 
 		SearchResults results = null;
-		
+
 		try {
 			results = search.search(this.keyword + " " + example);
 		} catch (IOException e) {
@@ -375,13 +376,13 @@ public class SimpleOpenEval extends Source<String, Boolean, double[]> {
 			return "";
 		}
 	}
-	
-	public int getPagesToCheck(){
+
+	public int getPagesToCheck() {
 		return pagesToCheck;
 	}
-	
-	public void setPagesToCheck(int numOfPages){
-		if(numOfPages<0 || numOfPages > 10){
+
+	public void setPagesToCheck(int numOfPages) {
+		if (numOfPages < 0 || numOfPages > 10) {
 			throw new IllegalArgumentException();
 		}
 		this.pagesToCheck = numOfPages;

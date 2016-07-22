@@ -1,6 +1,10 @@
 package edu.toronto.cs.se.ci;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -57,4 +61,10 @@ public class AppTest
     	for(String file: files)
     		System.out.println(file);
     }
+    
+    /*
+    public void testFilePresence() throws FileNotFoundException{
+    	File file = new File("./cpu.arff");
+    	BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+    }*/
 }
