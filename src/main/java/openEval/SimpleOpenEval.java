@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,7 +20,6 @@ import edu.toronto.cs.se.ci.Source;
 import edu.toronto.cs.se.ci.UnknownException;
 import edu.toronto.cs.se.ci.budget.Expenditure;
 import edu.toronto.cs.se.ci.data.Opinion;
-import edu.toronto.cs.se.ci.utils.searchEngine.BingSearchJSON;
 import edu.toronto.cs.se.ci.utils.searchEngine.GenericSearchEngine;
 import edu.toronto.cs.se.ci.utils.searchEngine.GoogleCSESearchJSON;
 import edu.toronto.cs.se.ci.utils.searchEngine.SearchResult;
@@ -30,15 +30,17 @@ import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.SparseInstance;
 import weka.core.converters.ArffSaver;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.StringToWordVector;
 
 //TODO: make way to store/load search results, preferably remembering keyword used
-public class SimpleOpenEval extends Source<String, Boolean, double[]> {
+public class SimpleOpenEval extends Source<String, Boolean, Double> {
 	GenericSearchEngine search;
 	String keyword;
 	StringToWordVector filter;
+	Instances unfilteredTrainingData;
 	Instances trainingData;
 	Classifier classifier;
 	int pagesToCheck = 1;
@@ -101,8 +103,8 @@ public class SimpleOpenEval extends Source<String, Boolean, double[]> {
 		String[] options = new String[] { "-C" };
 		filter.setOptions(options);
 		// change to create Instances method;
-		Instances wordBags = createTrainingData(positiveExamples, negativeExamples);
-		this.trainingData = wordBagsToWordFrequencies(wordBags);
+		this.unfilteredTrainingData = createTrainingData(positiveExamples, negativeExamples);
+		this.trainingData = wordBagsToWordFrequencies(this.unfilteredTrainingData);
 		classifier.buildClassifier(this.trainingData);
 	}
 
@@ -112,17 +114,17 @@ public class SimpleOpenEval extends Source<String, Boolean, double[]> {
 		search = new GoogleCSESearchJSON();
 		classifier = new SMO();
 		this.keyword = keyword;
-		Instances wordBags = createTrainingData(positiveExamples, negativeExamples);
+		this.unfilteredTrainingData = createTrainingData(positiveExamples, negativeExamples);
 		// TODO remove later
 		ArffSaver saver = new ArffSaver();
-		saver.setInstances(wordBags);
+		saver.setInstances(this.unfilteredTrainingData);
 		saver.setFile(new File(pathToSaveTrainingData));
 		saver.writeBatch();
 
 		filter = new StringToWordVector();
 		String[] options = new String[] { "-C" };
 		filter.setOptions(options);
-		this.trainingData = wordBagsToWordFrequencies(wordBags);
+		this.trainingData = wordBagsToWordFrequencies(this.unfilteredTrainingData);
 		// TODO: Remove later
 		try {
 			saver = new ArffSaver();
@@ -162,6 +164,7 @@ public class SimpleOpenEval extends Source<String, Boolean, double[]> {
 			throw new RuntimeException(e);
 		}
 		// TODO: check how to copy word bag
+		this.unfilteredTrainingData = wordBags;
 		this.trainingData = wordBagsToWordFrequencies(wordBags);
 		classifier.buildClassifier(this.trainingData);
 	}
@@ -324,16 +327,84 @@ public class SimpleOpenEval extends Source<String, Boolean, double[]> {
 	}
 
 	@Override
-	public Opinion<Boolean, double[]> getOpinion(String args) throws UnknownException {
+	public Opinion<Boolean, Double> getOpinion(String args) throws UnknownException {
 		List<String> text = getText(args);
-		Map<String, List<String>> argToText = new HashMap<String, List<String>>();
-		argToText.put(args, text);
+		Map<String, List<String>> argsToText = new HashMap<String, List<String>>();
+		argsToText.put(args, text);
+		List<String> wordBags = mapOfTextToBags(argsToText);
 
-		return null;
+		// Create a corpus attribute of the Weka type string attribute
+		List<String> textValues = null;
+		Attribute textCorpus = new Attribute("corpus", textValues);
+
+		// Create a nominal attribute to function as the Class attribute
+		List<String> classValues = new ArrayList<String>(2);
+		classValues.add("true");
+		classValues.add("false");
+		Attribute classAttribute = new Attribute("class", classValues);
+
+		ArrayList<Attribute> featureVector = new ArrayList<Attribute>(2);
+		featureVector.add(textCorpus);
+		featureVector.add(classAttribute);
+
+		Instances wordBagsAsInstances = new Instances("posOrNegWordBags", featureVector, wordBags.size());
+
+		// TODO: determine if we should use weighted or unweighed vote
+		for (String wordBag : wordBags) {
+			// Create sparse instance with 2 attributes (corpus & class)
+			SparseInstance data = new SparseInstance(2);
+			data.setDataset(wordBagsAsInstances);
+			data.setValue(textCorpus, wordBag);
+			data.setMissing(classAttribute);
+			wordBagsAsInstances.add(data);
+		}
+
+		Instances wordFrequenciesAsInstances = null;
+		try {
+			wordFrequenciesAsInstances = Filter.useFilter(wordBagsAsInstances, filter);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new UnknownException(e);
+		}
+
+		Enumeration<Instance> wordFrequencies = wordFrequenciesAsInstances.enumerateInstances();
+		int positiveWordBags = 0;
+		int negativeWordBags = 0;
+		while (wordFrequencies.hasMoreElements()) {
+			Instance wordFrequency = wordFrequencies.nextElement();
+			try {
+				double[] distribution = classifier.distributionForInstance(wordFrequency);
+				double classification = classifier.classifyInstance(wordFrequency);
+
+				assert (distribution.length == 2);
+				String responseAsString = trainingData.classAttribute().value((int) classification);
+				if (responseAsString.equals("true")) {
+					positiveWordBags++;
+				} else if (responseAsString.equals("false")) {
+					negativeWordBags++;
+				} else {
+					throw new RuntimeException("Invalid value for classification: " + responseAsString);
+				}
+
+			} catch (Exception e) {
+				System.out.println("Failed to classify frequency");
+				e.printStackTrace();
+			}
+		}
+
+		if (positiveWordBags == negativeWordBags) {
+			throw new UnknownException();
+		} else if (positiveWordBags > negativeWordBags) {
+			double confidence = ((double) positiveWordBags) / (positiveWordBags + negativeWordBags);
+			return new Opinion<Boolean, Double>(true, confidence, this);
+		} else {
+			double confidence = ((double) negativeWordBags) / (positiveWordBags + negativeWordBags);
+			return new Opinion<Boolean, Double>(false, confidence, this);
+		}
 	}
 
 	@Override
-	public double[] getTrust(String args, Optional<Boolean> value) {
+	public Double getTrust(String args, Optional<Boolean> value) {
 		return null;
 	}
 
