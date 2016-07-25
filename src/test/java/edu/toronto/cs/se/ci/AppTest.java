@@ -64,7 +64,8 @@ public class AppTest
     
     /*
     public void testFilePresence() throws FileNotFoundException{
-    	File file = new File("./cpu.arff");
+    	File file = new File("./target/test-classes/cpu.arff");
+    	System.out.println("Abs path: "+file.getAbsolutePath());
     	BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
     }*/
 }

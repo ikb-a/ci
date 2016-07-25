@@ -160,7 +160,7 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 
 		Instances data = MLUtility.fileToInstances("./Fictional1.arff");
 		SimpleOpenEval bob = new SimpleOpenEval(data, "");
-		System.out.println(bob.getOpinion("Stephen Belford"));
+		System.out.println(bob.getOpinion("fsdlkj lsjfls"));
 	}
 
 	/**
