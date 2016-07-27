@@ -90,6 +90,8 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 	 * that can be requested, this variable must be between 1 and 10 inclusive.
 	 */
 	int pagesToCheck = 1;
+
+	String nameSuffix = "";
 	// TODO: eventually change to reading from text file
 	/**
 	 * The list of all stop words to be ignored.
@@ -794,5 +796,14 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 	public void setClassifier(Classifier classifier) throws Exception {
 		this.classifier = classifier;
 		classifier.buildClassifier(trainingData);
+	}
+
+	public void setNameSuffix(String newSuffix) {
+		this.nameSuffix = newSuffix;
+	}
+
+	@Override
+	public String getName() {
+		return super.getName() + this.nameSuffix;
 	}
 }
