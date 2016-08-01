@@ -279,6 +279,71 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 	}
 
 	/**
+	 * Creates a new SimpleOpenEval. This may take some time, and will most
+	 * likely result in some errors being printed to the console as some
+	 * webpages will not be readable.
+	 * 
+	 * @param positiveExamples
+	 *            A list of positive arguments for the predicate being defined.
+	 *            For example, if this SimpleOpenEval is meant to represent the
+	 *            predicate isBlue(item) then some examples may be "water",
+	 *            "sky", "ocean", "saphire", etc...
+	 * @param negativeExamples
+	 *            A list of negative examples for the predicate being defined.
+	 *            Following from the above IsBlue(item) predicate example, some
+	 *            negative examples might include "grass", "sun", "mayonnaise",
+	 *            "mushroom", "pavement", etc...
+	 * @param keyword
+	 *            The keyword to be used in searching. This value cannot be
+	 *            {@code null}, but it can be the empty string. It also must be
+	 *            a single word. For example, the predicate IsBlue(item) might
+	 *            use "colour" as a keyword.
+	 * @param pathToSaveTrainingData
+	 *            This is a path to save the word bag data. This file can then
+	 *            be used with {@link #SimpleOpenEval(Instances, String)} to
+	 *            circumvent the need to search all of examples again.
+	 * @param search
+	 *            This search engine is used in place of the default search
+	 *            engine
+	 * @throws Exception
+	 *             An exception can be thrown if: WEKA could not set the options
+	 *             on the {@link #filter}, WEKA could not save the word bag
+	 *             data, WEKA could not apply the filter on the word bags, or if
+	 *             WEKA could not train the classifier on the produced word
+	 *             frequency data.
+	 */
+	public SimpleOpenEval(List<String> positiveExamples, List<String> negativeExamples, String keyword,
+			String pathToSaveTrainingData, GenericSearchEngine search) throws Exception {
+		this.search = search;
+		classifier = new SMO();
+		this.keyword = keyword;
+		// creates word bag data
+		this.unfilteredTrainingData = createTrainingData(positiveExamples, negativeExamples);
+
+		// Save the word bag data
+		ArffSaver saver = new ArffSaver();
+		saver.setInstances(this.unfilteredTrainingData);
+		saver.setFile(new File(pathToSaveTrainingData));
+		saver.writeBatch();
+
+		filter = new StringToWordVector();
+		String[] options = new String[] { "-C" };
+		filter.setOptions(options);
+		this.trainingData = wordBagsToWordFrequencies(this.unfilteredTrainingData);
+		// TODO: Remove later
+		try {
+			saver = new ArffSaver();
+			saver.setInstances(this.trainingData);
+			saver.setFile(new File("./filteredResults.arff"));
+			saver.writeBatch();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		classifier.buildClassifier(this.trainingData);
+	}
+
+	/**
 	 * Takes an Instances object where each instance is a String attribute
 	 * called "corpus" that contains the word bag as a String of space seperated
 	 * words, and a Nominal Attribute which is either "true" or "false".
