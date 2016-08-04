@@ -100,7 +100,8 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 	boolean memoizeLinkContents = true;
 	Map<String, String> memoizedLinkContents;
 	public static final String classAttributeName = "Class_Attribute_For_SimpleOpenEval";
-	//TODO: modify so that activating memoization forces the user to give a path
+	// TODO: modify so that activating memoization forces the user to give a
+	// path
 	public static final String linkContentsPath = "./src/main/resources/data/monthData/OpenEval/LinkContents.txt";
 	// TODO: eventually change to reading from text file
 	/**
@@ -222,7 +223,7 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		 * Sets the filter so that it produces the Count of each word, rather
 		 * than it's presence
 		 */
-		String[] options = new String[] { "-C" };
+		String[] options = new String[] { "-C", "-L" };
 		filter.setOptions(options);
 		/*
 		 * Uses the positive and negative training data to create an instances
@@ -294,7 +295,7 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		saver.writeBatch();
 
 		filter = new StringToWordVector();
-		String[] options = new String[] { "-C" };
+		String[] options = new String[] { "-C", "-L" };
 		filter.setOptions(options);
 		this.trainingData = wordBagsToWordFrequencies(this.unfilteredTrainingData);
 		this.trainingData.setClass(this.trainingData.attribute(classAttributeName));
@@ -369,7 +370,7 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		saver.writeBatch();
 
 		filter = new StringToWordVector();
-		String[] options = new String[] { "-C" };
+		String[] options = new String[] { "-C", "-L" };
 		filter.setOptions(options);
 		this.trainingData = wordBagsToWordFrequencies(this.unfilteredTrainingData);
 		this.trainingData.setClass(this.trainingData.attribute(classAttributeName));
@@ -445,7 +446,7 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		// TODO mark produced training data by search engine?
 		filter = new StringToWordVector();
 		// set the option so that word count rather than word presence is used.
-		String[] options = new String[] { "-C" };
+		String[] options = new String[] { "-C", "-L" };
 		try {
 			filter.setOptions(options);
 		} catch (Exception e) {
@@ -455,8 +456,6 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		}
 		// TODO: check how to copy word bag
 		this.unfilteredTrainingData = wordBags;
-		System.out.println(wordBags.attribute(0));
-		System.out.println(wordBags.attribute(1));
 		this.unfilteredTrainingData.setClass(this.unfilteredTrainingData.attribute(classAttributeName));
 		this.trainingData = wordBagsToWordFrequencies(wordBags);
 		this.trainingData.setClass(this.trainingData.attribute(classAttributeName));
@@ -816,7 +815,8 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 
 		if (positiveWordBags == negativeWordBags) {
 			// if the unweighed vote is a tie, throw unknown
-			throw new UnknownException();
+			throw new UnknownException(
+					"Positive Word Bags: " + positiveWordBags + " Negative Word Bags " + negativeWordBags);
 		} else if (positiveWordBags > negativeWordBags) {
 			double confidence = ((double) positiveWordBags) / (positiveWordBags + negativeWordBags);
 			return new Opinion<Boolean, Double>(true, confidence, this);
