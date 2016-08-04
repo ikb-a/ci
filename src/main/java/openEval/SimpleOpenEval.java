@@ -1,7 +1,12 @@
 package openEval;
 
+import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -92,6 +97,11 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 	int pagesToCheck = 1;
 
 	String nameSuffix = "";
+	boolean memoizeLinkContents = true;
+	Map<String, String> memoizedLinkContents;
+	public static final String classAttributeName = "Class_Attribute_For_SimpleOpenEval";
+	//TODO: modify so that activating memoization forces the user to give a path
+	public static final String linkContentsPath = "./src/main/resources/data/monthData/OpenEval/LinkContents.txt";
 	// TODO: eventually change to reading from text file
 	/**
 	 * The list of all stop words to be ignored.
@@ -194,6 +204,16 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 	public SimpleOpenEval(List<String> positiveExamples, List<String> negativeExamples, String keyword)
 			throws Exception {
 		// search = new BingSearchJSON();
+
+		if (this.memoizeLinkContents) {
+			try {
+				this.memoizedLinkContents = loadMemoizedContents(linkContentsPath);
+			} catch (EOFException e) {
+				this.memoizedLinkContents = new HashMap<String, String>();
+			}
+		} else {
+			this.memoizedLinkContents = new HashMap<String, String>();
+		}
 		search = new GoogleCSESearchJSON();
 		classifier = new SMO();
 		this.keyword = keyword;
@@ -210,8 +230,10 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		 * derived from a positive or negative example
 		 */
 		this.unfilteredTrainingData = createTrainingData(positiveExamples, negativeExamples);
+		this.unfilteredTrainingData.setClass(this.unfilteredTrainingData.attribute(classAttributeName));
 		// convert the instance of word bags to instances of word counts
 		this.trainingData = wordBagsToWordFrequencies(this.unfilteredTrainingData);
+		this.trainingData.setClass(this.trainingData.attribute(classAttributeName));
 		classifier.buildClassifier(this.trainingData);
 	}
 
@@ -249,11 +271,21 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 	public SimpleOpenEval(List<String> positiveExamples, List<String> negativeExamples, String keyword,
 			String pathToSaveTrainingData) throws Exception {
 		// search = new BingSearchJSON();
+		if (this.memoizeLinkContents) {
+			try {
+				this.memoizedLinkContents = loadMemoizedContents(linkContentsPath);
+			} catch (EOFException e) {
+				this.memoizedLinkContents = new HashMap<String, String>();
+			}
+		} else {
+			this.memoizedLinkContents = new HashMap<String, String>();
+		}
 		search = new GoogleCSESearchJSON();
 		classifier = new SMO();
 		this.keyword = keyword;
 		// creates word bag data
 		this.unfilteredTrainingData = createTrainingData(positiveExamples, negativeExamples);
+		this.unfilteredTrainingData.setClass(this.unfilteredTrainingData.attribute(classAttributeName));
 
 		// Save the word bag data
 		ArffSaver saver = new ArffSaver();
@@ -265,6 +297,7 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		String[] options = new String[] { "-C" };
 		filter.setOptions(options);
 		this.trainingData = wordBagsToWordFrequencies(this.unfilteredTrainingData);
+		this.trainingData.setClass(this.trainingData.attribute(classAttributeName));
 		// TODO: Remove later
 		try {
 			saver = new ArffSaver();
@@ -314,12 +347,21 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 	 */
 	public SimpleOpenEval(List<String> positiveExamples, List<String> negativeExamples, String keyword,
 			String pathToSaveTrainingData, GenericSearchEngine search) throws Exception {
+		if (this.memoizeLinkContents) {
+			try {
+				this.memoizedLinkContents = loadMemoizedContents(linkContentsPath);
+			} catch (EOFException e) {
+				this.memoizedLinkContents = new HashMap<String, String>();
+			}
+		} else {
+			this.memoizedLinkContents = new HashMap<String, String>();
+		}
 		this.search = search;
 		classifier = new SMO();
 		this.keyword = keyword;
 		// creates word bag data
 		this.unfilteredTrainingData = createTrainingData(positiveExamples, negativeExamples);
-
+		this.unfilteredTrainingData.setClass(this.unfilteredTrainingData.attribute(classAttributeName));
 		// Save the word bag data
 		ArffSaver saver = new ArffSaver();
 		saver.setInstances(this.unfilteredTrainingData);
@@ -330,6 +372,7 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		String[] options = new String[] { "-C" };
 		filter.setOptions(options);
 		this.trainingData = wordBagsToWordFrequencies(this.unfilteredTrainingData);
+		this.trainingData.setClass(this.trainingData.attribute(classAttributeName));
 		// TODO: Remove later
 		try {
 			saver = new ArffSaver();
@@ -386,6 +429,15 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 	 *             Thrown if WEKA cannot filter or train on {@code wordBags}.
 	 */
 	public SimpleOpenEval(Instances wordBags, String keyword) throws Exception {
+		if (this.memoizeLinkContents) {
+			try {
+				this.memoizedLinkContents = loadMemoizedContents(linkContentsPath);
+			} catch (EOFException e) {
+				this.memoizedLinkContents = new HashMap<String, String>();
+			}
+		} else {
+			this.memoizedLinkContents = new HashMap<String, String>();
+		}
 		// search = new BingSearchJSON();
 		search = new GoogleCSESearchJSON();
 		classifier = new SMO();
@@ -403,8 +455,19 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		}
 		// TODO: check how to copy word bag
 		this.unfilteredTrainingData = wordBags;
+		System.out.println(wordBags.attribute(0));
+		System.out.println(wordBags.attribute(1));
+		this.unfilteredTrainingData.setClass(this.unfilteredTrainingData.attribute(classAttributeName));
 		this.trainingData = wordBagsToWordFrequencies(wordBags);
+		this.trainingData.setClass(this.trainingData.attribute(classAttributeName));
 		classifier.buildClassifier(this.trainingData);
+	}
+
+	private Attribute getClassAttribute() {
+		List<String> classValues = new ArrayList<String>(2);
+		classValues.add("true");
+		classValues.add("false");
+		return new Attribute(classAttributeName, classValues);
 	}
 
 	/**
@@ -429,7 +492,7 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		mapExamplesToText(negativeExampleText, negativeExamples);
 		List<String> negativeWordBags = mapOfTextToBags(negativeExampleText);
 		negativeExampleText = null;
-		
+
 		mapExamplesToText(positiveExampleText, positiveExamples);
 		List<String> positiveWordBags = mapOfTextToBags(positiveExampleText);
 		positiveExampleText = null;
@@ -448,10 +511,7 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		Attribute textCorpus = new Attribute("corpus", textValues);
 
 		// Create a nominal attribute to function as the Class attribute
-		List<String> classValues = new ArrayList<String>(2);
-		classValues.add("true");
-		classValues.add("false");
-		Attribute classAttribute = new Attribute("class", classValues);
+		Attribute classAttribute = getClassAttribute();
 
 		/*
 		 * defines the feature vector that each instance in the Instances object
@@ -701,10 +761,7 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		Attribute textCorpus = new Attribute("corpus", textValues);
 
 		// Create a nominal attribute to function as the Class attribute
-		List<String> classValues = new ArrayList<String>(2);
-		classValues.add("true");
-		classValues.add("false");
-		Attribute classAttribute = new Attribute("class", classValues);
+		Attribute classAttribute = getClassAttribute();
 
 		ArrayList<Attribute> featureVector = new ArrayList<Attribute>(2);
 		featureVector.add(textCorpus);
@@ -730,7 +787,6 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 			e.printStackTrace();
 			throw new UnknownException(e);
 		}
-
 		Enumeration<Instance> wordFrequencies = wordFrequenciesAsInstances.enumerateInstances();
 		int positiveWordBags = 0;
 		int negativeWordBags = 0;
@@ -819,12 +875,23 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 	 * Connects to and reads {@code link}
 	 */
 	private String readLink(String link) {
+		if (this.memoizeLinkContents && this.memoizedLinkContents.containsKey(link)) {
+			return this.memoizedLinkContents.get(link);
+		}
+
 		try {
 			Document doc = Jsoup.connect(link).get();
-			return doc.body().text();
+			String result = doc.body().text();
+			if (memoizeLinkContents) {
+				memoizedLinkContents.put(link, result);
+			}
+			return result;
 		} catch (Exception e) {
-			System.out.println("Reading " + link + " failed");
-			e.printStackTrace();
+			System.out.println("Reading " + link + " failed: " + e);
+			// e.printStackTrace();
+			if (memoizeLinkContents) {
+				memoizedLinkContents.put(link, "");
+			}
 			return "";
 		}
 	}
@@ -873,5 +940,32 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 	@Override
 	public String getName() {
 		return super.getName() + this.nameSuffix;
+	}
+
+	public void setMemoizeLinkContents(boolean memoize) {
+		this.memoizeLinkContents = memoize;
+	}
+
+	public Map<String, String> loadMemoizedContents(String path) throws IOException, ClassNotFoundException {
+		File f = new File(path);
+		if (!f.exists()) {
+			f.createNewFile();
+		}
+
+		try (FileInputStream fis = new FileInputStream(path)) {
+			ObjectInputStream ois = new ObjectInputStream(fis);
+			@SuppressWarnings("unchecked")
+			Map<String, String> result = (Map<String, String>) ois.readObject();
+			ois.close();
+			return result;
+		}
+	}
+
+	public void saveMemoizedContents() throws IOException {
+		try (FileOutputStream fos = new FileOutputStream(linkContentsPath)) {
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject(this.memoizedLinkContents);
+			oos.close();
+		}
 	}
 }
