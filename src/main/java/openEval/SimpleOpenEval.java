@@ -426,8 +426,13 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		 * produced by 1) searching "{@link keyord} {@code example}" 2)Reading
 		 * the contents of each website produced in 1)
 		 */
-		mapExamplesToText(positiveExampleText, positiveExamples);
 		mapExamplesToText(negativeExampleText, negativeExamples);
+		List<String> negativeWordBags = mapOfTextToBags(negativeExampleText);
+		negativeExampleText = null;
+		
+		mapExamplesToText(positiveExampleText, positiveExamples);
+		List<String> positiveWordBags = mapOfTextToBags(positiveExampleText);
+		positiveExampleText = null;
 
 		/*
 		 * Converts the above Map into a list of word bags. The a single word
@@ -437,8 +442,6 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		 * 3) removing the stop words, the words in the example, and the
 		 * keyword.
 		 */
-		List<String> positiveWordBags = mapOfTextToBags(positiveExampleText);
-		List<String> negativeWordBags = mapOfTextToBags(negativeExampleText);
 
 		// Create a corpus attribute of the Weka type string attribute
 		List<String> textValues = null;

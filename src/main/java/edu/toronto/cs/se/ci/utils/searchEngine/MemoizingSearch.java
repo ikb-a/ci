@@ -19,9 +19,9 @@ import org.json.JSONObject;
  * @author Ian Berlot-Attwell
  *
  */
-public class MemoizingSearchJSON implements JSONSearchEngine {
+public class MemoizingSearch implements GenericSearchEngine {
 	// The search engine being wrapped
-	JSONSearchEngine search;
+	GenericSearchEngine search;
 	// The json object containing all previous searches
 	JSONObject json;
 	// The file containing the json object on the hard drive
@@ -29,7 +29,7 @@ public class MemoizingSearchJSON implements JSONSearchEngine {
 
 	// demo
 	public static void main(String[] args) throws IOException {
-		MemoizingSearchJSON search = new MemoizingSearchJSON("./googleMemoization.json", new GoogleCSESearchJSON());
+		MemoizingSearch search = new MemoizingSearch("./googleMemoization.json", new GoogleCSESearchJSON());
 		System.out.println(search.search("avocado"));
 		System.out.println(search.search("pineaple"));
 		System.out.println(search.search("grapes"));
@@ -50,13 +50,16 @@ public class MemoizingSearchJSON implements JSONSearchEngine {
 	 *            The search engine to memoize.
 	 * @throws IOException
 	 */
-	public MemoizingSearchJSON(String path, JSONSearchEngine search) throws IOException {
+	public MemoizingSearch(String path, GenericSearchEngine search) throws IOException {
 		this.search = search;
 		file = new File(path);
 		String fileContents = readFile(file);
 		if (fileContents.equals("")) {
 			this.json = new JSONObject();
 		} else {
+			if (!fileContents.startsWith("{")) {
+				fileContents = fileContents.substring(fileContents.indexOf("{"));
+			}
 			this.json = new JSONObject(fileContents);
 		}
 	}
@@ -86,25 +89,10 @@ public class MemoizingSearchJSON implements JSONSearchEngine {
 	@Override
 	public SearchResults search(String searchString, int pageNumber) throws IOException {
 		/*
-		 * In the file, the JSON's format is as follows:
-		 * {
-	"searchString":{
-			"hits":0,
-			"pageNumber":0,
-			"query":"query",
-			"results":[
-			{
-			"title": "title",
-			"link": "link",
-			"snippet": "snippet"
-			},
-			{
-			"title": "title",
-			"link": "link",
-			"snippet": "snippet"
-			}
-			]
-	}
+		 * In the file, the JSON's format is as follows: { "searchString":{
+		 * "hits":0, "pageNumber":0, "query":"query", "results":[ { "title":
+		 * "title", "link": "link", "snippet": "snippet" }, { "title": "title",
+		 * "link": "link", "snippet": "snippet" } ] }
 		 */
 
 		if (json.has(searchString)) {
