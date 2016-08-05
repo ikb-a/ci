@@ -887,7 +887,7 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 			}
 			return result;
 		} catch (Exception e) {
-			System.out.println("Reading " + link + " failed: " + e);
+			// System.out.println("Reading " + link + " failed: " + e);
 			// e.printStackTrace();
 			if (memoizeLinkContents) {
 				memoizedLinkContents.put(link, "");
@@ -946,6 +946,10 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		this.memoizeLinkContents = memoize;
 	}
 
+	public boolean getMemoizeLinkContents() {
+		return this.memoizeLinkContents;
+	}
+
 	public Map<String, String> loadMemoizedContents(String path) throws IOException, ClassNotFoundException {
 		File f = new File(path);
 		if (!f.exists()) {
@@ -958,6 +962,8 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 			Map<String, String> result = (Map<String, String>) ois.readObject();
 			ois.close();
 			return result;
+		} catch (EOFException e) {
+			return new HashMap<String, String>();
 		}
 	}
 

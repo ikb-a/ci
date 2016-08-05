@@ -107,7 +107,6 @@ public class MemoizingSearch implements GenericSearchEngine {
 			return new SearchResults(jsonSearchResults.getInt("hits"), listOfResult,
 					jsonSearchResults.getString("query"), jsonSearchResults.getInt("pageNumber"));
 		}
-
 		SearchResults results = search.search(searchString, pageNumber);
 		JSONArray jsonResults = new JSONArray();
 		for (SearchResult result : results) {
