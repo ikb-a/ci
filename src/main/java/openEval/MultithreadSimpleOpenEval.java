@@ -9,13 +9,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jsoup.Jsoup;
@@ -99,8 +99,9 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 	int pagesToCheck = 1;
 
 	String nameSuffix = "";
-	boolean memoizeLinkContents = false;
-	Map<String, String> memoizedLinkContents;
+	boolean memoizeLinkContents = true;
+	boolean verbose = false;
+	ConcurrentHashMap<String, String> memoizedLinkContents;
 	public static final String classAttributeName = "Class_Attribute_For_SimpleOpenEval";
 	// TODO: modify so that activating memoization forces the user to give a
 	// path
@@ -142,10 +143,10 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			try {
 				this.memoizedLinkContents = loadMemoizedContents(linkContentsPath);
 			} catch (EOFException e) {
-				this.memoizedLinkContents = new HashMap<String, String>();
+				this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 			}
 		} else {
-			this.memoizedLinkContents = new HashMap<String, String>();
+			this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 		}
 		search = new GoogleCSESearchJSON();
 		classifier = new SMO();
@@ -208,10 +209,10 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			try {
 				this.memoizedLinkContents = loadMemoizedContents(linkContentsPath);
 			} catch (EOFException e) {
-				this.memoizedLinkContents = new HashMap<String, String>();
+				this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 			}
 		} else {
-			this.memoizedLinkContents = new HashMap<String, String>();
+			this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 		}
 		search = new GoogleCSESearchJSON();
 		classifier = new SMO();
@@ -284,33 +285,38 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			try {
 				this.memoizedLinkContents = loadMemoizedContents(linkContentsPath);
 			} catch (EOFException e) {
-				this.memoizedLinkContents = new HashMap<String, String>();
+				this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 			}
 		} else {
-			this.memoizedLinkContents = new HashMap<String, String>();
+			this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 		}
 		this.search = search;
 		classifier = new SMO();
 		this.keyword = keyword;
 		// creates word bag data
-		System.out.println("M. Creating Training Data");
+		if (verbose)
+			System.out.println("M. Creating Training Data");
 		this.unfilteredTrainingData = createTrainingData(positiveExamples, negativeExamples);
 		this.unfilteredTrainingData.setClass(this.unfilteredTrainingData.attribute(classAttributeName));
-		System.out.println("M. Saving unfiltered data");
+		if (verbose)
+			System.out.println("M. Saving unfiltered data");
 		// Save the word bag data
 		ArffSaver saver = new ArffSaver();
 		saver.setInstances(this.unfilteredTrainingData);
 		saver.setFile(new File(pathToSaveTrainingData));
 		saver.writeBatch();
 
-		System.out.println("M. Filtering data");
+		if (verbose)
+			System.out.println("M. Filtering data");
 		filter = new StringToWordVector();
 		String[] options = new String[] { "-C", "-L" };
 		filter.setOptions(options);
 		this.trainingData = wordBagsToWordFrequencies(this.unfilteredTrainingData);
 		this.trainingData.setClass(this.trainingData.attribute(classAttributeName));
 		// TODO: Remove later
-		System.out.println("M. Saving filtered data");
+
+		if (verbose)
+			System.out.println("M. Saving filtered data");
 		try {
 			saver = new ArffSaver();
 			saver.setInstances(this.trainingData);
@@ -319,9 +325,11 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println("M. Training Classifier");
+		if (verbose)
+			System.out.println("M. Training Classifier");
 		classifier.buildClassifier(this.trainingData);
-		System.out.println("M. done");
+		if (verbose)
+			System.out.println("M. done");
 	}
 
 	/**
@@ -371,10 +379,10 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			try {
 				this.memoizedLinkContents = loadMemoizedContents(linkContentsPath);
 			} catch (EOFException e) {
-				this.memoizedLinkContents = new HashMap<String, String>();
+				this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 			}
 		} else {
-			this.memoizedLinkContents = new HashMap<String, String>();
+			this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 		}
 		// search = new BingSearchJSON();
 		search = new GoogleCSESearchJSON();
@@ -413,12 +421,15 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 	 * "class" is set as the Class Attribute in the Instances object returned.
 	 */
 	private Instances createTrainingData(List<String> positiveExamples, List<String> negativeExamples) {
-		System.out.println("M. Retrieving positive word bags");
-		List<String> positiveWordBags = getWordBags(positiveExamples, numOfLinkThreads);
-		System.out.println("M. Retrieving negative word bags");
-		List<String> negativeWordBags = getWordBags(negativeExamples, numOfLinkThreads);
+		if (verbose)
+			System.out.println("M. Retrieving positive word bags");
+		List<WordBagAndArg> positiveWordBags = getWordBags(positiveExamples, numOfLinkThreads);
+		if (verbose)
+			System.out.println("M. Retrieving negative word bags");
+		List<WordBagAndArg> negativeWordBags = getWordBags(negativeExamples, numOfLinkThreads);
 
-		System.out.println("M. Creating attributes");
+		if (verbose)
+			System.out.println("M. Creating attributes");
 		// Create a corpus attribute of the Weka type string attribute
 		List<String> textValues = null;
 		Attribute textCorpus = new Attribute("corpus", textValues);
@@ -434,7 +445,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		featureVector.add(textCorpus);
 		featureVector.add(classAttribute);
 
-		System.out.println("M. Creating Instance");
+		if (verbose)
+			System.out.println("M. Creating Instance");
 
 		/*
 		 * Creates the Instances object in which each contained Instance will
@@ -444,7 +456,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		Instances posOrNegWordBags = new Instances("posOrNegWordBags", featureVector,
 				positiveWordBags.size() + negativeWordBags.size());
 
-		System.out.println("M. Adding bags to Instance");
+		if (verbose)
+			System.out.println("M. Adding bags to Instance");
 		/*
 		 * Adds positive and negative word bags to the Instances. Positive word
 		 * bags are given a "class" value of "true", negative word bags are
@@ -477,14 +490,14 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 	 *            added
 	 * @param featureVector
 	 */
-	private void addWordBagInstances(Instances posOrNegWordBags, String string, List<String> wordBags,
+	private void addWordBagInstances(Instances posOrNegWordBags, String string, List<WordBagAndArg> wordBags,
 			ArrayList<Attribute> featureVector) {
 		assert (string.equals("true") || string.equals("false"));
 
-		for (String bag : wordBags) {
+		for (WordBagAndArg bag : wordBags) {
 			Instance toAdd = new DenseInstance(2);
 			// set corpus
-			toAdd.setValue(featureVector.get(0), bag);
+			toAdd.setValue(featureVector.get(0), bag.getWordBag());
 			// set class value
 			toAdd.setValue(featureVector.get(1), string);
 			posOrNegWordBags.add(toAdd);
@@ -506,7 +519,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 	public Opinion<Boolean, Double> getOpinion(String args) throws UnknownException {
 		List<String> examples = new ArrayList<String>();
 		examples.add(args);
-		List<String> wordBags = getWordBags(examples, numOfLinkThreads);
+		List<WordBagAndArg> wordBags = getWordBags(examples, numOfLinkThreads);
 
 		// Create a corpus attribute of the Weka type string attribute
 		List<String> textValues = null;
@@ -522,14 +535,15 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		Instances wordBagsAsInstances = new Instances("posOrNegWordBags", featureVector, wordBags.size());
 
 		// TODO: determine if we should use weighted or unweighed vote
-		for (String wordBag : wordBags) {
+		for (WordBagAndArg wordBag : wordBags) {
 			// Create sparse instance with 2 attributes (corpus & class)
 			SparseInstance data = new SparseInstance(2);
 			data.setDataset(wordBagsAsInstances);
-			data.setValue(textCorpus, wordBag);
+			data.setValue(textCorpus, wordBag.getWordBag());
 			data.setMissing(classAttribute);
 			wordBagsAsInstances.add(data);
 		}
+		wordBags = null;
 
 		// convert the word bags to word frequencies
 		Instances wordFrequenciesAsInstances = null;
@@ -561,8 +575,10 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 				}
 
 			} catch (Exception e) {
-				System.out.println("Failed to classify frequency");
-				e.printStackTrace();
+				if (verbose) {
+					System.out.println("Failed to classify frequency");
+					e.printStackTrace();
+				}
 			}
 		}
 
@@ -577,6 +593,102 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			double confidence = ((double) negativeWordBags) / (positiveWordBags + negativeWordBags);
 			return new Opinion<Boolean, Double>(false, confidence, this);
 		}
+	}
+
+	// Null is UNKNOWN
+	// Use list if order is important
+	public List<Opinion<Boolean, Double>> getOpinions(Collection<String> args) {
+		List<WordBagAndArg> allWordBags = getWordBags(new ArrayList<String>(args), numOfLinkThreads);
+		List<Opinion<Boolean, Double>> result = new ArrayList<Opinion<Boolean, Double>>(allWordBags.size());
+
+		// Create a corpus attribute of the Weka type string attribute
+		List<String> textValues = null;
+		Attribute textCorpus = new Attribute("corpus", textValues);
+
+		// Create a nominal attribute to function as the Class attribute
+		Attribute classAttribute = getClassAttribute();
+
+		ArrayList<Attribute> featureVector = new ArrayList<Attribute>(2);
+		featureVector.add(textCorpus);
+		featureVector.add(classAttribute);
+
+		for (String arg : args) {
+			List<String> wordBags = new ArrayList<String>();
+			for (WordBagAndArg bag : allWordBags) {
+				if (arg.equalsIgnoreCase(bag.getArg())) {
+					wordBags.add(bag.getWordBag());
+				}
+			}
+
+			if (wordBags.isEmpty()) {
+				result.add(null);
+			} else {
+				Instances wordBagsAsInstances = new Instances("posOrNegWordBags", featureVector, wordBags.size());
+
+				// TODO: determine if we should use weighted or unweighed vote
+				for (String wordBag : wordBags) {
+					// Create sparse instance with 2 attributes (corpus & class)
+					SparseInstance data = new SparseInstance(2);
+					data.setDataset(wordBagsAsInstances);
+					data.setValue(textCorpus, wordBag);
+					data.setMissing(classAttribute);
+					wordBagsAsInstances.add(data);
+				}
+				wordBags = null;
+
+				// convert the word bags to word frequencies
+				Instances wordFrequenciesAsInstances = null;
+				try {
+					wordFrequenciesAsInstances = Filter.useFilter(wordBagsAsInstances, filter);
+				} catch (Exception e) {
+					e.printStackTrace();
+					result.add(null);
+					continue;
+				}
+				Enumeration<Instance> wordFrequencies = wordFrequenciesAsInstances.enumerateInstances();
+				int positiveWordBags = 0;
+				int negativeWordBags = 0;
+				// classify each word frequency, depending on the result add to
+				// positive
+				// or negative word bags counter
+				while (wordFrequencies.hasMoreElements()) {
+					Instance wordFrequency = wordFrequencies.nextElement();
+					try {
+						double[] distribution = classifier.distributionForInstance(wordFrequency);
+						double classification = classifier.classifyInstance(wordFrequency);
+
+						assert (distribution.length == 2);
+						String responseAsString = trainingData.classAttribute().value((int) classification);
+						if (responseAsString.equals("true")) {
+							positiveWordBags++;
+						} else if (responseAsString.equals("false")) {
+							negativeWordBags++;
+						} else {
+							throw new RuntimeException("Invalid value for classification: " + responseAsString);
+						}
+
+					} catch (Exception e) {
+						if (verbose) {
+							System.out.println("Failed to classify frequency");
+							e.printStackTrace();
+						}
+						throw new RuntimeException(e);
+					}
+				}
+
+				if (positiveWordBags == negativeWordBags) {
+					result.add(null);
+				} else if (positiveWordBags > negativeWordBags) {
+					double confidence = ((double) positiveWordBags) / (positiveWordBags + negativeWordBags);
+					result.add(new Opinion<Boolean, Double>(true, confidence, this));
+				} else {
+					double confidence = ((double) negativeWordBags) / (positiveWordBags + negativeWordBags);
+					result.add(new Opinion<Boolean, Double>(false, confidence, this));
+				}
+
+			}
+		}
+		return result;
 	}
 
 	@Override
@@ -638,7 +750,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		return this.memoizeLinkContents;
 	}
 
-	public Map<String, String> loadMemoizedContents(String path) throws IOException, ClassNotFoundException {
+	public ConcurrentHashMap<String, String> loadMemoizedContents(String path)
+			throws IOException, ClassNotFoundException {
 		File f = new File(path);
 		if (!f.exists()) {
 			f.createNewFile();
@@ -647,11 +760,11 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		try (FileInputStream fis = new FileInputStream(path)) {
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			@SuppressWarnings("unchecked")
-			Map<String, String> result = (Map<String, String>) ois.readObject();
+			ConcurrentHashMap<String, String> result = (ConcurrentHashMap<String, String>) ois.readObject();
 			ois.close();
 			return result;
 		} catch (EOFException e) {
-			return new HashMap<String, String>();
+			return new ConcurrentHashMap<String, String>();
 		}
 	}
 
@@ -664,8 +777,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 	}
 
 	// TODO
-	public List<String> getWordBags(List<String> examples, int numOfLinkThreads) {
-		List<String> wordBags = new ArrayList<String>();
+	public List<WordBagAndArg> getWordBags(List<String> examples, int numOfLinkThreads) {
+		List<WordBagAndArg> wordBags = new ArrayList<WordBagAndArg>();
 
 		AtomicBoolean SearchDone = new AtomicBoolean(false);
 		AtomicBoolean WordDone = new AtomicBoolean(false);
@@ -687,7 +800,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			listT2.add(t2);
 		}
 
-		SearchThread t1 = new SearchThread(examples, keyword, search, SearchDone, t1Tot2Lists);
+		SearchThread t1 = new SearchThread(examples, search, SearchDone, t1Tot2Lists);
 
 		WordProcessingThread t3 = new WordProcessingThread(LinksDone, cont, WordDone, wordBags);
 
@@ -715,13 +828,12 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 
 		AtomicBoolean amDone;
 		List<String> examples;
-		String keyword;
 		GenericSearchEngine search;
 		List<List<SearchResults>> ListSearchResults;
 
 		// Note searchResults should be a synchronizedList
-		public SearchThread(List<String> examples, String keyword, GenericSearchEngine search,
-				AtomicBoolean searchThreadIsDone, List<List<SearchResults>> ListSearchResults) {
+		public SearchThread(List<String> examples, GenericSearchEngine search, AtomicBoolean searchThreadIsDone,
+				List<List<SearchResults>> ListSearchResults) {
 			assert (searchThreadIsDone.get() == false);
 			assert (!ListSearchResults.isEmpty());
 
@@ -729,7 +841,6 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			this.examples = examples;
 			this.search = search;
 			this.ListSearchResults = ListSearchResults;
-			this.keyword = keyword;
 		}
 
 		@Override
@@ -738,25 +849,24 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			while (itr.hasNext()) {
 				String ex = itr.next();
 				try {
-					System.out.println("1. Starting search");
+					if (verbose)
+						System.out.println("1. Starting search");
 					SearchResults resultsForEx;
 					if (keyword.isEmpty()) {
 						resultsForEx = search.search(ex);
 					} else {
 						resultsForEx = search.search(keyword + " " + ex);
 					}
-					System.out.println("1. Done search");
+					if (verbose)
+						System.out.println("1. Done search");
 
 					List<SearchResults> splitResults = splitNWay(resultsForEx, ListSearchResults.size());
 					for (int x = 0; x < ListSearchResults.size(); x++) {
 						List<SearchResults> r = ListSearchResults.get(x);
 						synchronized (r) {
-							// System.out.println("Adding result");
-							System.out.println("1. Updating Search Results #" + x);
+							if (verbose)
+								System.out.println("1. Updating Search Results #" + x);
 							r.add(splitResults.get(x));
-							// System.out.println("checking if next exists");
-
-							// System.out.println("notifying");
 							r.notifyAll();
 						}
 					}
@@ -764,7 +874,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 					Object lock = new Object();
 					synchronized (lock) {
 						if (!itr.hasNext()) {
-							System.out.println("1. setting Done to true");
+							if (verbose)
+								System.out.println("1. setting Done to true");
 							amDone.set(true);
 							for (List<SearchResults> sr : ListSearchResults) {
 								synchronized (sr) {
@@ -777,9 +888,11 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 				} catch (IOException e) {
 					Object lock = new Object();
 					synchronized (lock) {
-						System.err.println("Searching " + ex + " falied");
+						if (verbose)
+							System.err.println("Searching " + ex + " falied");
 						if (!itr.hasNext()) {
-							System.out.println("1. setting Done to true (last search failed)");
+							if (verbose)
+								System.out.println("1. setting Done to true (last search failed)");
 							amDone.set(true);
 
 							for (List<SearchResults> sr : ListSearchResults) {
@@ -846,7 +959,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 				// If there are no more links to process, either get more links,
 				// or return.
 				if (toProcess.isEmpty()) {
-					System.out.println("2." + name + " No results to process");
+					if (verbose)
+						System.out.println("2." + name + " No results to process");
 
 					// Synchronize on the SearchResults. This means that
 					// SearchThread CANNOT have searchResults & searchDone in
@@ -854,11 +968,13 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 					synchronized (searchResults) {
 						// If there are not futher search results
 						if (searchResults.isEmpty()) {
-							System.out.println("2." + name + " SearchResults is empty");
+							if (verbose)
+								System.out.println("2." + name + " SearchResults is empty");
 							// ... and search is done, then this thread is done
 							if (searchDone.get()) {
 								synchronized (linkContents) {
-									System.out.println("2." + name + " SearchThread is done, so am I");
+									if (verbose)
+										System.out.println("2." + name + " SearchThread is done, so am I");
 									amDone.set(true);
 									linkContents.notifyAll();
 									return;
@@ -866,14 +982,17 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 							}
 							// ... otherwise wait for more results
 							try {
-								System.out.println("2." + name + " Waiting on SearchThread");
+								if (verbose)
+									System.out.println("2." + name + " Waiting on SearchThread");
 								searchResults.wait();
-								System.out.println("2." + name + " Done Waiting");
+								if (verbose)
+									System.out.println("2." + name + " Done Waiting");
 
 								if (searchDone.get() && searchResults.isEmpty()) {
 									synchronized (linkContents) {
-										System.out
-												.println("2." + name + " Done waiting. SearchThread is done, so am I");
+										if (verbose)
+											System.out.println(
+													"2." + name + " Done waiting. SearchThread is done, so am I");
 										amDone.set(true);
 										linkContents.notifyAll();
 										return;
@@ -897,34 +1016,46 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 					itr.remove();
 					LinkContentsForSearch contents = new LinkContentsForSearch(curr.getQuery());
 					for (SearchResult link : curr) {
-						if (memoizeLinkContents && memoizedLinkContents.containsKey(link.getLink())) {
-							contents.add(memoizedLinkContents.get(link.getLink()));
+						if (memoizeLinkContents && link.getLink() != null
+								&& memoizedLinkContents.containsKey(link.getLink())) {
+							String savedContents = (memoizedLinkContents.get(link.getLink()));
+							if (!savedContents.isEmpty()) {
+								contents.add(savedContents);
+							}
 							continue;
 						}
 
 						try {
-							System.out.println("2." + name + " Reading: " + link);
+							if (verbose)
+								System.out.println("2." + name + " Reading: " + link);
 							String websiteAsString = Jsoup.connect(link.getLink())
 									.userAgent(
 											"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:48.0) Gecko/20100101 Firefox/48.0")
 									.referrer("http://www.google.com").get().text();
 							if (!websiteAsString.isEmpty()) {
-								System.out.println("2." + name + " Adding result to contents");
+								if (verbose)
+									System.out.println("2." + name + " Adding result to contents");
 								contents.add(websiteAsString);
 								if (memoizeLinkContents) {
 									memoizedLinkContents.put(link.getLink(), websiteAsString);
 								}
 							}
 						} catch (Exception e) {
-							System.err.println("2." + name + " Unable to read " + link.getLink() + " CAUSE: " + e);
+							if (verbose)
+								System.err.println("2." + name + " Unable to read " + link.getLink() + " CAUSE: " + e);
+							if (memoizeLinkContents) {
+								memoizedLinkContents.put(link.getLink(), "");
+							}
 						}
 					}
 
 					synchronized (linkContents) {
-						System.out.println("2." + name + " Updating linkContents");
+						if (verbose)
+							System.out.println("2." + name + " Updating linkContents");
 						linkContents.add(contents);
 						linkContents.notifyAll();
-						System.out.println("2." + name + " Notified");
+						if (verbose)
+							System.out.println("2." + name + " Notified");
 					}
 				}
 			}
@@ -965,7 +1096,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		List<AtomicBoolean> linksDone;
 		AtomicBoolean amDone;
 		List<LinkContentsForSearch> linkContents;
-		List<String> generatedWordBags;
+		List<WordBagAndArg> generatedWordBags;
 
 		/**
 		 * The list of all stop words to be ignored.
@@ -1012,7 +1143,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		public final static int WORD_BAG_SPACING = 15;
 
 		public WordProcessingThread(List<AtomicBoolean> LinkContentsIsDone, List<LinkContentsForSearch> linkContents,
-				AtomicBoolean wordProcessingIsDone, List<String> generatedWordBags) {
+				AtomicBoolean wordProcessingIsDone, List<WordBagAndArg> generatedWordBags) {
 			linksDone = LinkContentsIsDone;
 			amDone = wordProcessingIsDone;
 			this.linkContents = linkContents;
@@ -1024,13 +1155,16 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			List<LinkContentsForSearch> toProcess = new ArrayList<LinkContentsForSearch>();
 			while (true) {
 				if (toProcess.isEmpty()) {
-					System.out.println("3. Need more text");
+					if (verbose)
+						System.out.println("3. Need more text");
 					synchronized (linkContents) {
 						if (linkContents.isEmpty()) {
-							System.out.println("3. LinkContent Thread buffer is empty");
+							if (verbose)
+								System.out.println("3. LinkContent Thread buffer is empty");
 							if (allLinkThreadsDone()) {
 								synchronized (generatedWordBags) {
-									System.out.println("3. LinkContent Thread done, therefore so am I.");
+									if (verbose)
+										System.out.println("3. LinkContent Thread done, therefore so am I.");
 									synchronized (amDone) {
 										amDone.set(true);
 										amDone.notifyAll();
@@ -1040,12 +1174,14 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 								return;
 							} else {
 								try {
-									System.out.println("3. Waiting for more text.");
+									if (verbose)
+										System.out.println("3. Waiting for more text.");
 									linkContents.wait();
 									if (linkContents.isEmpty()) {
 										synchronized (generatedWordBags) {
-											System.out.println(
-													"3. LinkContent Thread has no more data therefore I am done.");
+											if (verbose)
+												System.out.println(
+														"3. LinkContent Thread has no more data therefore I am done.");
 											synchronized (amDone) {
 												amDone.set(true);
 												amDone.notifyAll();
@@ -1063,7 +1199,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 						}
 						toProcess.addAll(linkContents);
 						linkContents.clear();
-						System.out.println("3. Added and cleared linkContents");
+						if (verbose)
+							System.out.println("3. Added and cleared linkContents");
 					}
 				}
 
@@ -1076,19 +1213,18 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 						String contents = itr2.next();
 						itr2.remove();
 
-						System.out.println("3. starting word bag extraction");
-						// TODO: Find faster solution?
-						// contents =
-						// Jsoup.parse(contents).text().toLowerCase().replaceAll("[^\\w0-9-]",
-						// " ");
+						if (verbose)
+							System.out.println("3. starting word bag extraction");
 						contents = contents.toLowerCase().replaceAll("[^\\w0-9-]", " ");
 						List<String> textAsList = new ArrayList<String>(Arrays.asList(contents.split("\\s++")));
 
-						List<String> wordBags = textAsListToWordBags(textAsList, searchTermsAndKeywords);
+						List<WordBagAndArg> wordBags = textAsListToWordBags(textAsList, searchTermsAndKeywords,
+								linkContentsSet.getKeywords().toLowerCase());
 						textAsList = null;
 
 						synchronized (generatedWordBags) {
-							System.out.println("3. Adding more word bags");
+							if (verbose)
+								System.out.println("3. Adding more word bags");
 							generatedWordBags.addAll(wordBags);
 							generatedWordBags.notifyAll();
 						}
@@ -1129,7 +1265,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		 *            word bag is extracted.
 		 * @return A list of word bags.
 		 */
-		private List<String> textAsListToWordBags(List<String> textAsList, Set<String> neededWords) {
+		private List<WordBagAndArg> textAsListToWordBags(List<String> textAsList, Set<String> neededWords,
+				String query) {
 			// we are presently looking at the first word in the text
 			int currFirstWord = 0;
 			/*
@@ -1138,7 +1275,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			 * between them, plus WORD_BAG_SPACING word before and after the
 			 * last found words in neededWords
 			 */
-			List<String> result = new ArrayList<String>();
+			List<WordBagAndArg> result = new ArrayList<WordBagAndArg>();
 			for (; currFirstWord < textAsList.size(); currFirstWord++) {
 				/*
 				 * Checks that the first word in the block of text being
@@ -1190,7 +1327,12 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 									text.append(" ");
 								}
 							}
-							result.add(text.toString());
+
+							if (keyword.isEmpty()) {
+								result.add(new WordBagAndArg(text.toString(), query));
+							} else {
+								result.add(new WordBagAndArg(text.toString(), query.substring(keyword.length() + 1)));
+							}
 							break;
 						} else if (wordFound == false) {
 							break;
@@ -1200,5 +1342,24 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			}
 			return result;
 		}
+	}
+
+	private class WordBagAndArg {
+		final String wordBag;
+		final String arg;
+
+		WordBagAndArg(String wordBag, String arg) {
+			this.wordBag = wordBag;
+			this.arg = arg;
+		}
+
+		public String getWordBag() {
+			return wordBag;
+		}
+
+		public String getArg() {
+			return arg;
+		}
+
 	}
 }
