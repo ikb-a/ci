@@ -1,16 +1,14 @@
 package edu.toronto.cs.se.ci.utils.searchEngine;
 
-import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This class is a wrapper for any JSONSearchEngine. It memoizes the results of
@@ -22,17 +20,16 @@ import org.json.JSONObject;
 public class MemoizingSearch implements GenericSearchEngine {
 	// The search engine being wrapped
 	GenericSearchEngine search;
-	// The json object containing all previous searches
-	JSONObject json;
+	Map<String, SearchResults> savedSearches;
 	// The file containing the json object on the hard drive
-	File file;
+	String filePath;
 
 	// demo
 	public static void main(String[] args) throws IOException {
-		MemoizingSearch search = new MemoizingSearch("./googleMemoization.json", new GoogleCSESearchJSON());
+		MemoizingSearch search = new MemoizingSearch("./googleMemoization.ser", new GoogleCSESearchJSON());
 		System.out.println(search.search("avocado"));
-		System.out.println(search.search("pineaple"));
-		System.out.println(search.search("grapes"));
+		//System.out.println(search.search("pineaple"));
+		//System.out.println(search.search("grapes"));
 	}
 
 	/**
@@ -52,33 +49,31 @@ public class MemoizingSearch implements GenericSearchEngine {
 	 */
 	public MemoizingSearch(String path, GenericSearchEngine search) throws IOException {
 		this.search = search;
-		file = new File(path);
-		String fileContents = readFile(file);
-		if (fileContents.equals("")) {
-			this.json = new JSONObject();
-		} else {
-			if (!fileContents.startsWith("{")) {
-				fileContents = fileContents.substring(fileContents.indexOf("{"));
-			}
-			this.json = new JSONObject(fileContents);
+		filePath = path;
+		try {
+			savedSearches = loadMemoizedContents(path);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
-	private String readFile(File f) throws IOException {
+	private HashMap<String, SearchResults> loadMemoizedContents(String path)
+			throws IOException, ClassNotFoundException {
+		File f = new File(path);
 		if (!f.exists()) {
 			f.createNewFile();
-			return "";
+			return new HashMap<String, SearchResults>();
 		}
 
-		BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
-		String line = br.readLine();
-		String result = "";
-		while (line != null) {
-			result += line;
-			line = br.readLine();
+		try (FileInputStream fis = new FileInputStream(path)) {
+			ObjectInputStream ois = new ObjectInputStream(fis);
+			@SuppressWarnings("unchecked")
+			HashMap<String, SearchResults> result = (HashMap<String, SearchResults>) ois.readObject();
+			ois.close();
+			return result;
+		} catch (EOFException e) {
+			return new HashMap<String, SearchResults>();
 		}
-		br.close();
-		return result;
 	}
 
 	@Override
@@ -86,51 +81,23 @@ public class MemoizingSearch implements GenericSearchEngine {
 		return search(searchString, 1);
 	}
 
+	// TODO: Fix so that it checks String and Page number
 	@Override
 	public SearchResults search(String searchString, int pageNumber) throws IOException {
-		/*
-		 * In the file, the JSON's format is as follows: { "searchString":{
-		 * "hits":0, "pageNumber":0, "query":"query", "results":[ { "title":
-		 * "title", "link": "link", "snippet": "snippet" }, { "title": "title",
-		 * "link": "link", "snippet": "snippet" } ] }
-		 */
+		if(pageNumber != 1){
+			throw new UnsupportedOperationException();
+		}
 
-		if (json.has(searchString)) {
-			List<SearchResult> listOfResult = new ArrayList<SearchResult>();
-			JSONObject jsonSearchResults = json.getJSONObject(searchString);
-			JSONArray jsonResults = jsonSearchResults.getJSONArray("results");
-			for (int x = 0; x < jsonResults.length(); x++) {
-				JSONObject jsonResult = jsonResults.getJSONObject(x);
-				listOfResult.add(new SearchResult(jsonResult.getString("title"), jsonResult.getString("link"),
-						jsonResult.getString("snippet")));
-			}
-			return new SearchResults(jsonSearchResults.getInt("hits"), listOfResult,
-					jsonSearchResults.getString("query"), jsonSearchResults.getInt("pageNumber"));
+		if (savedSearches.containsKey(searchString)) {
+			return savedSearches.get(searchString);
 		}
 		SearchResults results = search.search(searchString, pageNumber);
-		JSONArray jsonResults = new JSONArray();
-		for (SearchResult result : results) {
-			JSONObject jsonResult = new JSONObject();
-			jsonResult.put("title", result.getTitle());
-			jsonResult.put("link", result.getLink());
-			jsonResult.put("snippet", result.getSnippet());
-			jsonResults.put(jsonResult);
-		}
-		JSONObject jsonSearchResults = new JSONObject();
-		jsonSearchResults.put("hits", results.getHits());
-		jsonSearchResults.put("query", results.getQuery());
-		jsonSearchResults.put("pageNumber", results.getPageNumber());
-		jsonSearchResults.put("results", jsonResults);
+		savedSearches.put(searchString, results);
 
-		json.put(searchString, jsonSearchResults);
-
-		try {
-			FileWriter fw = new FileWriter(file);
-			fw.write(json.toString());
-			fw.close();
-		} catch (IOException e) {
-			System.err.println("unable to save data");
-			e.printStackTrace();
+		try (FileOutputStream fos = new FileOutputStream(filePath)) {
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject(this.savedSearches);
+			oos.close();
 		}
 
 		return results;
