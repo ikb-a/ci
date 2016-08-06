@@ -106,7 +106,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 	// path
 	public static final String linkContentsPath = "./src/main/resources/data/monthData/OpenEval/LinkContents.txt";
 	// TODO: eventually change to reading from text file
-	public static final int numOfLinkThreads = 2;
+	public static final int numOfLinkThreads = 8;
 
 	/**
 	 * Creates a new SimpleOpenEval. This may take some time, and will most
@@ -293,20 +293,24 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		classifier = new SMO();
 		this.keyword = keyword;
 		// creates word bag data
+		System.out.println("M. Creating Training Data");
 		this.unfilteredTrainingData = createTrainingData(positiveExamples, negativeExamples);
 		this.unfilteredTrainingData.setClass(this.unfilteredTrainingData.attribute(classAttributeName));
+		System.out.println("M. Saving unfiltered data");
 		// Save the word bag data
 		ArffSaver saver = new ArffSaver();
 		saver.setInstances(this.unfilteredTrainingData);
 		saver.setFile(new File(pathToSaveTrainingData));
 		saver.writeBatch();
 
+		System.out.println("M. Filtering data");
 		filter = new StringToWordVector();
 		String[] options = new String[] { "-C", "-L" };
 		filter.setOptions(options);
 		this.trainingData = wordBagsToWordFrequencies(this.unfilteredTrainingData);
 		this.trainingData.setClass(this.trainingData.attribute(classAttributeName));
 		// TODO: Remove later
+		System.out.println("M. Saving filtered data");
 		try {
 			saver = new ArffSaver();
 			saver.setInstances(this.trainingData);
@@ -315,8 +319,9 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		System.out.println("M. Training Classifier");
 		classifier.buildClassifier(this.trainingData);
+		System.out.println("M. done");
 	}
 
 	/**
@@ -408,9 +413,12 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 	 * "class" is set as the Class Attribute in the Instances object returned.
 	 */
 	private Instances createTrainingData(List<String> positiveExamples, List<String> negativeExamples) {
+		System.out.println("M. Retrieving positive word bags");
 		List<String> positiveWordBags = getWordBags(positiveExamples, numOfLinkThreads);
+		System.out.println("M. Retrieving negative word bags");
 		List<String> negativeWordBags = getWordBags(negativeExamples, numOfLinkThreads);
 
+		System.out.println("M. Creating attributes");
 		// Create a corpus attribute of the Weka type string attribute
 		List<String> textValues = null;
 		Attribute textCorpus = new Attribute("corpus", textValues);
@@ -426,6 +434,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		featureVector.add(textCorpus);
 		featureVector.add(classAttribute);
 
+		System.out.println("M. Creating Instance");
+
 		/*
 		 * Creates the Instances object in which each contained Instance will
 		 * obey the feature vector declared above, and which has a capacity
@@ -434,6 +444,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		Instances posOrNegWordBags = new Instances("posOrNegWordBags", featureVector,
 				positiveWordBags.size() + negativeWordBags.size());
 
+		System.out.println("M. Adding bags to Instance");
 		/*
 		 * Adds positive and negative word bags to the Instances. Positive word
 		 * bags are given a "class" value of "true", negative word bags are
