@@ -880,7 +880,9 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		}
 
 		try {
-			Document doc = Jsoup.connect(link).get();
+			Document doc = Jsoup.connect(link)
+					.userAgent("Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:48.0) Gecko/20100101 Firefox/48.0")
+					.referrer("http://www.google.com").get();
 			String result = doc.body().text();
 			if (memoizeLinkContents) {
 				memoizedLinkContents.put(link, result);
