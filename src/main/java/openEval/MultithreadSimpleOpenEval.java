@@ -1,13 +1,10 @@
 package openEval;
 
-import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
@@ -31,7 +28,6 @@ import edu.toronto.cs.se.ci.budget.Expenditure;
 import edu.toronto.cs.se.ci.data.Opinion;
 import edu.toronto.cs.se.ci.utils.searchEngine.GenericSearchEngine;
 import edu.toronto.cs.se.ci.utils.searchEngine.GoogleCSESearchJSON;
-import edu.toronto.cs.se.ci.utils.searchEngine.MemoizingSearch;
 import edu.toronto.cs.se.ci.utils.searchEngine.SearchResult;
 import edu.toronto.cs.se.ci.utils.searchEngine.SearchResults;
 import weka.classifiers.Classifier;
@@ -103,7 +99,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 	int pagesToCheck = 1;
 
 	String nameSuffix = "";
-	//TODO: Fix link content memoization
+	// TODO: Fix link content memoization
 	boolean memoizeLinkContents = false;
 	Map<String, String> memoizedLinkContents;
 	public static final String classAttributeName = "Class_Attribute_For_SimpleOpenEval";
@@ -111,85 +107,6 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 	// path
 	public static final String linkContentsPath = "./src/main/resources/data/monthData/OpenEval/LinkContents.txt";
 	// TODO: eventually change to reading from text file
-
-	// TODO: remove main method/move test into test folder.
-	/**
-	 * Quick and dirty test.
-	 * 
-	 * @param args
-	 * @throws Exception
-	 */
-	public static void main(String[] args) throws Exception {
-		AtomicBoolean SearchDone = new AtomicBoolean(false);
-		AtomicBoolean LinksDone = new AtomicBoolean(false);
-		AtomicBoolean WordDone = new AtomicBoolean(false);
-
-		List<SearchResults> res = new ArrayList<SearchResults>();
-		List<LinkContentsForSearch> cont = new ArrayList<LinkContentsForSearch>();
-		List<String> wordbags = new ArrayList<String>();
-
-		MemoizingSearch search = new MemoizingSearch("./googleMemoization.json", new GoogleCSESearchJSON());
-
-		SearchThread t1 = new SearchThread(
-				new ArrayList<String>(Arrays.asList(new String[] { "avocado", "pineaple", "grapes" })), "", search,
-				SearchDone, res);
-
-		LinkContentsThread t2 = new LinkContentsThread(res, SearchDone, LinksDone, cont);
-
-		WordProcessingThread t3 = new WordProcessingThread(LinksDone, cont, WordDone, wordbags);
-
-		(new Thread(t1)).start();
-		(new Thread(t2)).start();
-		(new Thread(t3)).start();
-
-		List<String> allResults = new ArrayList<String>();
-		synchronized (wordbags) {
-			while (WordDone.get() == false) {
-				try {
-					System.out.println("M Waiting for word bags");
-					wordbags.wait();
-				} catch (InterruptedException e) {
-					return;
-				}
-				// System.out.println("M: " + cont);
-				allResults.addAll(wordbags);
-				wordbags.clear();
-				System.out.println("M Added and cleared wordbags");
-				System.out.println(WordDone);
-			}
-			if (!wordbags.isEmpty()) {
-				allResults.addAll(wordbags);
-				wordbags.clear();
-				System.out.println("M Added and cleared Contents. Now Done.");
-			}
-		}
-		System.out.println(wordbags);
-		System.out.println(allResults.size());
-		System.out.println(allResults);
-
-		/*
-		 * List<LinkContentsForSearch> allResults = new
-		 * ArrayList<LinkContentsForSearch>(); synchronized (cont) { while
-		 * (LinksDone.get() == false) { try { System.out.println(
-		 * "M Waiting for Contents"); cont.wait(); } catch (InterruptedException
-		 * e) { return; } // System.out.println("M: " + cont);
-		 * allResults.addAll(cont); cont.clear(); System.out.println(
-		 * "M Added and cleared Contents"); System.out.println(LinksDone); } if
-		 * (!cont.isEmpty()) { allResults.addAll(cont); cont.clear();
-		 * System.out.println("M Added and cleared Contents. Now Done."); } }
-		 * System.out.println(cont); int numLinks = 0; for
-		 * (LinkContentsForSearch lcfs : allResults) { numLinks += lcfs.size();
-		 * } System.out.println(numLinks);
-		 */
-
-		/*
-		 * List<SearchResults> allResults = new ArrayList<SearchResults>();
-		 * synchronized (res) { while (done.get() == false) { try { res.wait();
-		 * } catch (InterruptedException e) { // TODO figure out proper
-		 * behaviour return; } allResults.addAll(res); res.clear(); } }
-		 */
-
-	}
 
 	/**
 	 * Creates a new SimpleOpenEval. This may take some time, and will most
@@ -812,7 +729,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		}
 	}
 
-	private static class SearchThread implements Runnable {
+	private class SearchThread implements Runnable {
 
 		AtomicBoolean amDone;
 		List<String> examples;
@@ -881,7 +798,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		}
 	}
 
-	private static class LinkContentsThread implements Runnable {
+	private class LinkContentsThread implements Runnable {
 		List<SearchResults> searchResults;
 		AtomicBoolean searchDone;
 		AtomicBoolean amDone;
@@ -952,29 +869,27 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 					itr.remove();
 					LinkContentsForSearch contents = new LinkContentsForSearch(curr.getQuery());
 					for (SearchResult link : curr) {
-						try {
-							System.out.println("2. Reading: " + link);
-							Process readLink = Runtime.getRuntime()
-									.exec(new String[] { "curl", "-L","--max-filesize","50000", "-A",
-											"Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0",
-											link.getLink() });
-
-							String websiteAsString = readAllOfStream(readLink.getInputStream());
-							String errorsAsString = readAllOfStream(readLink.getErrorStream());
-							System.out.println("Error Stream: " + errorsAsString);
-
-							readLink.destroyForcibly();
-							if (!websiteAsString.isEmpty() && !websiteAsString.startsWith("curl: (")) {
-								System.out.println("2. Adding result to contents");
-								contents.add(websiteAsString);
-							}
-						} catch (IOException e) {
-							System.err.println("2. Unable to read " + link.getLink() + " CAUSE: " + e);
+						if (memoizeLinkContents && memoizedLinkContents.containsKey(link.getLink())) {
+							contents.add(memoizedLinkContents.get(link.getLink()));
+							continue;
 						}
 
-						// run process
-						// wait for response
-						// add response to contents
+						try {
+							System.out.println("2. Reading: " + link);
+							String websiteAsString = Jsoup.connect(link.getLink())
+									.userAgent(
+											"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:48.0) Gecko/20100101 Firefox/48.0")
+									.referrer("http://www.google.com").get().text();
+							if (!websiteAsString.isEmpty()) {
+								System.out.println("2. Adding result to contents");
+								contents.add(websiteAsString);
+								if (memoizeLinkContents) {
+									memoizedLinkContents.put(link.getLink(), websiteAsString);
+								}
+							}
+						} catch (Exception e) {
+							System.err.println("2. Unable to read " + link.getLink() + " CAUSE: " + e);
+						}
 					}
 
 					synchronized (linkContents) {
@@ -985,18 +900,6 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 					}
 				}
 			}
-		}
-
-		public String readAllOfStream(InputStream stream) throws IOException {
-			System.out.println("2. Starting to read In or Err stream");
-			StringBuilder webContent = new StringBuilder();
-
-			BufferedReader in = new BufferedReader(new InputStreamReader(stream));
-			String line = null;
-			while ((line = in.readLine()) != null) {
-				webContent.append(line);
-			}
-			return webContent.toString();
 		}
 	}
 
@@ -1030,7 +933,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 
 	}
 
-	private static class WordProcessingThread implements Runnable {
+	private class WordProcessingThread implements Runnable {
 		AtomicBoolean linksDone;
 		AtomicBoolean amDone;
 		List<LinkContentsForSearch> linkContents;
@@ -1147,7 +1050,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 
 						System.out.println("3. starting word bag extraction");
 						// TODO: Find faster solution?
-						contents = Jsoup.parse(contents).text().toLowerCase().replaceAll("[^\\w0-9-]", " ");
+						//contents = Jsoup.parse(contents).text().toLowerCase().replaceAll("[^\\w0-9-]", " ");
+						contents = contents.toLowerCase().replaceAll("[^\\w0-9-]", " ");
 						List<String> textAsList = new ArrayList<String>(Arrays.asList(contents.split("\\s++")));
 
 						List<String> wordBags = textAsListToWordBags(textAsList, searchTermsAndKeywords);
