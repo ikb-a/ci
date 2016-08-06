@@ -718,7 +718,6 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		String keyword;
 		GenericSearchEngine search;
 		List<List<SearchResults>> ListSearchResults;
-		int currIndex = 0;
 
 		// Note searchResults should be a synchronizedList
 		public SearchThread(List<String> examples, String keyword, GenericSearchEngine search,
@@ -748,20 +747,22 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 					}
 					System.out.println("1. Done search");
 
-					/*
-					 * As this block and the catch are synchronized, possible
-					 * states are: 1) searchResults contains resultsForEx &
-					 * amDone = false; 2) searchResults contains resultsForEx &
-					 * amDone = true 3) searchResuts may or may not be empty,
-					 * but amDone=true
-					 */
-					List<SearchResults> searchResults = ListSearchResults.get(currIndex);
-					currIndex = (currIndex == ListSearchResults.size() - 1) ? 0 : currIndex + 1;
-					synchronized (searchResults) {
-						// System.out.println("Adding result");
-						System.out.println("1. Updating Search Results");
-						searchResults.add(resultsForEx);
-						// System.out.println("checking if next exists");
+					List<SearchResults> splitResults = splitNWay(resultsForEx, ListSearchResults.size());
+					for (int x = 0; x < ListSearchResults.size(); x++) {
+						List<SearchResults> r = ListSearchResults.get(x);
+						synchronized (r) {
+							// System.out.println("Adding result");
+							System.out.println("1. Updating Search Results #" + x);
+							r.add(splitResults.get(x));
+							// System.out.println("checking if next exists");
+
+							// System.out.println("notifying");
+							r.notifyAll();
+						}
+					}
+
+					Object lock = new Object();
+					synchronized (lock) {
 						if (!itr.hasNext()) {
 							System.out.println("1. setting Done to true");
 							amDone.set(true);
@@ -771,16 +772,12 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 								}
 							}
 						}
-						// System.out.println("notifying");
-						searchResults.notifyAll();
 					}
 
 				} catch (IOException e) {
-					List<SearchResults> searchResults = ListSearchResults.get(currIndex);
-					currIndex = ((currIndex + 1) == searchResults.size()) ? 0 : currIndex + 1;
-					synchronized (searchResults) {
+					Object lock = new Object();
+					synchronized (lock) {
 						System.err.println("Searching " + ex + " falied");
-						// e.printStackTrace();
 						if (!itr.hasNext()) {
 							System.out.println("1. setting Done to true (last search failed)");
 							amDone.set(true);
@@ -794,6 +791,32 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 					}
 				}
 			}
+		}
+
+		public List<SearchResults> splitNWay(SearchResults toSplit, int n) {
+			assert (n > 0);
+			List<SearchResults> result = new ArrayList<SearchResults>(n);
+			int hits = toSplit.getHits();
+			String query = toSplit.getQuery();
+			int pageNumber = toSplit.getPageNumber();
+			for (int x = 0; x < n; x++) {
+				List<SearchResult> temp = new ArrayList<SearchResult>();
+				result.add(new SearchResults(hits, temp, query, pageNumber));
+			}
+
+			int index = 0;
+			while (index + n <= toSplit.size()) {
+				for (int x = 0; x < n; x++) {
+					result.get(x).add(toSplit.get(index + x));
+				}
+				index += n;
+			}
+
+			for (; index < toSplit.size(); index++) {
+				result.get(index % n).add(toSplit.get(index));
+			}
+
+			return result;
 		}
 	}
 
