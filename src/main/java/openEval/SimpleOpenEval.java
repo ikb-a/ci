@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -122,9 +123,7 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 	/**
 	 * The path to which any memoized data is saved
 	 */
-	// TODO: modify so that activating memoization forces the user to give a
-	// path
-	public static final String linkContentsPath = "./src/main/resources/data/monthData/OpenEval/LinkContents.ser";
+	private String linkContentsPath;
 	// TODO: eventually change to reading from text file
 	/**
 	 * The list of all stop words to be ignored.
@@ -377,6 +376,76 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		} else {
 			this.memoizedLinkContents = new HashMap<String, String>();
 		}
+		this.search = search;
+		classifier = new SMO();
+		this.keyword = keyword;
+		// creates word bag data
+		this.unfilteredTrainingData = createTrainingData(positiveExamples, negativeExamples);
+		this.unfilteredTrainingData.setClass(this.unfilteredTrainingData.attribute(classAttributeName));
+		// Save the word bag data
+		ArffSaver saver = new ArffSaver();
+		saver.setInstances(this.unfilteredTrainingData);
+		saver.setFile(new File(pathToSaveTrainingData));
+		saver.writeBatch();
+
+		filter = new StringToWordVector();
+		String[] options = new String[] { "-C", "-L" };
+		filter.setOptions(options);
+		this.trainingData = wordBagsToWordFrequencies(this.unfilteredTrainingData);
+		this.trainingData.setClass(this.trainingData.attribute(classAttributeName));
+
+		classifier.buildClassifier(this.trainingData);
+	}
+
+	/**
+	 * Creates a new SimpleOpenEval. This may take some time, and will most
+	 * likely result in some errors being printed to the console as some
+	 * webpages will not be readable. Memoization of link contents will be
+	 * enabled.
+	 * 
+	 * @param positiveExamples
+	 *            A list of positive arguments for the predicate being defined.
+	 *            For example, if this SimpleOpenEval is meant to represent the
+	 *            predicate isBlue(item) then some examples may be "water",
+	 *            "sky", "ocean", "saphire", etc...
+	 * @param negativeExamples
+	 *            A list of negative examples for the predicate being defined.
+	 *            Following from the above IsBlue(item) predicate example, some
+	 *            negative examples might include "grass", "sun", "mayonnaise",
+	 *            "mushroom", "pavement", etc...
+	 * @param keyword
+	 *            The keyword to be used in searching. This value cannot be
+	 *            {@code null}, but it can be the empty string. It also must be
+	 *            a single word. For example, the predicate IsBlue(item) might
+	 *            use "colour" as a keyword.
+	 * @param pathToSaveTrainingData
+	 *            This is a path to save the word bag data. This file can then
+	 *            be used with {@link #SimpleOpenEval(Instances, String)} to
+	 *            circumvent the need to search all of examples again.
+	 * @param search
+	 *            This search engine is used in place of the default search
+	 *            engine
+	 * @param pathToMemoizedData
+	 *            Path to a serialized hashmap of link name to link contents. If
+	 *            the directory of the file exists, but the file does not, then
+	 *            the file will be created.
+	 * @throws Exception
+	 *             An exception can be thrown if: WEKA could not set the options
+	 *             on the {@link #filter}, WEKA could not save the word bag
+	 *             data, WEKA could not apply the filter on the word bags, or if
+	 *             WEKA could not train the classifier on the produced word
+	 *             frequency data.
+	 */
+	public SimpleOpenEval(List<String> positiveExamples, List<String> negativeExamples, String keyword,
+			String pathToSaveTrainingData, GenericSearchEngine search, String pathToMemoizedData) throws Exception {
+		memoizeLinkContents = true;
+		try {
+			this.memoizedLinkContents = loadMemoizedContents(linkContentsPath);
+		} catch (EOFException e) {
+			this.memoizedLinkContents = new HashMap<String, String>();
+		}
+		this.memoizedLinkContents = new HashMap<String, String>();
+
 		this.search = search;
 		classifier = new SMO();
 		this.keyword = keyword;
@@ -973,8 +1042,38 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		return super.getName() + this.nameSuffix;
 	}
 
-	public void setMemoizeLinkContents(boolean memoize) {
-		this.memoizeLinkContents = memoize;
+	/**
+	 * Disables memoization of link contents and removes all saved link contents
+	 * from memory
+	 */
+	public void setMemoizeLinkContentsOff() {
+		this.memoizeLinkContents = false;
+		this.memoizedLinkContents = null;
+	}
+
+	/**
+	 * Enables memoization. If {@code pathToMemoizationFile} does not exist but
+	 * the folder does, then the file will be created. If the file does exist,
+	 * than it will be loaded to memory.
+	 * 
+	 * @param pathToMemoizationFile
+	 *            Path to where memoized link information should be stored. If
+	 *            the file exists then it should contain a serialized HashMap
+	 *            that maps from String link names to String link contents.
+	 * @throws IOException
+	 *             If the file that pathToMemoizationFile cannot be created, or
+	 *             if it exists but cannot be read.
+	 */
+	public void setMemoizeLinkContentsOn(String pathToMemoizationFile) throws IOException {
+		try {
+			this.memoizedLinkContents = loadMemoizedContents(pathToMemoizationFile);
+		} catch (EOFException e) {
+			this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
+		} catch (ClassNotFoundException e) {
+			throw new IllegalArgumentException(e);
+		}
+		this.linkContentsPath = pathToMemoizationFile;
+		this.memoizeLinkContents = true;
 	}
 
 	public boolean getMemoizeLinkContents() {
