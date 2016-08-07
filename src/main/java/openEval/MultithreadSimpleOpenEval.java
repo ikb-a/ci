@@ -99,13 +99,13 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 	int pagesToCheck = 1;
 
 	String nameSuffix = "";
-	boolean memoizeLinkContents = true;
+	boolean memoizeLinkContents = false;
 	boolean verbose = false;
 	ConcurrentHashMap<String, String> memoizedLinkContents;
 	public static final String classAttributeName = "Class_Attribute_For_SimpleOpenEval";
 	// TODO: modify so that activating memoization forces the user to give a
 	// path
-	public static final String linkContentsPath = "./src/main/resources/data/monthData/OpenEval/LinkContents.txt";
+	private String linkContentsPath;
 	// TODO: eventually change to reading from text file
 	public static final int numOfLinkThreads = 8;
 
@@ -288,6 +288,58 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 				this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 			}
 		} else {
+			this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
+		}
+		this.search = search;
+		classifier = new SMO();
+		this.keyword = keyword;
+		// creates word bag data
+		if (verbose)
+			System.out.println("M. Creating Training Data");
+		this.unfilteredTrainingData = createTrainingData(positiveExamples, negativeExamples);
+		this.unfilteredTrainingData.setClass(this.unfilteredTrainingData.attribute(classAttributeName));
+		if (verbose)
+			System.out.println("M. Saving unfiltered data");
+		// Save the word bag data
+		ArffSaver saver = new ArffSaver();
+		saver.setInstances(this.unfilteredTrainingData);
+		saver.setFile(new File(pathToSaveTrainingData));
+		saver.writeBatch();
+
+		if (verbose)
+			System.out.println("M. Filtering data");
+		filter = new StringToWordVector();
+		String[] options = new String[] { "-C", "-L" };
+		filter.setOptions(options);
+		this.trainingData = wordBagsToWordFrequencies(this.unfilteredTrainingData);
+		this.trainingData.setClass(this.trainingData.attribute(classAttributeName));
+		// TODO: Remove later
+
+		if (verbose)
+			System.out.println("M. Saving filtered data");
+		try {
+			saver = new ArffSaver();
+			saver.setInstances(this.trainingData);
+			saver.setFile(new File("./filteredResults.arff"));
+			saver.writeBatch();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		if (verbose)
+			System.out.println("M. Training Classifier");
+		classifier.buildClassifier(this.trainingData);
+		if (verbose)
+			System.out.println("M. done");
+	}
+
+	public MultithreadSimpleOpenEval(List<String> positiveExamples, List<String> negativeExamples, String keyword,
+			String pathToSaveTrainingData, GenericSearchEngine search, String pathForLinkContentMemoization)
+			throws Exception {
+		memoizeLinkContents = true;
+		this.linkContentsPath = pathForLinkContentMemoization;
+		try {
+			this.memoizedLinkContents = loadMemoizedContents(linkContentsPath);
+		} catch (EOFException e) {
 			this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 		}
 		this.search = search;
@@ -742,19 +794,33 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		return super.getName() + this.nameSuffix;
 	}
 
-	public void setMemoizeLinkContents(boolean memoize) {
-		this.memoizeLinkContents = memoize;
+	public void setMemoizeLinkContentsOff() {
+		this.memoizeLinkContents = false;
+		this.memoizedLinkContents = null;
+	}
+
+	public void setMemoizeLinkContentsOn(String pathToMemoizationFile) throws IOException {
+		try {
+			this.memoizedLinkContents = loadMemoizedContents(pathToMemoizationFile);
+		} catch (EOFException e) {
+			this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
+		} catch (ClassNotFoundException e) {
+			throw new IllegalArgumentException(e);
+		}
+		this.linkContentsPath = pathToMemoizationFile;
+		this.memoizeLinkContents = true;
 	}
 
 	public boolean getMemoizeLinkContents() {
 		return this.memoizeLinkContents;
 	}
 
-	public ConcurrentHashMap<String, String> loadMemoizedContents(String path)
+	private ConcurrentHashMap<String, String> loadMemoizedContents(String path)
 			throws IOException, ClassNotFoundException {
 		File f = new File(path);
 		if (!f.exists()) {
 			f.createNewFile();
+			return new ConcurrentHashMap<String, String>();
 		}
 
 		try (FileInputStream fis = new FileInputStream(path)) {
