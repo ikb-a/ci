@@ -96,13 +96,35 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 	 */
 	int pagesToCheck = 1;
 
+	/**
+	 * This suffix is appended to the name of the SimpleOpenEval. When creating
+	 * a CI with a ML aggregator, each SimpleOpenEval must have a distinct name
+	 * suffix.
+	 */
 	String nameSuffix = "";
+
+	/**
+	 * Whether or not the simpleOpenEval should memoize the contents of links.
+	 */
 	boolean memoizeLinkContents = true;
+
+	/**
+	 * A map that maps from the name of a link, to the contents of the link.
+	 */
 	Map<String, String> memoizedLinkContents;
+
+	/**
+	 * The name of the class attribute in the Weka data (both in the training
+	 * data, and in the Weka instance objects used in evaluation).
+	 */
 	public static final String classAttributeName = "Class_Attribute_For_SimpleOpenEval";
+
+	/**
+	 * The path to which any memoized data is saved
+	 */
 	// TODO: modify so that activating memoization forces the user to give a
 	// path
-	public static final String linkContentsPath = "./src/main/resources/data/monthData/OpenEval/LinkContents.txt";
+	public static final String linkContentsPath = "./src/main/resources/data/monthData/OpenEval/LinkContents.ser";
 	// TODO: eventually change to reading from text file
 	/**
 	 * The list of all stop words to be ignored.
@@ -169,7 +191,7 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		// "Isaac Newton", "Harrison Ford" };
 		// List<String> neg = new ArrayList<String>(Arrays.asList(negNames));
 		// SimpleOpenEval bob = new SimpleOpenEval(pos, neg, "",
-		// "./Fictional3.arff");
+		// "./Fictional1.arff");
 
 		Instances data = MLUtility.fileToInstances("./Fictional1.arff");
 		SimpleOpenEval bob = new SimpleOpenEval(data, "");
@@ -204,8 +226,6 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 	 */
 	public SimpleOpenEval(List<String> positiveExamples, List<String> negativeExamples, String keyword)
 			throws Exception {
-		// search = new BingSearchJSON();
-
 		if (this.memoizeLinkContents) {
 			try {
 				this.memoizedLinkContents = loadMemoizedContents(linkContentsPath);
@@ -271,7 +291,6 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 	 */
 	public SimpleOpenEval(List<String> positiveExamples, List<String> negativeExamples, String keyword,
 			String pathToSaveTrainingData) throws Exception {
-		// search = new BingSearchJSON();
 		if (this.memoizeLinkContents) {
 			try {
 				this.memoizedLinkContents = loadMemoizedContents(linkContentsPath);
@@ -284,6 +303,7 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		search = new GoogleCSESearchJSON();
 		classifier = new SMO();
 		this.keyword = keyword;
+
 		// creates word bag data
 		this.unfilteredTrainingData = createTrainingData(positiveExamples, negativeExamples);
 		this.unfilteredTrainingData.setClass(this.unfilteredTrainingData.attribute(classAttributeName));
@@ -374,37 +394,8 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		filter.setOptions(options);
 		this.trainingData = wordBagsToWordFrequencies(this.unfilteredTrainingData);
 		this.trainingData.setClass(this.trainingData.attribute(classAttributeName));
-		// TODO: Remove later
-		try {
-			saver = new ArffSaver();
-			saver.setInstances(this.trainingData);
-			saver.setFile(new File("./filteredResults.arff"));
-			saver.writeBatch();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 
 		classifier.buildClassifier(this.trainingData);
-	}
-
-	/**
-	 * Takes an Instances object where each instance is a String attribute
-	 * called "corpus" that contains the word bag as a String of space seperated
-	 * words, and a Nominal Attribute which is either "true" or "false".
-	 * <p>
-	 * This method also sets the filter's input format to that of the wordBags.
-	 * This forces WEKA to do Batch Filtering, meaning that future Instances
-	 * filtered by {@link #filter} will use the same dictionary, and will
-	 * therefore be classifiable by {@link #classifier}.
-	 * 
-	 * @throws Exception
-	 *             WEKA was unable to convert the word bags to word frequencies.
-	 */
-	private Instances wordBagsToWordFrequencies(Instances wordBags) throws Exception {
-		assert (filter != null);
-
-		filter.setInputFormat(wordBags);
-		return Filter.useFilter(wordBags, filter);
 	}
 
 	/**
@@ -439,7 +430,6 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		} else {
 			this.memoizedLinkContents = new HashMap<String, String>();
 		}
-		// search = new BingSearchJSON();
 		search = new GoogleCSESearchJSON();
 		classifier = new SMO();
 		this.keyword = keyword;
@@ -462,6 +452,45 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		classifier.buildClassifier(this.trainingData);
 	}
 
+	/**
+	 * Takes an Instances object where each instance is a String attribute
+	 * called "corpus" that contains the word bag as a String of space seperated
+	 * words, and a Nominal Attribute which is either "true" or "false".
+	 * <p>
+	 * This method also sets the filter's input format to that of the wordBags.
+	 * This forces WEKA to do Batch Filtering, meaning that future Instances
+	 * filtered by {@link #filter} will use the same dictionary, and will
+	 * therefore be classifiable by {@link #classifier}.
+	 * 
+	 * @throws Exception
+	 *             WEKA was unable to convert the word bags to word frequencies.
+	 */
+	private Instances wordBagsToWordFrequencies(Instances wordBags) throws Exception {
+		assert (filter != null);
+
+		filter.setInputFormat(wordBags);
+		return Filter.useFilter(wordBags, filter);
+	}
+
+	/**
+	 * Saves the word-frequency data as a .arff file which can be opened using
+	 * Weka. This method should only be used for debugging and development
+	 * purposes.
+	 * 
+	 * @param path
+	 * @throws IOException
+	 */
+	public void saveFilteredTrainingData(String path) throws IOException {
+		ArffSaver saver = new ArffSaver();
+		saver.setInstances(this.trainingData);
+		saver.setFile(new File(path));
+		saver.writeBatch();
+	}
+
+	/**
+	 * Creates and returns a nominal Attribute with the values of "true" or
+	 * "false", and the name of {@link #classAttributeName}
+	 */
 	private Attribute getClassAttribute() {
 		List<String> classValues = new ArrayList<String>(2);
 		classValues.add("true");
@@ -734,12 +763,12 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 
 	@Override
 	public Expenditure[] getCost(String args) throws Exception {
-		// TODO add cost in time, if possible add cost in API calls
+		// TODO add cost in time
 		return new Expenditure[] {};
 	}
 
 	/**
-	 * Determine if {@code args} is true or false for this predicate. The
+	 * Determines if {@code args} is true or false for this predicate. The
 	 * confidence produced is (number of word bags in favor of result)/(total
 	 * number of word bags).
 	 */
@@ -952,10 +981,26 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		return this.memoizeLinkContents;
 	}
 
-	public Map<String, String> loadMemoizedContents(String path) throws IOException, ClassNotFoundException {
+	/**
+	 * Loads the Map of link name to link contents. If the file does not exist,
+	 * but the directory does, then the file is created.
+	 * 
+	 * @param path
+	 *            The path containing the serialized map
+	 * @return Map from link name to link contents
+	 * @throws IOException
+	 *             If path is an invalid path, or if the file cannot be read
+	 *             from.
+	 * @throws ClassNotFoundException
+	 *             If the serialized object is not a known object. This should
+	 *             not occur unless an invalid file is given.
+	 */
+	private Map<String, String> loadMemoizedContents(String path) throws IOException, ClassNotFoundException {
 		File f = new File(path);
+
 		if (!f.exists()) {
 			f.createNewFile();
+			return new HashMap<String, String>();
 		}
 
 		try (FileInputStream fis = new FileInputStream(path)) {
@@ -969,6 +1014,13 @@ public class SimpleOpenEval extends Source<String, Boolean, Double> {
 		}
 	}
 
+	/**
+	 * Saves {@link #memoizedLinkContents} to {@link #linkContentsPath}.
+	 * 
+	 * @throws IOException
+	 *             If {@link #linkContentsPath} is an invalid path, or if the
+	 *             file cannot be written to.
+	 */
 	public void saveMemoizedContents() throws IOException {
 		try (FileOutputStream fos = new FileOutputStream(linkContentsPath)) {
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
