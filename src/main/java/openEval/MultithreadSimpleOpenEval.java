@@ -41,11 +41,11 @@ import weka.core.converters.ArffSaver;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.StringToWordVector;
 
-//TODO: Re-implement text memoization
-
 /**
  * A simplified version of OpenEval. This class can answer predicates by being
- * given positive and negative examples.
+ * given positive and negative examples. To increase speed, this class uses
+ * multiple threads so as to request information from websites while waiting for
+ * the response from the search engine.
  * 
  * @author Ian Berlot-Attwell.
  *
@@ -98,21 +98,50 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 	 */
 	int pagesToCheck = 1;
 
+	/**
+	 * This suffix is appended to the name of the SimpleOpenEval. When creating
+	 * a CI with a ML aggregator, each SimpleOpenEval must have a distinct name
+	 * suffix.
+	 */
 	String nameSuffix = "";
+
+	/**
+	 * Whether or not to memoize link contents
+	 */
 	boolean memoizeLinkContents = false;
+
+	/**
+	 * Whether or not to print debug messages
+	 */
 	boolean verbose = false;
+
+	/**
+	 * Map from link name to link contents, only used if
+	 * {@link #memoizeLinkContents} is true.
+	 */
 	ConcurrentHashMap<String, String> memoizedLinkContents;
+
+	/**
+	 * The name of the class attribute in the Weka data (both in the training
+	 * data, and in the Weka instance objects used in evaluation).
+	 */
 	public static final String classAttributeName = "Class_Attribute_For_SimpleOpenEval";
-	// TODO: modify so that activating memoization forces the user to give a
-	// path
+
+	/**
+	 * The path to which any memoized data is saved
+	 */
 	private String linkContentsPath;
-	// TODO: eventually change to reading from text file
+
+	/**
+	 * The number of link-content reading threads to create. Increasing the
+	 * number of link reading threads may accelerate training and evaluation,
+	 * but it is limited by available memory, and ultimately by internet speed
+	 * and bandwidth.
+	 */
 	public static final int numOfLinkThreads = 8;
 
 	/**
-	 * Creates a new SimpleOpenEval. This may take some time, and will most
-	 * likely result in some errors being printed to the console as some
-	 * webpages will not be readable.
+	 * Creates a new MultithreadSimpleOpenEval. This may take some time.
 	 * 
 	 * @param positiveExamples
 	 *            A list of positive arguments for the predicate being defined.
@@ -154,7 +183,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		filter = new StringToWordVector();
 		/*
 		 * Sets the filter so that it produces the Count of each word, rather
-		 * than it's presence
+		 * than it's presence (-C). Also sets the filter to consider all words
+		 * in Lower case (-L).
 		 */
 		String[] options = new String[] { "-C", "-L" };
 		filter.setOptions(options);
@@ -172,9 +202,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 	}
 
 	/**
-	 * Creates a new SimpleOpenEval. This may take some time, and will most
-	 * likely result in some errors being printed to the console as some
-	 * webpages will not be readable.
+	 * Creates a new SimpleOpenEval. This may take some time.
 	 * 
 	 * @param positiveExamples
 	 *            A list of positive arguments for the predicate being defined.
@@ -232,23 +260,12 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		filter.setOptions(options);
 		this.trainingData = wordBagsToWordFrequencies(this.unfilteredTrainingData);
 		this.trainingData.setClass(this.trainingData.attribute(classAttributeName));
-		// TODO: Remove later
-		try {
-			saver = new ArffSaver();
-			saver.setInstances(this.trainingData);
-			saver.setFile(new File("./filteredResults.arff"));
-			saver.writeBatch();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 
 		classifier.buildClassifier(this.trainingData);
 	}
 
 	/**
-	 * Creates a new SimpleOpenEval. This may take some time, and will most
-	 * likely result in some errors being printed to the console as some
-	 * webpages will not be readable.
+	 * Creates a new SimpleOpenEval. This may take some time.
 	 * 
 	 * @param positiveExamples
 	 *            A list of positive arguments for the predicate being defined.
@@ -313,18 +330,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		filter.setOptions(options);
 		this.trainingData = wordBagsToWordFrequencies(this.unfilteredTrainingData);
 		this.trainingData.setClass(this.trainingData.attribute(classAttributeName));
-		// TODO: Remove later
 
-		if (verbose)
-			System.out.println("M. Saving filtered data");
-		try {
-			saver = new ArffSaver();
-			saver.setInstances(this.trainingData);
-			saver.setFile(new File("./filteredResults.arff"));
-			saver.writeBatch();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 		if (verbose)
 			System.out.println("M. Training Classifier");
 		classifier.buildClassifier(this.trainingData);
@@ -332,6 +338,41 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			System.out.println("M. done");
 	}
 
+	/**
+	 * Creates a new SimpleOpenEval. This constructor enables the memoization of
+	 * link contents. This may take some time.
+	 * 
+	 * @param positiveExamples
+	 *            A list of positive arguments for the predicate being defined.
+	 *            For example, if this SimpleOpenEval is meant to represent the
+	 *            predicate isBlue(item) then some examples may be "water",
+	 *            "sky", "ocean", "saphire", etc...
+	 * @param negativeExamples
+	 *            A list of negative examples for the predicate being defined.
+	 *            Following from the above IsBlue(item) predicate example, some
+	 *            negative examples might include "grass", "sun", "mayonnaise",
+	 *            "mushroom", "pavement", etc...
+	 * @param keyword
+	 *            The keyword to be used in searching. This value cannot be
+	 *            {@code null}, but it can be the empty string. It also must be
+	 *            a single word. For example, the predicate IsBlue(item) might
+	 *            use "colour" as a keyword.
+	 * @param pathToSaveTrainingData
+	 *            This is a path to save the word bag data. This file can then
+	 *            be used with {@link #SimpleOpenEval(Instances, String)} to
+	 *            circumvent the need to search all of examples again.
+	 * @param search
+	 *            This search engine is used in place of the default search
+	 *            engine
+	 * @param pathForLinkContentMemoization
+	 *            The path to which memoized link content data will be saved.
+	 * @throws Exception
+	 *             An exception can be thrown if: WEKA could not set the options
+	 *             on the {@link #filter}, WEKA could not save the word bag
+	 *             data, WEKA could not apply the filter on the word bags, or if
+	 *             WEKA could not train the classifier on the produced word
+	 *             frequency data.
+	 */
 	public MultithreadSimpleOpenEval(List<String> positiveExamples, List<String> negativeExamples, String keyword,
 			String pathToSaveTrainingData, GenericSearchEngine search, String pathForLinkContentMemoization)
 			throws Exception {
@@ -365,43 +406,12 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		filter.setOptions(options);
 		this.trainingData = wordBagsToWordFrequencies(this.unfilteredTrainingData);
 		this.trainingData.setClass(this.trainingData.attribute(classAttributeName));
-		// TODO: Remove later
 
-		if (verbose)
-			System.out.println("M. Saving filtered data");
-		try {
-			saver = new ArffSaver();
-			saver.setInstances(this.trainingData);
-			saver.setFile(new File("./filteredResults.arff"));
-			saver.writeBatch();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 		if (verbose)
 			System.out.println("M. Training Classifier");
 		classifier.buildClassifier(this.trainingData);
 		if (verbose)
 			System.out.println("M. done");
-	}
-
-	/**
-	 * Takes an Instances object where each instance is a String attribute
-	 * called "corpus" that contains the word bag as a String of space seperated
-	 * words, and a Nominal Attribute which is either "true" or "false".
-	 * <p>
-	 * This method also sets the filter's input format to that of the wordBags.
-	 * This forces WEKA to do Batch Filtering, meaning that future Instances
-	 * filtered by {@link #filter} will use the same dictionary, and will
-	 * therefore be classifiable by {@link #classifier}.
-	 * 
-	 * @throws Exception
-	 *             WEKA was unable to convert the word bags to word frequencies.
-	 */
-	private Instances wordBagsToWordFrequencies(Instances wordBags) throws Exception {
-		assert (filter != null);
-
-		filter.setInputFormat(wordBags);
-		return Filter.useFilter(wordBags, filter);
 	}
 
 	/**
@@ -440,7 +450,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		search = new GoogleCSESearchJSON();
 		classifier = new SMO();
 		this.keyword = keyword;
-		// TODO mark produced training data by search engine?
+
 		filter = new StringToWordVector();
 		// set the option so that word count rather than word presence is used.
 		String[] options = new String[] { "-C", "-L" };
@@ -459,11 +469,50 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		classifier.buildClassifier(this.trainingData);
 	}
 
+	/**
+	 * Takes an Instances object where each instance is a String attribute
+	 * called "corpus" that contains the word bag as a String of space seperated
+	 * words, and a Nominal Attribute which is either "true" or "false".
+	 * <p>
+	 * This method also sets the filter's input format to that of the wordBags.
+	 * This forces WEKA to do Batch Filtering, meaning that future Instances
+	 * filtered by {@link #filter} will use the same dictionary, and will
+	 * therefore be classifiable by {@link #classifier}.
+	 * 
+	 * @throws Exception
+	 *             WEKA was unable to convert the word bags to word frequencies.
+	 */
+	private Instances wordBagsToWordFrequencies(Instances wordBags) throws Exception {
+		assert (filter != null);
+
+		filter.setInputFormat(wordBags);
+		return Filter.useFilter(wordBags, filter);
+	}
+
+	/**
+	 * Creates and returns a nominal Attribute with the values of "true" or
+	 * "false", and the name of {@link #classAttributeName}
+	 */
 	private Attribute getClassAttribute() {
 		List<String> classValues = new ArrayList<String>(2);
 		classValues.add("true");
 		classValues.add("false");
 		return new Attribute(classAttributeName, classValues);
+	}
+
+	/**
+	 * Saves the word-frequency data as a .arff file which can be opened using
+	 * Weka. This method should only be used for debugging and development
+	 * purposes.
+	 * 
+	 * @param path
+	 * @throws IOException
+	 */
+	public void saveFilteredTrainingData(String path) throws IOException {
+		ArffSaver saver = new ArffSaver();
+		saver.setInstances(this.trainingData);
+		saver.setFile(new File(path));
+		saver.writeBatch();
 	}
 
 	/**
@@ -586,7 +635,6 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 
 		Instances wordBagsAsInstances = new Instances("posOrNegWordBags", featureVector, wordBags.size());
 
-		// TODO: determine if we should use weighted or unweighed vote
 		for (WordBagAndArg wordBag : wordBags) {
 			// Create sparse instance with 2 attributes (corpus & class)
 			SparseInstance data = new SparseInstance(2);
@@ -647,8 +695,20 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		}
 	}
 
-	// Null is UNKNOWN
-	// Use list if order is important
+	/**
+	 * Given a collection of strings, evaluate each and return the results. This
+	 * method is quicker than {@link #getOpinion(String)}. If {@code args} is a
+	 * list, then the returned {@code List<Opinion<Boolean, Double>>} will be in
+	 * the same order. In the returned list, {@code null} signifies unknown,
+	 * otherwise the opinion is present.
+	 * 
+	 * @param args
+	 *            A list of Strings to be evaluated as being true or false
+	 *            according to the trained open eval
+	 * @return A list of opinions, one for each String if {@code args}. If the
+	 *         value for a String is unknown, than {@code null} is returned as
+	 *         an element in the list in the place of an opinion.
+	 */
 	public List<Opinion<Boolean, Double>> getOpinions(Collection<String> args) {
 		List<WordBagAndArg> allWordBags = getWordBags(new ArrayList<String>(args), numOfLinkThreads);
 		List<Opinion<Boolean, Double>> result = new ArrayList<Opinion<Boolean, Double>>(allWordBags.size());
@@ -665,6 +725,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		featureVector.add(classAttribute);
 
 		for (String arg : args) {
+			// collect word bags whose creating argument matches arg
 			List<String> wordBags = new ArrayList<String>();
 			for (WordBagAndArg bag : allWordBags) {
 				if (arg.equalsIgnoreCase(bag.getArg())) {
@@ -677,7 +738,6 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			} else {
 				Instances wordBagsAsInstances = new Instances("posOrNegWordBags", featureVector, wordBags.size());
 
-				// TODO: determine if we should use weighted or unweighed vote
 				for (String wordBag : wordBags) {
 					// Create sparse instance with 2 attributes (corpus & class)
 					SparseInstance data = new SparseInstance(2);
@@ -709,6 +769,9 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 						double[] distribution = classifier.distributionForInstance(wordFrequency);
 						double classification = classifier.classifyInstance(wordFrequency);
 
+						// distribution should have 2 elements. The probability
+						// of arg being "true" and the probability of arg being
+						// "false" according to the classifier.
 						assert (distribution.length == 2);
 						String responseAsString = trainingData.classAttribute().value((int) classification);
 						if (responseAsString.equals("true")) {
@@ -794,11 +857,28 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		return super.getName() + this.nameSuffix;
 	}
 
+	/**
+	 * Disables memoization of link contents and removes all saved link contents
+	 * from memory
+	 */
 	public void setMemoizeLinkContentsOff() {
 		this.memoizeLinkContents = false;
 		this.memoizedLinkContents = null;
 	}
 
+	/**
+	 * Enables memoization. If {@code pathToMemoizationFile} does not exist but
+	 * the folder does, then the file will be created. If the file does exist,
+	 * than it will be loaded to memory.
+	 * 
+	 * @param pathToMemoizationFile
+	 *            Path to where memoized link information should be stored. If
+	 *            the file exists then it should contain a serialized HashMap
+	 *            that maps from String link names to String link contents.
+	 * @throws IOException
+	 *             If the file that pathToMemoizationFile cannot be
+	 *             created/read.
+	 */
 	public void setMemoizeLinkContentsOn(String pathToMemoizationFile) throws IOException {
 		try {
 			this.memoizedLinkContents = loadMemoizedContents(pathToMemoizationFile);
@@ -815,6 +895,20 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		return this.memoizeLinkContents;
 	}
 
+	/**
+	 * Loads the Map of link name to link contents. If the file does not exist,
+	 * but the directory does, then the file is created.
+	 * 
+	 * @param path
+	 *            The path containing the serialized map
+	 * @return Map from link name to link contents
+	 * @throws IOException
+	 *             If path is an invalid path, or if the file cannot be read
+	 *             from.
+	 * @throws ClassNotFoundException
+	 *             If the serialized object is not a known object. This should
+	 *             not occur unless an invalid file is given.
+	 */
 	private ConcurrentHashMap<String, String> loadMemoizedContents(String path)
 			throws IOException, ClassNotFoundException {
 		File f = new File(path);
@@ -834,6 +928,13 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		}
 	}
 
+	/**
+	 * Saves {@link #memoizedLinkContents} to {@link #linkContentsPath}.
+	 * 
+	 * @throws IOException
+	 *             If {@link #linkContentsPath} is an invalid path, or if the
+	 *             file cannot be written to.
+	 */
 	public void saveMemoizedContents() throws IOException {
 		try (FileOutputStream fos = new FileOutputStream(linkContentsPath)) {
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -842,27 +943,64 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		}
 	}
 
-	// TODO
-	public List<WordBagAndArg> getWordBags(List<String> examples, int numOfLinkThreads) {
+	/**
+	 * Converts the list of inputs to the open eval {@link examples} into word
+	 * bags using {@link #keyword}.
+	 * 
+	 * @param examples
+	 *            The inputs for which word bags should be generated
+	 * @param numOfLinkThreads
+	 *            The number of {@link LinkContentsThread} to use
+	 * @return a list of word bags, and the arguments used to create them. The
+	 *         arguments may be in lower case.
+	 */
+	private List<WordBagAndArg> getWordBags(List<String> examples, int numOfLinkThreads) {
 		List<WordBagAndArg> wordBags = new ArrayList<WordBagAndArg>();
 
+		// whether the thread in charge of making queries to the search engine
+		// is done
 		AtomicBoolean SearchDone = new AtomicBoolean(false);
+		// whether the thread in charge of converting webpage contents to word
+		// bags is done
 		AtomicBoolean WordDone = new AtomicBoolean(false);
+		// List of website contents, and the query used to find them
 		List<LinkContentsForSearch> cont = new ArrayList<LinkContentsForSearch>();
 
+		// List of threads in charge of getting website contents from links
 		List<LinkContentsThread> listT2 = new ArrayList<LinkContentsThread>();
+		/*
+		 * List of Lists of lists of website links by the query that created
+		 * them. Each List<SearchResults> is used to send links from Thread1
+		 * (the thread in charge of querying the search engine) to one of the
+		 * threads in listT2.
+		 */
 		List<List<SearchResults>> t1Tot2Lists = new ArrayList<List<SearchResults>>();
+
+		/*
+		 * Each AtomicBoolean in the list corresponds to one of the threads in
+		 * listT2. Each represents whether the thread in listT2 has completed
+		 * execution.
+		 */
 		List<AtomicBoolean> LinksDone = new ArrayList<AtomicBoolean>();
 
+		// for each link-reading thread, as dictated by the method's argument
+		// numOfLinkThreads:
 		for (int x = 0; x < numOfLinkThreads; x++) {
+			// Create the list used to send links from the SearchThread t1 to
+			// one of the threads in listT2.
 			List<SearchResults> res = new ArrayList<SearchResults>();
 			t1Tot2Lists.add(res);
 
+			// Create the AtomicBoolean that will be used to indicated whether
+			// one of the threads in listT2 has completed
 			AtomicBoolean linksDoneBool = new AtomicBoolean(false);
 			LinksDone.add(linksDoneBool);
 
+			// Create a new thread object using the list and boolean from above
 			LinkContentsThread t2 = new LinkContentsThread(res, SearchDone, linksDoneBool, cont);
+			// give it a unique name for debugging
 			t2.setName("_" + x);
+			// Add the thread to listT2
 			listT2.add(t2);
 		}
 
@@ -870,6 +1008,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 
 		WordProcessingThread t3 = new WordProcessingThread(LinksDone, cont, WordDone, wordBags);
 
+		// Start all of the threads.
 		(new Thread(t1)).start();
 		for (LinkContentsThread t2 : listT2) {
 			(new Thread(t2)).start();
@@ -877,6 +1016,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 
 		(new Thread(t3)).start();
 
+		// Wait for the word processing thread to be done placing word bags into
+		// the list named wordBags
 		synchronized (WordDone) {
 			if (WordDone.get() != true) {
 				try {
@@ -887,17 +1028,67 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 				}
 			}
 		}
+		// return wordBags, it should be filled by the thread t3
 		return wordBags;
 	}
 
+	/**
+	 * This Runnable searches words, and returns the resulting links.
+	 * 
+	 * @author Ian Berlot-Attwell
+	 */
 	private class SearchThread implements Runnable {
 
+		/**
+		 * Whether this thread has finished searching and returning links.
+		 * Should be false until the {@link #run()} method has been called no
+		 * further SearchResults will be added to any of the lists in
+		 * {@link #ListSearchResults}.
+		 */
 		AtomicBoolean amDone;
+
+		/**
+		 * A list of words to be searched with
+		 * {@link MultithreadSimpleOpenEval.keyword}. As words are searched they
+		 * are removed from the list. This thread does not write to examples.
+		 */
 		List<String> examples;
+
+		/**
+		 * The search engine to use to make queries.
+		 */
 		GenericSearchEngine search;
+
+		/**
+		 * When search results are produced by searching a word in
+		 * {@link #examples}, the links are divided amongst each {@code List
+		 * <SearchResults>} in this list. This class only writes to these lists,
+		 * it does not read any of them.
+		 */
 		List<List<SearchResults>> ListSearchResults;
 
-		// Note searchResults should be a synchronizedList
+		/**
+		 * Create a SearchThread that, when run, takes a String for
+		 * {@code examples}, searches it using {@code search} preceded with
+		 * {@link MultithreadSimpleOpenEval.keyword}, divides the links into
+		 * {@code ListSearchResults.size()} roughly equal parts and places each
+		 * part into a list in {@code ListSearchResults}. Once there are no more
+		 * words in {@code examples} and all of the links have been distributed
+		 * amongst the lists in {@code ListSearchResults}, then
+		 * {@code searchThreadIsDone} is set to true.
+		 * 
+		 * @param examples
+		 *            The strings to be searched
+		 * @param search
+		 *            The search engine to search the Strings in
+		 *            {@code examples}.
+		 * @param searchThreadIsDone
+		 *            Whether the thread is finished searching words and
+		 *            distributing the links. Must be false during contruction.
+		 * @param ListSearchResults
+		 *            The lists amongst which the found links are distributed.
+		 *            Cannot be empty or {@code null}.
+		 */
 		public SearchThread(List<String> examples, GenericSearchEngine search, AtomicBoolean searchThreadIsDone,
 				List<List<SearchResults>> ListSearchResults) {
 			assert (searchThreadIsDone.get() == false);
@@ -909,9 +1100,19 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			this.ListSearchResults = ListSearchResults;
 		}
 
+		/**
+		 * For each String in {@code examples}, searches it using {@code search}
+		 * preceded with {@link MultithreadSimpleOpenEval.keyword}, divides the
+		 * links into {@code ListSearchResults.size()} roughly equal parts and
+		 * places each part into a list in {@code ListSearchResults}. Once there
+		 * are no more words in {@code examples} and all of the links have been
+		 * distributed amongst the lists in {@code ListSearchResults}, then
+		 * {@code searchThreadIsDone} is set to true.
+		 */
 		@Override
 		public void run() {
 			Iterator<String> itr = examples.iterator();
+			// iterates through each String in examples
 			while (itr.hasNext()) {
 				String ex = itr.next();
 				try {
@@ -927,6 +1128,9 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 						System.out.println("1. Done search");
 
 					List<SearchResults> splitResults = splitNWay(resultsForEx, ListSearchResults.size());
+
+					// places a unique part of the results in list in
+					// ListSearchResults, and notifies the sublist.
 					for (int x = 0; x < ListSearchResults.size(); x++) {
 						List<SearchResults> r = ListSearchResults.get(x);
 						synchronized (r) {
@@ -937,6 +1141,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 						}
 					}
 
+					// If there are no further Strings in example, sets amDone
+					// to true and notifies all sublists in ListSearchResults
 					Object lock = new Object();
 					synchronized (lock) {
 						if (!itr.hasNext()) {
@@ -956,6 +1162,12 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 					synchronized (lock) {
 						if (verbose)
 							System.err.println("Searching " + ex + " falied");
+
+						/*
+						 * If there are no further Strings in example, sets
+						 * amDone to true and notifies all sublists in
+						 * ListSearchResults
+						 */
 						if (!itr.hasNext()) {
 							if (verbose)
 								System.out.println("1. setting Done to true (last search failed)");
@@ -972,17 +1184,29 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			}
 		}
 
+		/**
+		 * Takes a SearchResults (which is a list of links), and splits it into
+		 * n SearchResults, each of roughly equal size. {@code n} must be
+		 * {@code >0}.
+		 */
 		public List<SearchResults> splitNWay(SearchResults toSplit, int n) {
 			assert (n > 0);
+
 			List<SearchResults> result = new ArrayList<SearchResults>(n);
+
+			// retrive non-link information stored in toSplit
 			int hits = toSplit.getHits();
 			String query = toSplit.getQuery();
 			int pageNumber = toSplit.getPageNumber();
+
+			// Create n empty SearchResults each containing the same non-link
+			// information
 			for (int x = 0; x < n; x++) {
 				List<SearchResult> temp = new ArrayList<SearchResult>();
 				result.add(new SearchResults(hits, temp, query, pageNumber));
 			}
 
+			// Distributes links amongst the n empty SearchResults evenly.
 			int index = 0;
 			while (index + n <= toSplit.size()) {
 				for (int x = 0; x < n; x++) {
@@ -991,6 +1215,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 				index += n;
 			}
 
+			// Places the remaining links (0 <= remaining links < n) one in each
+			// SearchResults until there are no further links
 			for (; index < toSplit.size(); index++) {
 				result.get(index % n).add(toSplit.get(index));
 			}
@@ -999,6 +1225,13 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		}
 	}
 
+	/**
+	 * A Runnable that, when run, removes SearchResults objects from a list,
+	 * searches the links stored within, the passes the link contents along with
+	 * the query that produced the link to a separate list.
+	 * 
+	 * @author Ian Berlot-Attwell
+	 */
 	private class LinkContentsThread implements Runnable {
 		List<SearchResults> searchResults;
 		AtomicBoolean searchDone;
@@ -1301,6 +1534,9 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			}
 		}
 
+		/**
+		 * Whether all the LinkContentsThread objects are done running
+		 */
 		private boolean allLinkThreadsDone() {
 			synchronized (linkContents) {
 				for (AtomicBoolean a : linksDone) {
@@ -1410,19 +1646,44 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		}
 	}
 
+	/**
+	 * Represents a word bag as a String of words seperated by " ", as well as
+	 * the arguments (excluding {@link MultithreadSimpleOpenEval.keyword}) to
+	 * the MultithreadSimpleOpenEval which created it. The arguments may be in
+	 * lowercase.
+	 * 
+	 * @author Ian Berlot-Attwell
+	 *
+	 */
 	private class WordBagAndArg {
 		final String wordBag;
 		final String arg;
 
+		/**
+		 * Construct WordBagAndArg.
+		 * 
+		 * @param wordBag
+		 *            a word bag as a String of words seperated by " "
+		 * @param arg
+		 *            the arguments to to the MultithreadSimpleOpenEval which
+		 *            created {@code wordBag}.
+		 */
 		WordBagAndArg(String wordBag, String arg) {
 			this.wordBag = wordBag;
 			this.arg = arg;
 		}
 
+		/**
+		 * Return a word bag as a String of words seperated by " "
+		 */
 		public String getWordBag() {
 			return wordBag;
 		}
 
+		/**
+		 * Return the arguments to MultithreadSimpleOpenEval which created the
+		 * word bag represented by this object.
+		 */
 		public String getArg() {
 			return arg;
 		}
