@@ -32,6 +32,7 @@ import edu.toronto.cs.se.ci.utils.searchEngine.SearchResult;
 import edu.toronto.cs.se.ci.utils.searchEngine.SearchResults;
 import weka.classifiers.Classifier;
 import weka.classifiers.functions.SMO;
+import weka.classifiers.meta.FilteredClassifier;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
@@ -39,6 +40,7 @@ import weka.core.Instances;
 import weka.core.SparseInstance;
 import weka.core.converters.ArffSaver;
 import weka.filters.Filter;
+import weka.filters.supervised.instance.ClassBalancer;
 import weka.filters.unsupervised.attribute.StringToWordVector;
 
 /**
@@ -178,7 +180,15 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 		}
 		search = new GoogleCSESearchJSON();
-		classifier = new SMO();
+		
+		SMO smo = new SMO();
+		String [] SMOOptions = new String []{"-M"};
+		smo.setOptions(SMOOptions);
+		FilteredClassifier fc = new FilteredClassifier();
+		fc.setClassifier(smo);
+		fc.setFilter(new ClassBalancer());
+		classifier = fc;
+		
 		this.keyword = keyword;
 		filter = new StringToWordVector();
 		/*
@@ -243,7 +253,15 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 		}
 		search = new GoogleCSESearchJSON();
-		classifier = new SMO();
+		
+		SMO smo = new SMO();
+		String [] SMOOptions = new String []{"-M"};
+		smo.setOptions(SMOOptions);
+		FilteredClassifier fc = new FilteredClassifier();
+		fc.setClassifier(smo);
+		fc.setFilter(new ClassBalancer());
+		classifier = fc;
+		
 		this.keyword = keyword;
 		// creates word bag data
 		this.unfilteredTrainingData = createTrainingData(positiveExamples, negativeExamples);
@@ -308,7 +326,15 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 		}
 		this.search = search;
-		classifier = new SMO();
+		
+		SMO smo = new SMO();
+		String [] SMOOptions = new String []{"-M"};
+		smo.setOptions(SMOOptions);
+		FilteredClassifier fc = new FilteredClassifier();
+		fc.setClassifier(smo);
+		fc.setFilter(new ClassBalancer());
+		classifier = fc;
+		
 		this.keyword = keyword;
 		// creates word bag data
 		if (verbose)
@@ -384,7 +410,15 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 		}
 		this.search = search;
-		classifier = new SMO();
+		
+		SMO smo = new SMO();
+		String [] SMOOptions = new String []{"-M"};
+		smo.setOptions(SMOOptions);
+		FilteredClassifier fc = new FilteredClassifier();
+		fc.setClassifier(smo);
+		fc.setFilter(new ClassBalancer());
+		classifier = fc;
+		
 		this.keyword = keyword;
 		// creates word bag data
 		if (verbose)
@@ -448,7 +482,15 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		}
 		// search = new BingSearchJSON();
 		search = new GoogleCSESearchJSON();
-		classifier = new SMO();
+		
+		SMO smo = new SMO();
+		String [] SMOOptions = new String []{"-M"};
+		smo.setOptions(SMOOptions);
+		FilteredClassifier fc = new FilteredClassifier();
+		fc.setClassifier(smo);
+		fc.setFilter(new ClassBalancer());
+		classifier = fc;
+		
 		this.keyword = keyword;
 
 		filter = new StringToWordVector();
@@ -855,6 +897,10 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 	@Override
 	public String getName() {
 		return super.getName() + this.nameSuffix;
+	}
+	
+	public String getKeyword(){
+		return keyword;
 	}
 
 	/**
