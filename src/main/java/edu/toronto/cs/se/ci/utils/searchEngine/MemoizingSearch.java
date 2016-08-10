@@ -18,18 +18,28 @@ import java.util.Map;
  *
  */
 public class MemoizingSearch implements GenericSearchEngine {
-	// The search engine being wrapped
+	/**
+	 * The search engine being wrapped
+	 */
 	GenericSearchEngine search;
+
+	/**
+	 * Maps from a String query to the SearchResults produced by searching said
+	 * query with {@link #search}.
+	 */
 	Map<String, SearchResults> savedSearches;
-	// The file containing the json object on the hard drive
+
+	/**
+	 * The file containing the json object on the hard drive
+	 */
 	String filePath;
 
 	// demo
 	public static void main(String[] args) throws IOException {
 		MemoizingSearch search = new MemoizingSearch("./googleMemoization.ser", new GoogleCSESearchJSON());
 		System.out.println(search.search("avocado"));
-		//System.out.println(search.search("pineaple"));
-		//System.out.println(search.search("grapes"));
+		// System.out.println(search.search("pineaple"));
+		// System.out.println(search.search("grapes"));
 	}
 
 	/**
@@ -57,6 +67,21 @@ public class MemoizingSearch implements GenericSearchEngine {
 		}
 	}
 
+	/**
+	 * Attempts to return the serialized hashmap at {@code path}. If the file at
+	 * {@code path} does not exist, but the directory does, then the file is
+	 * created and an empty hashmap is returned.
+	 * 
+	 * @param path
+	 * @return The hashmap serialized at {@code path}, or an empty hashmap if
+	 *         {@code path} did not lead to a file, but a new empty file could
+	 *         be created there.
+	 * @throws IOException
+	 *             A problem occured in reading the file, or in creating the
+	 *             non-existant file.
+	 * @throws ClassNotFoundException
+	 *             A problem occured in the deserialization of the file.
+	 */
 	private HashMap<String, SearchResults> loadMemoizedContents(String path)
 			throws IOException, ClassNotFoundException {
 		File f = new File(path);
@@ -81,19 +106,26 @@ public class MemoizingSearch implements GenericSearchEngine {
 		return search(searchString, 1);
 	}
 
-	// TODO: Fix so that it checks String and Page number
+	// TODO: Fix so that it checks String and Page number (i.e. page 1 is just
+	// searchString, following n pages are searchString_n).
 	@Override
 	public SearchResults search(String searchString, int pageNumber) throws IOException {
-		if(pageNumber != 1){
+		// TODO: Remove once fix is implemented
+		if (pageNumber != 1) {
 			throw new UnsupportedOperationException();
 		}
 
+		// If this search has been done before, return the previously found
+		// result.
 		if (savedSearches.containsKey(searchString)) {
 			return savedSearches.get(searchString);
 		}
+
+		// otherwise search for the result and add it to memory
 		SearchResults results = search.search(searchString, pageNumber);
 		savedSearches.put(searchString, results);
 
+		// update the file of search queries and responses.
 		try (FileOutputStream fos = new FileOutputStream(filePath)) {
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
 			oos.writeObject(this.savedSearches);

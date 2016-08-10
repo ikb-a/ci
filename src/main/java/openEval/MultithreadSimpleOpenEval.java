@@ -180,15 +180,19 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 		}
 		search = new GoogleCSESearchJSON();
-		
+
+		// Creates a SMO classifier
 		SMO smo = new SMO();
-		String [] SMOOptions = new String []{"-M"};
+		// sets the classifier to give meaningful probabilities
+		String[] SMOOptions = new String[] { "-M" };
 		smo.setOptions(SMOOptions);
+		// Adds a class balancing filter which will balance the
+		// weight of classes for training
 		FilteredClassifier fc = new FilteredClassifier();
 		fc.setClassifier(smo);
 		fc.setFilter(new ClassBalancer());
 		classifier = fc;
-		
+
 		this.keyword = keyword;
 		filter = new StringToWordVector();
 		/*
@@ -253,15 +257,15 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 		}
 		search = new GoogleCSESearchJSON();
-		
+
 		SMO smo = new SMO();
-		String [] SMOOptions = new String []{"-M"};
+		String[] SMOOptions = new String[] { "-M" };
 		smo.setOptions(SMOOptions);
 		FilteredClassifier fc = new FilteredClassifier();
 		fc.setClassifier(smo);
 		fc.setFilter(new ClassBalancer());
 		classifier = fc;
-		
+
 		this.keyword = keyword;
 		// creates word bag data
 		this.unfilteredTrainingData = createTrainingData(positiveExamples, negativeExamples);
@@ -326,15 +330,15 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 		}
 		this.search = search;
-		
+
 		SMO smo = new SMO();
-		String [] SMOOptions = new String []{"-M"};
+		String[] SMOOptions = new String[] { "-M" };
 		smo.setOptions(SMOOptions);
 		FilteredClassifier fc = new FilteredClassifier();
 		fc.setClassifier(smo);
 		fc.setFilter(new ClassBalancer());
 		classifier = fc;
-		
+
 		this.keyword = keyword;
 		// creates word bag data
 		if (verbose)
@@ -410,15 +414,15 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			this.memoizedLinkContents = new ConcurrentHashMap<String, String>();
 		}
 		this.search = search;
-		
+
 		SMO smo = new SMO();
-		String [] SMOOptions = new String []{"-M"};
+		String[] SMOOptions = new String[] { "-M" };
 		smo.setOptions(SMOOptions);
 		FilteredClassifier fc = new FilteredClassifier();
 		fc.setClassifier(smo);
 		fc.setFilter(new ClassBalancer());
 		classifier = fc;
-		
+
 		this.keyword = keyword;
 		// creates word bag data
 		if (verbose)
@@ -482,15 +486,15 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		}
 		// search = new BingSearchJSON();
 		search = new GoogleCSESearchJSON();
-		
+
 		SMO smo = new SMO();
-		String [] SMOOptions = new String []{"-M"};
+		String[] SMOOptions = new String[] { "-M" };
 		smo.setOptions(SMOOptions);
 		FilteredClassifier fc = new FilteredClassifier();
 		fc.setClassifier(smo);
 		fc.setFilter(new ClassBalancer());
 		classifier = fc;
-		
+
 		this.keyword = keyword;
 
 		filter = new StringToWordVector();
@@ -885,11 +889,27 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		return classifier;
 	}
 
+	/**
+	 * Changes the classifier used to the classifier provided, and retrains.
+	 * Note that the class-balancing filter will not be applied during training.
+	 * If you want to apply the class balancing filter, or other filters to
+	 * training/evaluation, then pass a filteredClassifier to this method.
+	 * 
+	 * @param classifier
+	 * @throws Exception
+	 */
 	public void setClassifier(Classifier classifier) throws Exception {
 		this.classifier = classifier;
 		classifier.buildClassifier(trainingData);
 	}
 
+	/**
+	 * Sets the suffix that will be appended to the name of this class. The
+	 * suffix is used to make the name of this openeval unique, allowing for
+	 * multiple open eval objects to be used in a CI using a ML aggregator.
+	 * 
+	 * @param newSuffix
+	 */
 	public void setNameSuffix(String newSuffix) {
 		this.nameSuffix = newSuffix;
 	}
@@ -898,8 +918,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 	public String getName() {
 		return super.getName() + this.nameSuffix;
 	}
-	
-	public String getKeyword(){
+
+	public String getKeyword() {
 		return keyword;
 	}
 
@@ -1273,18 +1293,75 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 
 	/**
 	 * A Runnable that, when run, removes SearchResults objects from a list,
-	 * searches the links stored within, the passes the link contents along with
-	 * the query that produced the link to a separate list.
+	 * searches the links stored within, the passes the link's contents along
+	 * with the query that produced the link to a separate list.
 	 * 
 	 * @author Ian Berlot-Attwell
 	 */
 	private class LinkContentsThread implements Runnable {
+		/**
+		 * List of SearchResults objects. This list should be the output of a
+		 * {@link MultithreadSimpleOpenEval.SearchThread}
+		 */
 		List<SearchResults> searchResults;
+
+		/**
+		 * Whether the {@link MultithreadSimpleOpenEval.SearchThread} adding new
+		 * links to {@link #searchResults} has no further links to add.
+		 */
 		AtomicBoolean searchDone;
+
+		/**
+		 * Whether {@link #searchResults} is empty and {@link #searchDone} is
+		 * true.
+		 */
 		AtomicBoolean amDone;
+
+		/**
+		 * List of LinkContentsForSearch objects. Each of these objects contains
+		 * the text body of a link, along with the search query that produced
+		 * the link.
+		 */
 		List<LinkContentsForSearch> linkContents;
+
+		/**
+		 * The name for this thread. The name is used in the debugging print
+		 * statements to differentiate between the different
+		 * {@link MultithreadSimpleOpenEval.SearchThread} threads running.
+		 */
 		String name = "";
 
+		/**
+		 * Creates a new Runnable that, when run, removes SearchResults objects
+		 * from a {@code searchResuts}, searches the links stored within, and
+		 * then passes the link's contents along with the query that produced
+		 * the link to {@code linkContents}. This behaviour continues until
+		 * {@code searchResuts} is empty and and {@code SearchThreadIsDone} is
+		 * true, at which point {@code LinkContentsIsDone} is set to true.
+		 * <p>
+		 * Note that whenever a new element is added to {@code linkContents}, or
+		 * when the thread is finished executing, notifyAll is called on
+		 * {@code linkContents}.
+		 * 
+		 * @param searchResults
+		 *            List of SearchResults objects. This list should be the
+		 *            output of a {@link MultithreadSimpleOpenEval.SearchThread}
+		 *            . This list should have notifyAll() called upon it
+		 *            whenever new elements are added to it, or when
+		 *            {@code SearchThreadIsDone} is set to true.
+		 * @param SearchThreadIsDone
+		 *            Whether the {@link MultithreadSimpleOpenEval.SearchThread}
+		 *            adding new links to {@code searchResults} has no further
+		 *            links to add.
+		 * @param LinkContentsIsDone
+		 *            Whether {@code searchResults} is empty and
+		 *            {@code SearchThreadIsDone} is true.
+		 * @param linkContents
+		 *            List of LinkContentsForSearch objects. Each of these
+		 *            objects contains the text body of a link, along with the
+		 *            search query that produced the link. This list is notified
+		 *            whenever this thread adds to it, or is finished executing.
+		 */
 		public LinkContentsThread(List<SearchResults> searchResults, AtomicBoolean SearchThreadIsDone,
 				AtomicBoolean LinkContentsIsDone, List<LinkContentsForSearch> linkContents) {
 			this.searchResults = searchResults;
@@ -1293,10 +1370,26 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			this.linkContents = linkContents;
 		}
 
+		/**
+		 * Sets the name used in debug messages to differentiate this thread
+		 * from other instances of the same class.
+		 */
 		public void setName(String name) {
 			this.name = name;
 		}
 
+		/**
+		 * Removes SearchResults from {@link #searchResults} until the list is
+		 * empty and {@link #searchDone} is true. For each SearchResult removed
+		 * from {@link #searchResults}, the links are read and their contents
+		 * are added to {@link #linkContents}, at which point notifyAll() is
+		 * called on {@link #linkContents}.
+		 * <p>
+		 * When {@link #searchResults} is empty and {@link #searchDone} is true
+		 * and there are no futher links that need to be read, then
+		 * {@link #amDone} is set to true and notifyAll is called on
+		 * {@link #linkContents}.
+		 */
 		@Override
 		public void run() {
 			List<SearchResults> toProcess = new ArrayList<SearchResults>();
@@ -1359,8 +1452,14 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 				for (Iterator<SearchResults> itr = toProcess.iterator(); itr.hasNext();) {
 					SearchResults curr = itr.next();
 					itr.remove();
+					// Creates a object that represents the contents of the
+					// link, and also records that the link was found by
+					// searching curr.getQuery()
 					LinkContentsForSearch contents = new LinkContentsForSearch(curr.getQuery());
 					for (SearchResult link : curr) {
+						// if link memoization is being used, and the links
+						// contents are known, then add the known results and
+						// continue to the next link
 						if (memoizeLinkContents && link.getLink() != null
 								&& memoizedLinkContents.containsKey(link.getLink())) {
 							String savedContents = (memoizedLinkContents.get(link.getLink()));
@@ -1373,6 +1472,9 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 						try {
 							if (verbose)
 								System.out.println("2." + name + " Reading: " + link);
+							// read the contents of the website
+							// TODO: set jsoup so as to reject any website that
+							// request authentication
 							String websiteAsString = Jsoup.connect(link.getLink())
 									.userAgent(
 											"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:48.0) Gecko/20100101 Firefox/48.0")
@@ -1394,6 +1496,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 						}
 					}
 
+					// once all the links in the list toProccess are completed,
+					// update and notify the linkContents list.
 					synchronized (linkContents) {
 						if (verbose)
 							System.out.println("2." + name + " Updating linkContents");
@@ -1407,6 +1511,14 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		}
 	}
 
+	/**
+	 * This class represents the contents of the links produced by a query, as
+	 * well as the query used to find the links. Each element in the set is the
+	 * contents of a website found by searching {@link #keywords}.
+	 * 
+	 * @author Ian Berlot-Attwell
+	 *
+	 */
 	@SuppressWarnings("serial")
 	private static class LinkContentsForSearch extends HashSet<String> {
 		final String keywords;
@@ -1437,14 +1549,39 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 
 	}
 
+	/**
+	 * This thread converts the contents of links along with the queries used to
+	 * find said links; and converts them into word bags.
+	 * 
+	 * @author Ian Berlot-Attwell
+	 *
+	 */
 	private class WordProcessingThread implements Runnable {
+		/**
+		 * Each element in this list is whether a distinct LinkContentsThread
+		 * has finished adding new elements to {@link #linkContents}.
+		 */
 		List<AtomicBoolean> linksDone;
+
+		/**
+		 * Whether all of the elements in {@link #linksDone} are true, and this
+		 * thread has no further wordBags to add to {@link #generatedWordBags}.
+		 */
 		AtomicBoolean amDone;
+
+		/**
+		 * The list from which the thread takes the contents of websites so that
+		 * they may be converted to wordBags.
+		 */
 		List<LinkContentsForSearch> linkContents;
+
+		/**
+		 * The list to which the thread adds wordBags created.
+		 */
 		List<WordBagAndArg> generatedWordBags;
 
 		/**
-		 * The list of all stop words to be ignored.
+		 * The list of all stop words to be removed from word bags.
 		 */
 		List<String> stopWords = Arrays.asList(new String[] { "a", "about", "above", "across", "after", "again",
 				"against", "all", "almost", "alone", "along", "already", "also", "although", "always", "among", "an",
@@ -1485,8 +1622,39 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 				"who", "whole", "whose", "why", "will", "with", "within", "without", "work", "worked", "working",
 				"works", "would", "x", "y", "year", "years", "yet", "you", "young", "younger", "youngest", "your",
 				"yours", "z" });
+
+		/**
+		 * The maximum allowable distance between any 2 needed words (arguments
+		 * to the open eval and the keyword) in a word bag.
+		 */
 		public final static int WORD_BAG_SPACING = 15;
 
+		/**
+		 * Creates a thread that reads LinkContentsForSearch from
+		 * {@code linkContents} and converts them into word bags which are saved
+		 * to {@code generatedWordBags}. This process continues until all
+		 * elements of {@code LinkContentsIsDone} are true, the list
+		 * {@code linkContents} is emtpy (from this thread removing the list's
+		 * elements), and the thread has no further word bags to add to
+		 * {@code generatedWordBags}. At this point {@code wordProcessingIsDone}
+		 * is set to true.
+		 * 
+		 * @param LinkContentsIsDone
+		 *            When all the elements are true, this signals to this
+		 *            thread that no further elements will be added to
+		 *            {@code linkContents}.
+		 * @param linkContents
+		 *            The contents of links along with the query used to find
+		 *            the links.
+		 * @param wordProcessingIsDone
+		 *            True when all elements of {@code LinkContentsIsDone} are
+		 *            true, the list {@code linkContents} is emtpy (from this
+		 *            thread removing the list's elements), and the thread has
+		 *            no further word bags to add to {@code generatedWordBags}.
+		 * @param generatedWordBags
+		 *            The list to which word bags extracted from the
+		 *            LinkContentsForSearch in {@code linkContents} are added.
+		 */
 		public WordProcessingThread(List<AtomicBoolean> LinkContentsIsDone, List<LinkContentsForSearch> linkContents,
 				AtomicBoolean wordProcessingIsDone, List<WordBagAndArg> generatedWordBags) {
 			linksDone = LinkContentsIsDone;
@@ -1495,17 +1663,37 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			this.generatedWordBags = generatedWordBags;
 		}
 
+		/**
+		 * Converts LinkContentsForSearch in {@link #linkContents} into word
+		 * bags which are added to {@link #generatedWordBags}. Each time word
+		 * bags are added, notifyAll() is called on {@link #generatedWordBags}.
+		 * Once all elements of {@link #linksDone} are true, the list
+		 * {@link #linkContents} is empty (from this thread removing the list's
+		 * elements), and the thread has no further word bags to add to
+		 * {@link #generatedWordBags}; then {@link #amDone} is set to true.
+		 */
 		@Override
 		public void run() {
+			/*
+			 * The list of LinkContentsForSearch that need to be converted into
+			 * word bags
+			 */
 			List<LinkContentsForSearch> toProcess = new ArrayList<LinkContentsForSearch>();
 			while (true) {
+				// if there are no link contents to process ...
 				if (toProcess.isEmpty()) {
 					if (verbose)
 						System.out.println("3. Need more text");
 					synchronized (linkContents) {
+						/*
+						 * If linkContents contains more LinkContentsForSearch
+						 * then copy them and continue. Otherwise...
+						 */
 						if (linkContents.isEmpty()) {
 							if (verbose)
 								System.out.println("3. LinkContent Thread buffer is empty");
+							// If all of the elements in linksDone are true,
+							// stop execution.
 							if (allLinkThreadsDone()) {
 								synchronized (generatedWordBags) {
 									if (verbose)
@@ -1517,11 +1705,21 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 									generatedWordBags.notifyAll();
 								}
 								return;
+								// Otherwise, wait for more text
 							} else {
 								try {
 									if (verbose)
 										System.out.println("3. Waiting for more text.");
 									linkContents.wait();
+									/*
+									 * If more text is available, copy it and
+									 * continue processing. Otherwise, this
+									 * means that no further information is
+									 * coming.
+									 */
+									// TODO: fix bug where thread 2a) finishes,
+									// notifying linkContents; but 2b) is not
+									// yet done.
 									if (linkContents.isEmpty()) {
 										synchronized (generatedWordBags) {
 											if (verbose)
@@ -1542,6 +1740,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 							}
 
 						}
+						// empty linkContents and more the text into
+						// linkContents
 						toProcess.addAll(linkContents);
 						linkContents.clear();
 						if (verbose)
@@ -1549,18 +1749,27 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 					}
 				}
 
+				// Iterates through each LinkContentsForSearch object
 				for (Iterator<LinkContentsForSearch> itr = toProcess.iterator(); itr.hasNext();) {
+					// Retrieve collection of link contents for a search
 					LinkContentsForSearch linkContentsSet = itr.next();
 					itr.remove();
-					Set<String> searchTermsAndKeywords = new HashSet<String>(
-							Arrays.asList(linkContentsSet.getKeywords().toLowerCase().split(" +")));
+					// extract the search terms and the keyword from the
+					// keywords value of linkContentsSet
+					Set<String> searchTermsAndKeywords = new HashSet<String>(Arrays.asList(
+							linkContentsSet.getKeywords().toLowerCase().replaceAll("[^\\w0-9'-]", " ").split(" +")));
+					// Iterates through each String link content in the
+					// LinkContentsForSearch object
 					for (Iterator<String> itr2 = linkContentsSet.iterator(); itr2.hasNext();) {
 						String contents = itr2.next();
 						itr2.remove();
 
 						if (verbose)
 							System.out.println("3. starting word bag extraction");
-						contents = contents.toLowerCase().replaceAll("[^\\w0-9-]", " ");
+						// conver the text into a list of lowercase words made
+						// of letters, numbers, hyphens, single quotes and
+						// underscores.
+						contents = contents.toLowerCase().replaceAll("[^\\w0-9'-]", " ");
 						List<String> textAsList = new ArrayList<String>(Arrays.asList(contents.split("\\s++")));
 
 						List<WordBagAndArg> wordBags = textAsListToWordBags(textAsList, searchTermsAndKeywords,

@@ -23,14 +23,45 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ArffSaver;
 
+/**
+ * This class accepts training data and sources which produce a nominal output,
+ * and uses them to produce a .arff file that can be used to train a nominal ML
+ * aggregator for a CI.
+ * 
+ * @author Ian Berlot-Attwell
+ *
+ * @param <I>
+ *            The input type of the sources that will be used to create the
+ *            training data
+ * @param <O>
+ *            The output type of the sources that will be used to create the
+ *            training data
+ */
 public class NominalTrainer<I, O> {
 
+	/**
+	 * The sources that will be queried to produce training data.
+	 */
 	private final ImmutableSet<Source<I, O, Void>> sources;
 
+	/**
+	 * Create a new NominalTrainer by using source discovery on {@code contract}
+	 * 
+	 * @param contract
+	 *            A contract to be used to find the sources for the creation of
+	 *            training data.
+	 */
 	public NominalTrainer(Class<? extends Contract<I, O, Void>> contract) {
 		this(Contracts.discover(contract));
 	}
 
+	/**
+	 * Create a new NominalTrainer using the sources in {@code sources} to
+	 * produce training data.
+	 * 
+	 * @param sources
+	 *            A non-{@code null} collection of sources to be queried.
+	 */
 	public NominalTrainer(Collection<? extends Source<I, O, Void>> sources) {
 		if (sources == null) {
 			throw new IllegalArgumentException("Null arguments are invalid");
@@ -38,6 +69,13 @@ public class NominalTrainer<I, O> {
 		this.sources = ImmutableSet.copyOf(sources);
 	}
 
+	/**
+	 * Create a new NominalTrainer using the sources provided by
+	 * {@code provider} to produce training data.
+	 * 
+	 * @param provider
+	 *            A provider to produces sources to be queried.
+	 */
 	public NominalTrainer(Provider<I, O, Void> provider) {
 		if (provider == null) {
 			throw new IllegalArgumentException("Null arguments are invalid");
@@ -45,6 +83,42 @@ public class NominalTrainer<I, O> {
 		this.sources = ImmutableSet.copyOf(provider.provide());
 	}
 
+	/**
+	 * Given the examples in {@code trainingData} and the sources given during
+	 * construction, return an Instances object containing the expected value of
+	 * each example as well as the output of each source, and also save this
+	 * object as an .arff to {@code savePath}.
+	 * <p>
+	 * Depending on the speed of the sources and the number of examples, this
+	 * method may take minutes to hours to complete.
+	 * <p>
+	 * Note that the name of the class attribute produced by this method is
+	 * "class", so none of the sources' getName() methods can return "class".
+	 * 
+	 * @param trainingData
+	 *            The training data on which to produce the output. Together,
+	 *            the keys of the map should be every valid nominal output of
+	 *            the sources represented as a String (i.e. If each source
+	 *            returns a boolean, and {@code converter} converts true to "T"
+	 *            and false to "F", then the keys of the map must be "T" and "F"
+	 *            respectively). The values of the map should be an array of
+	 *            inputs that should produce the key as the output. For example,
+	 *            continuing the example where the sources return boolean
+	 *            outputs, if the sources all answer the question
+	 *            "Is the item x blue?" then "T" might map to ["blueberry",
+	 *            "ocean", "sky"] whereas "F" may map to ["brick", "concrete",
+	 *            "grass"].
+	 * @param converter
+	 *            The converter used to convert from the type O returned by the
+	 *            sources, to the String nominal value used as the keys in
+	 *            {@code trainingData}, and as the output values in the training
+	 *            data produced.
+	 * @param savePath
+	 *            The path to save the produced training data.
+	 * @return The produces training data as an Instances object. Each source is
+	 *         it's own attribute, with the value of the source's getName()
+	 *         method being the name of it's attribute.
+	 */
 	public Instances createNominalTrainingData(Map<String, I[]> trainingData, MLWekaNominalConverter<O> converter,
 			String savePath) {
 		Set<String> keys = trainingData.keySet();
@@ -106,6 +180,7 @@ public class NominalTrainer<I, O> {
 			}
 		}
 
+		// Save the produced instances object
 		try {
 			ArffSaver saver = new ArffSaver();
 			saver.setInstances(trainingDataAsInstances);
