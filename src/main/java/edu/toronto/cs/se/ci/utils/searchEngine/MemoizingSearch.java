@@ -106,24 +106,24 @@ public class MemoizingSearch implements GenericSearchEngine {
 		return search(searchString, 1);
 	}
 
-	// TODO: Fix so that it checks String and Page number (i.e. page 1 is just
-	// searchString, following n pages are searchString_n).
 	@Override
 	public SearchResults search(String searchString, int pageNumber) throws IOException {
-		// TODO: Remove once fix is implemented
+		String key;
 		if (pageNumber != 1) {
-			throw new UnsupportedOperationException();
+			key = searchString+"_PageNumber"+pageNumber;
+		}else{
+			key = searchString;
 		}
 
 		// If this search has been done before, return the previously found
 		// result.
-		if (savedSearches.containsKey(searchString)) {
-			return savedSearches.get(searchString);
+		if (savedSearches.containsKey(key)) {
+			return savedSearches.get(key);
 		}
 
 		// otherwise search for the result and add it to memory
 		SearchResults results = search.search(searchString, pageNumber);
-		savedSearches.put(searchString, results);
+		savedSearches.put(key, results);
 
 		// update the file of search queries and responses.
 		try (FileOutputStream fos = new FileOutputStream(filePath)) {
