@@ -1713,26 +1713,28 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 									linkContents.wait();
 									/*
 									 * If more text is available, copy it and
-									 * continue processing. Otherwise, this
-									 * means that no further information is
-									 * coming.
+									 * continue processing. Otherwise, check if
+									 * all of the text generating threads have
+									 * completed.
 									 */
-									// TODO: fix bug where thread 2a) finishes,
-									// notifying linkContents; but 2b) is not
-									// yet done.
 									if (linkContents.isEmpty()) {
-										synchronized (generatedWordBags) {
-											if (verbose)
-												System.out.println(
-														"3. LinkContent Thread has no more data therefore I am done.");
-											synchronized (amDone) {
-												amDone.set(true);
-												amDone.notifyAll();
+
+										if (allLinkThreadsDone()) {
+											synchronized (generatedWordBags) {
+												if (verbose)
+													System.out.println(
+															"3. LinkContent Thread has no more data therefore I am done.");
+												synchronized (amDone) {
+													amDone.set(true);
+													amDone.notifyAll();
+												}
+												generatedWordBags.notifyAll();
 											}
-											generatedWordBags.notifyAll();
+											assert (allLinkThreadsDone());
+											return;
+										} else {
+											continue;
 										}
-										assert (allLinkThreadsDone());
-										return;
 									}
 								} catch (InterruptedException e) {
 									return;
