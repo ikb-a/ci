@@ -656,6 +656,14 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		// TODO add cost in time, if possible add cost in API calls
 		return new Expenditure[] {};
 	}
+	
+	public void setVerbose(boolean verb){
+		this.verbose = verb;
+	}
+	
+	public boolean getVerbose(){
+		return this.verbose;
+	}
 
 	/**
 	 * Determine if {@code args} is true or false for this predicate. The
