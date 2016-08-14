@@ -44,6 +44,8 @@ public class NominalTrainer<I, O> {
 	 */
 	private final ImmutableSet<Source<I, O, Void>> sources;
 
+	private boolean verbose = true;
+
 	/**
 	 * Create a new NominalTrainer by using source discovery on {@code contract}
 	 * 
@@ -165,14 +167,22 @@ public class NominalTrainer<I, O> {
 		for (String key : keys) {
 			I[] inputs = trainingData.get(key);
 			for (I input : inputs) {
+				if (verbose)
+					System.out.println("New Input: " + input);
+
 				Instance i = new DenseInstance(sources.size() + 1);
 				i.setDataset(trainingDataAsInstances);
 				for (Source<I, O, Void> s : sources) {
 					try {
 						String finalResult = converter.convert(s.getOpinion(input));
 						i.setValue(mapSourceAttributes.get(s.getName()), finalResult);
+						if (verbose)
+							System.out.println("Source: " + s.getName() + ": " + finalResult);
+
 					} catch (UnknownException e) {
 						i.setMissing(mapSourceAttributes.get(s.getName()));
+						if (verbose)
+							System.out.println("Source: " + s.getName() + ": ?");
 					}
 				}
 				i.setValue(classAttribute, key);
