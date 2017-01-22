@@ -1507,7 +1507,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 								if (verbose)
 									System.out.println("2." + name + " Reading: " + link);
 								// Time out in 2 minutes
-					            websiteAsString = linkContentsFuture.get(2, TimeUnit.MINUTES);
+					            websiteAsString = linkContentsFuture.get(30, TimeUnit.SECONDS);
 					        } catch (TimeoutException e) {
 					        	// if the read timed out, abort and go to next link.
 					        	if(verbose)
