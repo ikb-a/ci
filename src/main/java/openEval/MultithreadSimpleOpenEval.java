@@ -15,7 +15,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jsoup.Jsoup;
@@ -115,7 +121,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 	/**
 	 * Whether or not to print debug messages
 	 */
-	boolean verbose = false;
+	boolean verbose = true;
 
 	/**
 	 * Map from link name to link contents, only used if
@@ -1338,6 +1344,17 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 		 * {@link MultithreadSimpleOpenEval.SearchThread} threads running.
 		 */
 		String name = "";
+		
+		/**
+		 * Variable that stores the full URL of the current link to read.
+		 * Used only by {@link TimedOutRead}
+		 */
+		String currentLinkToRead;
+		
+		/**
+		 * Executor to run a {@link TimedOutRead} thread
+		 */
+		ExecutorService executor;
 
 		/**
 		 * Creates a new Runnable that, when run, removes SearchResults objects
@@ -1376,6 +1393,7 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 			searchDone = SearchThreadIsDone;
 			amDone = LinkContentsIsDone;
 			this.linkContents = linkContents;
+			executor  = Executors.newSingleThreadExecutor();
 		}
 
 		/**
@@ -1421,6 +1439,8 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 								synchronized (linkContents) {
 									if (verbose)
 										System.out.println("2." + name + " SearchThread is done, so am I");
+									// Kill executor, set flag to indicate thread is done & notify.
+									executor.shutdownNow();
 									amDone.set(true);
 									linkContents.notifyAll();
 									return;
@@ -1477,16 +1497,25 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 							continue;
 						}
 
-						try {
-							if (verbose)
-								System.out.println("2." + name + " Reading: " + link);
-							// read the contents of the website
-							// TODO: set jsoup so as to reject any website that
-							// request authentication
-							String websiteAsString = Jsoup.connect(link.getLink())
-									.userAgent(
-											"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:48.0) Gecko/20100101 Firefox/48.0")
-									.referrer("http://www.google.com").get().text();
+						try {	
+							String websiteAsString = "";
+							this.currentLinkToRead = link.getLink();
+							// Start thread to attempt to read link
+							Future<String> linkContentsFuture = executor.submit(new TimedOutRead());
+
+					        try {
+								if (verbose)
+									System.out.println("2." + name + " Reading: " + link);
+								// Time out in 2 minutes
+					            websiteAsString = linkContentsFuture.get(2, TimeUnit.MINUTES);
+					        } catch (TimeoutException e) {
+					        	// if the read timed out, abort and go to next link.
+					        	if(verbose)
+					        		System.out.println("2." + name + " Timed out on : " + link+" aborting.");
+					        	linkContentsFuture.cancel(true);
+					        	continue;
+					        }
+							
 							if (!websiteAsString.isEmpty()) {
 								if (verbose)
 									System.out.println("2." + name + " Adding result to contents");
@@ -1498,9 +1527,6 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 						} catch (Exception e) {
 							if (verbose)
 								System.err.println("2." + name + " Unable to read " + link.getLink() + " CAUSE: " + e);
-							if (memoizeLinkContents) {
-								memoizedLinkContents.put(link.getLink(), "");
-							}
 						}
 					}
 
@@ -1516,6 +1542,18 @@ public class MultithreadSimpleOpenEval extends Source<String, Boolean, Double> {
 					}
 				}
 			}
+		}
+		
+		private class TimedOutRead implements Callable<String>{
+
+			@Override
+			public String call() throws Exception {
+				return Jsoup.connect(LinkContentsThread.this.currentLinkToRead)
+						.userAgent(
+								"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:48.0) Gecko/20100101 Firefox/48.0")
+						.referrer("http://www.google.com").get().text();
+			}
+			
 		}
 	}
 
