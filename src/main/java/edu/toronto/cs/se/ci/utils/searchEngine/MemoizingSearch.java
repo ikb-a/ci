@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This class is a wrapper for any JSONSearchEngine. It memoizes the results of
+ * This class is a wrapper for any GenericSearchEngine. It memoizes the results of
  * previous searches, and saves them /reads them to/from a file.
  * 
  * @author Ian Berlot-Attwell
@@ -30,7 +30,7 @@ public class MemoizingSearch implements GenericSearchEngine {
 	Map<String, SearchResults> savedSearches;
 
 	/**
-	 * The file containing the json object on the hard drive
+	 * The file where memoized results will be saved (as a serialized hashmap)
 	 */
 	String filePath;
 
